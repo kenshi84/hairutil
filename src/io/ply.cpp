@@ -62,8 +62,8 @@ std::shared_ptr<cyHairFile> io::load_ply(const std::string &filename) {
         }
 
         // Error if globals::ply_load_default_nsegs is not a divisor of the number of vertices
-        if (vertex_x.size() % globals::ply_load_default_nsegs != 0) {
-            throw std::runtime_error("PLY file does not have \"strand\" element with \"nsegs\" property, and --ply-load-default-nsegs is not a divisor of the number of vertices");
+        if (vertex_x.size() % (globals::ply_load_default_nsegs + 1) != 0) {
+            throw std::runtime_error("PLY file does not have \"strand\" element with \"nsegs\" property, and --ply-load-default-nsegs + 1 is not a divisor of the number of vertices");
         }
     }
 
@@ -77,7 +77,7 @@ std::shared_ptr<cyHairFile> io::load_ply(const std::string &filename) {
         (vertex_thickness.empty() ? 0 : _CY_HAIR_FILE_THICKNESS_BIT)
     );
 
-    hairfile->SetHairCount(segments_array.empty() ? vertex_x.size() / globals::ply_load_default_nsegs : segments_array.size());
+    hairfile->SetHairCount(segments_array.empty() ? (vertex_x.size() / (globals::ply_load_default_nsegs + 1)) : segments_array.size());
     hairfile->SetPointCount(vertex_x.size());
 
     for (size_t i = 0; i < vertex_x.size(); ++i) {
