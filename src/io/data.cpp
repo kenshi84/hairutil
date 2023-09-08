@@ -1,3 +1,12 @@
+/*
+File format used in:
+    Hair Photobooth: Geometric and Photometric Acquisition of Real Hairstyles (SIGGRAPH 2008)
+    https://web.archive.org/web/20180118090113/http://graphics.ucsd.edu/~will/download/HairPhotobooth/
+
+    Single-View Hair Modeling Using A Hairstyle Database (SIGGRAPH 2015)
+    https://web.archive.org/web/20230323054045/http://www-scf.usc.edu/~liwenhu/SHM/database.html
+*/
+
 #include "io.h"
 
 std::shared_ptr<cyHairFile> io::load_data(const std::string &filename) {

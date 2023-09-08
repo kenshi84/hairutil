@@ -1,3 +1,9 @@
+/*
+File format used in:
+    CT2Hair: High-Fidelity 3D Hair Modeling using Computed Tomography (SIGGRAPH 2023)
+    https://github.com/Jhonve/HairStrandsRendering/blob/f4ce2c5db4a5ab24a144cbc3297fbc073f83cf29/HairStrandsRendering/elems/strands.cpp#L255
+*/
+
 #include "io.h"
 
 std::shared_ptr<cyHairFile> io::load_bin(const std::string &filename) {

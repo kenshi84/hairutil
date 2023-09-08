@@ -1,3 +1,9 @@
+/*
+File format used in:
+    Hair Meshes (SIGGRAPH 2009)
+    http://www.cemyuksel.com/research/hairmodels/
+*/
+
 #include "io.h"
 
 std::shared_ptr<cyHairFile> io::load_hair(const std::string &filename) {
