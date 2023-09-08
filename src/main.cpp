@@ -13,6 +13,8 @@ int main(int argc, const char **argv)
     args::ValueFlag<std::string> globals_input_file(grp_globals, "PATH", "(*)Input file", {'i', "input-file"}, args::Options::Required);
     args::ValueFlag<std::string> globals_output_ext(grp_globals, "EXT", "(*)Output file extension {bin,hair,data,ma}", {"output-ext"}, args::Options::Required);
     args::Flag globals_overwrite(grp_globals, "overwrite", "Overwrite when output file exists", {"overwrite"});
+    args::ValueFlag<unsigned int> globals_ply_load_default_nsegs(grp_globals, "N", "Default number of segments per strand for PLY files [0]", {"ply-load-default-nsegs"}, 0);
+    args::Flag globals_ply_save_binary(grp_globals, "ply-save-binary", "Save PLY files in binary format", {"ply-save-binary"});
     args::HelpFlag globals_help(grp_globals, "help", "Show this help message", {'h', "help"});
 
     args::GlobalOptions global_options(parser, grp_globals);
@@ -49,6 +51,8 @@ int main(int argc, const char **argv)
     globals::input_file = *globals_input_file;
     globals::output_ext = *globals_output_ext;
     globals::overwrite = globals_overwrite;
+    globals::ply_load_default_nsegs = *globals_ply_load_default_nsegs;
+    globals::ply_save_binary = globals_ply_save_binary;
 
     // Get file extension from globals::input_file, in lowercase
     globals::input_ext = globals::input_file.substr(globals::input_file.find_last_of(".") + 1);

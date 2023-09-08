@@ -8,6 +8,7 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/ext/args
     ${CMAKE_CURRENT_SOURCE_DIR}/ext/cyCodeBase
     ${CMAKE_CURRENT_SOURCE_DIR}/ext/eigen
+    ${CMAKE_CURRENT_SOURCE_DIR}/ext/happly
     ${CMAKE_CURRENT_SOURCE_DIR}/ext/spdlog/include
     ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
@@ -18,6 +19,7 @@ add_executable(hairutil
     src/io/data.cpp
     src/io/hair.cpp
     src/io/ma.cpp
+    src/io/ply.cpp
     src/globals.cpp
     src/main.cpp
 )

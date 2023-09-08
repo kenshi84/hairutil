@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <functional>
 #include <memory>
+#include <numeric>
 #include <fstream>
 #include <sstream>
 #include <vector>
@@ -20,6 +21,8 @@ namespace globals {
     extern std::string input_file;
     extern std::string output_ext;
     extern bool overwrite;
+    extern unsigned int ply_load_default_nsegs;
+    extern bool ply_save_binary;
 
     extern std::string input_file_wo_ext;
     extern std::string input_ext;
