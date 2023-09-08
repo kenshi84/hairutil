@@ -13,3 +13,6 @@
 [submodule "ext/happly"]
 	path = ext/happly
 	url = https://github.com/nmwsharp/happly
+[submodule "ext/nanoflann"]
+	path = ext/nanoflann
+	url = https://github.com/jlblancoc/nanoflann

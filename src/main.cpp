@@ -7,14 +7,15 @@ int main(int argc, const char **argv)
 
     args::Group grp_commands(parser, "Commands:");
     args::Command cmd_convert(grp_commands, "convert", "Convert file type", cmd::parse::convert);
+    args::Command cmd_subsample(grp_commands, "subsample", "Subsample strands", cmd::parse::subsample);
 
     args::Group grp_globals("Common arguments:");
-    args::ValueFlag<std::string> globals_verbosity(grp_globals, "NAME", "Verbosity level name {trace,debug,info,warn,error,critical,off} [info]", {'v', "verbosity"}, "info");
     args::ValueFlag<std::string> globals_input_file(grp_globals, "PATH", "(*)Input file", {'i', "input-file"}, args::Options::Required);
-    args::ValueFlag<std::string> globals_output_ext(grp_globals, "EXT", "(*)Output file extension {bin,hair,data,ma}", {"output-ext"}, args::Options::Required);
+    args::ValueFlag<std::string> globals_output_ext(grp_globals, "EXT", "(*)Output file extension {bin,hair,data,ma}", {'o', "output-ext"}, args::Options::Required);
     args::Flag globals_overwrite(grp_globals, "overwrite", "Overwrite when output file exists", {"overwrite"});
     args::ValueFlag<unsigned int> globals_ply_load_default_nsegs(grp_globals, "N", "Default number of segments per strand for PLY files [0]", {"ply-load-default-nsegs"}, 0);
     args::Flag globals_ply_save_binary(grp_globals, "ply-save-binary", "Save PLY files in binary format", {"ply-save-binary"});
+    args::ValueFlag<std::string> globals_verbosity(grp_globals, "NAME", "Verbosity level name {trace,debug,info,warn,error,critical,off} [info]", {'v', "verbosity"}, "info");
     args::HelpFlag globals_help(grp_globals, "help", "Show this help message", {'h', "help"});
 
     args::GlobalOptions global_options(parser, grp_globals);

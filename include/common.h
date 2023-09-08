@@ -11,10 +11,12 @@
 
 #include <args.hxx>
 #include <spdlog/spdlog.h>
-#include <Eigen/Core>
+#include <Eigen/Geometry>
 
 #define CY_NO_INTRIN_H
 #include <cyHairFile.h>
+
+#include "kdtree.h"
 
 namespace globals {
     // Given as command line arguments
