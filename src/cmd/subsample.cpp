@@ -146,7 +146,8 @@ std::shared_ptr<cyHairFile> cmd::exec::subsample(std::shared_ptr<cyHairFile> hai
         }
         in_point_offset += nsegs + 1;
     }
-    assert(out_hair_idx == out_hair_count);
+    if (header_in.arrays & _CY_HAIR_FILE_SEGMENTS_BIT)
+        assert(out_hair_idx == out_hair_count);
 
     return hairfile_out;
 }
