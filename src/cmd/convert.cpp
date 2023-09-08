@@ -6,8 +6,7 @@ void cmd::parse::convert(args::Subparser &parser) {
     globals::output_file = [](){ return globals::input_file_wo_ext + "." + globals::output_ext; };
     globals::check_error = [](){
         if (globals::input_ext == globals::output_ext) {
-            spdlog::error("Input and output file extensions are the same: {}", globals::input_ext);
-            throw;
+            throw std::runtime_error(fmt::format("Input and output file extensions are the same: {}", globals::input_ext));
         }
     };
 }

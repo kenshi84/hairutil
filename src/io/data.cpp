@@ -5,8 +5,7 @@ std::shared_ptr<cyHairFile> io::load_data(const std::string &filename) {
     ifs.open(filename.c_str(), std::ios_base::binary);
 
     if (!ifs.is_open()) {
-        spdlog::error("Cannot open file {}", filename);
-        throw;
+        throw std::runtime_error(fmt::format("Cannot open file {}", filename));
     }
 
     // Read the number of strands
@@ -53,8 +52,7 @@ void io::save_data(const std::string &filename, const std::shared_ptr<cyHairFile
     ofs.open(filename.c_str(), std::ios::out | std::ios::binary);
 
     if (!ofs.is_open()) {
-        spdlog::error("Cannot open file {}", filename);
-        throw;
+        throw std::runtime_error(fmt::format("Cannot open file {}", filename));
     }
 
     const auto& header = hairfile->GetHeader();

@@ -7,15 +7,13 @@ std::shared_ptr<cyHairFile> io::load_ply(const std::string &filename) {
 
     // Error if it doesn't have "vertex" element
     if (!ply.hasElement("vertex")) {
-        spdlog::error("PLY file does not have \"vertex\" element");
-        throw;
+        throw std::runtime_error("PLY file does not have \"vertex\" element");
     }
     auto& vertex = ply.getElement("vertex");
 
     // Error if it doesn't have "x", "y", "z" properties
     if (!vertex.hasProperty("x") || !vertex.hasProperty("y") || !vertex.hasProperty("z")) {
-        spdlog::error("PLY file does not have \"x\", \"y\", \"z\" properties");
-        throw;
+        throw std::runtime_error("PLY file does not have \"x\", \"y\", \"z\" properties");
     }
     const std::vector<float> vertex_x = vertex.getProperty<float>("x");
     const std::vector<float> vertex_y = vertex.getProperty<float>("y");
@@ -60,14 +58,12 @@ std::shared_ptr<cyHairFile> io::load_ply(const std::string &filename) {
     if (segments_array.empty()) {
         // Error if globals::ply_load_default_nsegs is not set
         if (globals::ply_load_default_nsegs == 0) {
-            spdlog::error("PLY file does not have \"strand\" element with \"nsegs\" property, and --ply-load-default-nsegs is not set");
-            throw;
+            throw std::runtime_error("PLY file does not have \"strand\" element with \"nsegs\" property, and --ply-load-default-nsegs is not set");
         }
 
         // Error if globals::ply_load_default_nsegs is not a divisor of the number of vertices
         if (vertex_x.size() % globals::ply_load_default_nsegs != 0) {
-            spdlog::error("PLY file does not have \"strand\" element with \"nsegs\" property, and --ply-load-default-nsegs is not a divisor of the number of vertices");
-            throw;
+            throw std::runtime_error("PLY file does not have \"strand\" element with \"nsegs\" property, and --ply-load-default-nsegs is not a divisor of the number of vertices");
         }
     }
 

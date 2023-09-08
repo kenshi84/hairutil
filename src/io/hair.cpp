@@ -17,8 +17,7 @@ std::shared_ptr<cyHairFile> io::load_hair(const std::string &filename) {
     };
 
     if (res < 0) {
-        SPDLOG_ERROR("Error while loading {}: {}", filename, error_messages.at(res));
-        throw;
+        throw std::runtime_error(fmt::format("Error while loading {}: {}", filename, error_messages.at(res)));
     }
 
     return hairfile;
