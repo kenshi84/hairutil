@@ -1,0 +1,12 @@
+[submodule "ext/cyCodeBase"]
+	path = ext/cyCodeBase
+	url = https://github.com/cemyuksel/cyCodeBase/
+[submodule "ext/args"]
+	path = ext/args
+	url = https://github.com/Taywee/args
+[submodule "ext/spdlog"]
+	path = ext/spdlog
+	url = https://github.com/gabime/spdlog
+[submodule "ext/eigen"]
+	path = ext/eigen
+	url = https://gitlab.com/libeigen/eigen.git
