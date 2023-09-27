@@ -14,11 +14,12 @@ $ hairutil --help
 
       Commands:
         convert                           Convert file type
+        info                              Print information
         subsample                         Subsample strands
 
       Common options:
-        -i[PATH], --input-file=[PATH]     (*)Input file
-        -o[EXT], --output-ext=[EXT]       (*)Output file extension
+        -i[PATH], --input-file=[PATH]     (REQUIRED) Input file
+        -o[EXT], --output-ext=[EXT]       Output file extension
         --overwrite                       Overwrite when output file exists
         --ply-load-default-nsegs=[N]      Default number of segments per strand
                                           for PLY files [0]
@@ -43,6 +44,23 @@ make -j
 ```
 hairutil convert --input-file ~/CT2Hair/output/Bangs.bin --output-ext ma
 # Output saved to ~/CT2Hair/output/Bangs.ma
+```
+
+### `info` command
+```
+hairutil info --input-file ~/cemyuksel/wCurly.hair
+[info] Number of strands: 50000
+[info] Number of points: 3441580
+[info] ================================================================
+[info] Segments array: Yes
+[info] Points array: Yes
+[info] Thickness array: No
+[info] Transparency array: No
+[info] Colors array: No
+[info] Default thickness: 0.1
+[info] Default transparency: 0.4
+[info] Default color: (0.28718513, 0.22646429, 0.14465585)
+[info] ================================================================
 ```
 
 ### `subsample` command

@@ -1,5 +1,7 @@
 #include "cmd.h"
 
+#include "kdtree.h"
+
 namespace {
 unsigned int target_count;
 float scale_factor;

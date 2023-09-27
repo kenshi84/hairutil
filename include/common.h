@@ -16,8 +16,6 @@
 #define CY_NO_INTRIN_H
 #include <cyHairFile.h>
 
-#include "kdtree.h"
-
 namespace globals {
     // Given as command line arguments
     extern std::string input_file;
@@ -30,7 +28,7 @@ namespace globals {
     extern std::string input_ext;
     extern std::function<std::string(void)> output_file;        // For lazy evaluation
     extern std::function<void(void)> check_error;
-    extern std::function<std::shared_ptr<cyHairFile>(std::shared_ptr<cyHairFile>)> cmd_exec;
+    extern std::shared_ptr<cyHairFile> (*cmd_exec)(std::shared_ptr<cyHairFile>);
 }
 
 using namespace Eigen;

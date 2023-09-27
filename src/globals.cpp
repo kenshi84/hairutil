@@ -13,7 +13,7 @@ namespace globals {
     std::string input_ext;
     std::function<std::string(void)> output_file;        // For lazy evaluation
     std::function<void(void)> check_error;
-    std::function<std::shared_ptr<cyHairFile>(std::shared_ptr<cyHairFile>)> cmd_exec;
+    std::shared_ptr<cyHairFile> (*cmd_exec)(std::shared_ptr<cyHairFile>) = nullptr;
 
     const std::unordered_map<std::string, std::pair<::io::load_func_t, ::io::save_func_t>> supported_ext = {
         {"bin", {::io::load_bin, ::io::save_bin}},
