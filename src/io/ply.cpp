@@ -200,12 +200,6 @@ void io::save_ply(const std::string &filename, const std::shared_ptr<cyHairFile>
     ply.addElement("strand", header.hair_count);
     ply.getElement("strand").addProperty<unsigned short>("nsegs", segments_array);
 
-    // Write to file
-    ply.write(filename, globals::ply_save_binary ? happly::DataFormat::Binary : happly::DataFormat::ASCII);
-
-    //-------------------------------------------------------------+
-    // Write another version with edges for rendering with MeshLab |
-    //-------------------------------------------------------------+
     std::vector<int> edge_vertex1;      edge_vertex1.reserve(vertex_x.size());
     std::vector<int> edge_vertex2;      edge_vertex2.reserve(vertex_x.size());
 
@@ -223,6 +217,6 @@ void io::save_ply(const std::string &filename, const std::shared_ptr<cyHairFile>
     ply.getElement("edge").addProperty<int>("vertex1", edge_vertex1);
     ply.getElement("edge").addProperty<int>("vertex2", edge_vertex2);
 
-    const std::string filename_with_edges = filename.substr(0, filename.find_last_of(".")) + "_edges.ply";
-    ply.write(filename_with_edges, globals::ply_save_binary ? happly::DataFormat::Binary : happly::DataFormat::ASCII);
+    // Write to file
+    ply.write(filename, globals::ply_save_binary ? happly::DataFormat::Binary : happly::DataFormat::ASCII);
 }
