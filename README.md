@@ -14,6 +14,7 @@ $ hairutil --help
 
       Commands:
         convert                           Convert file type
+        decompose                         Decompose into individual curves
         info                              Print information
         subsample                         Subsample strands
 
@@ -44,6 +45,12 @@ make -j
 ```
 hairutil convert --input-file ~/CT2Hair/output/Bangs.bin --output-ext ma
 # Output saved to ~/CT2Hair/output/Bangs.ma
+```
+
+### `decompose` command
+```
+hairutil decompose --input-file ~/CT2Hair/output/Bangs.bin --output-ext ply --confirm
+# Output saved to ~/CT2Hair/output/Bangs_decomposed_ply/*.ply
 ```
 
 ### `info` command

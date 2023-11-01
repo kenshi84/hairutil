@@ -7,6 +7,7 @@ int main(int argc, const char **argv)
 
     args::Group grp_commands(parser, "Commands:");
     args::Command cmd_convert(grp_commands, "convert", "Convert file type", cmd::parse::convert);
+    args::Command cmd_decompose(grp_commands, "decompose", "Decompose into individual curves", cmd::parse::decompose);
     args::Command cmd_info(grp_commands, "info", "Print information", cmd::parse::info);
     args::Command cmd_subsample(grp_commands, "subsample", "Subsample strands", cmd::parse::subsample);
 
@@ -70,16 +71,15 @@ int main(int argc, const char **argv)
         spdlog::error("Unsupported input file extension: {}", globals::input_ext);
         return 1;
     }
-    io::load_func_t load_func = globals::supported_ext.at(globals::input_ext).first;
+    globals::load_func = globals::supported_ext.at(globals::input_ext).first;
 
     // Check if output file extension is supported
-    io::save_func_t save_func;
     if (globals::cmd_exec != cmd::exec::info) {
         if (globals::supported_ext.count(globals::output_ext) == 0) {
             spdlog::error("Unsupported output file extension: {}", globals::output_ext);
             return 1;
         }
-        save_func = globals::supported_ext.at(globals::output_ext).second;
+        globals::save_func = globals::supported_ext.at(globals::output_ext).second;
     }
 
     // Get input file name without extension
@@ -99,16 +99,16 @@ int main(int argc, const char **argv)
             globals::check_error();
 
         spdlog::info("Loading from {} ...", globals::input_file);
-        auto hairfile_in = load_func(globals::input_file);
+        auto hairfile_in = globals::load_func(globals::input_file);
 
         spdlog::info("Number of strands: {}", hairfile_in->GetHeader().hair_count);
         spdlog::info("Number of points: {}", hairfile_in->GetHeader().point_count);
 
         auto hairfile_out = globals::cmd_exec(hairfile_in);
 
-        if (globals::cmd_exec != cmd::exec::info) {
+        if (hairfile_out) {
             spdlog::info("Saving to {} ...", globals::output_file());
-            save_func(globals::output_file(), hairfile_out);
+            globals::save_func(globals::output_file(), hairfile_out);
         }
     }
     catch (const std::exception &e)

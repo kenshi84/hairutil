@@ -22,4 +22,7 @@ namespace globals {
         {"ply", {::io::load_ply, ::io::save_ply}},
         {"ma", {::io::load_ma, ::io::save_ma}}
     };
+
+    ::io::load_func_t load_func;
+    ::io::save_func_t save_func;
 }
