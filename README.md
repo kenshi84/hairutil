@@ -5,6 +5,7 @@ A command-line tool for handling hair files:
 - .data
 - .ply
 - .ma
+- .abc
 
 ```
 $ hairutil --help

@@ -20,7 +20,8 @@ namespace globals {
         {"hair", {::io::load_hair, ::io::save_hair}},
         {"data", {::io::load_data, ::io::save_data}},
         {"ply", {::io::load_ply, ::io::save_ply}},
-        {"ma", {::io::load_ma, ::io::save_ma}}
+        {"ma", {::io::load_ma, ::io::save_ma}},
+        {"abc", {::io::load_abc, ::io::save_abc}}
     };
 
     ::io::load_func_t load_func;

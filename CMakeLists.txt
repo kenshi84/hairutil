@@ -14,11 +14,14 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
+add_subdirectory(ext/alembic)
+
 add_executable(hairutil
     src/cmd/convert.cpp
     src/cmd/decompose.cpp
     src/cmd/info.cpp
     src/cmd/subsample.cpp
+    src/io/abc.cpp
     src/io/bin.cpp
     src/io/data.cpp
     src/io/hair.cpp
@@ -26,4 +29,8 @@ add_executable(hairutil
     src/io/ply.cpp
     src/globals.cpp
     src/main.cpp
+)
+
+target_link_libraries(hairutil
+    Alembic::Alembic
 )

@@ -12,12 +12,14 @@ std::shared_ptr<cyHairFile> load_hair(const std::string &filename);
 std::shared_ptr<cyHairFile> load_data(const std::string &filename);
 std::shared_ptr<cyHairFile> load_ply(const std::string &filename);
 std::shared_ptr<cyHairFile> load_ma(const std::string &filename);
+std::shared_ptr<cyHairFile> load_abc(const std::string &filename);
 
 void save_bin(const std::string &filename, const std::shared_ptr<cyHairFile> &hairfile);
 void save_hair(const std::string &filename, const std::shared_ptr<cyHairFile> &hairfile);
 void save_data(const std::string &filename, const std::shared_ptr<cyHairFile> &hairfile);
 void save_ply(const std::string &filename, const std::shared_ptr<cyHairFile> &hairfile);
 void save_ma(const std::string &filename, const std::shared_ptr<cyHairFile> &hairfile);
+void save_abc(const std::string &filename, const std::shared_ptr<cyHairFile> &hairfile);
 
 }
 

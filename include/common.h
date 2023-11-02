@@ -31,6 +31,5 @@ namespace globals {
     extern std::shared_ptr<cyHairFile> (*cmd_exec)(std::shared_ptr<cyHairFile>);
 }
 
-using namespace Eigen;
 using std::cout;
 using std::endl;

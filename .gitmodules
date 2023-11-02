@@ -16,3 +16,6 @@
 [submodule "ext/nanoflann"]
 	path = ext/nanoflann
 	url = https://github.com/jlblancoc/nanoflann
+[submodule "ext/alembic"]
+	path = ext/alembic
+	url = https://github.com/alembic/alembic

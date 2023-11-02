@@ -1,5 +1,7 @@
 #include "io.h"
 
+using namespace Eigen;
+
 std::shared_ptr<cyHairFile> io::load_ma(const std::string &filename) {
     std::ifstream ifs;
     ifs.open(filename.c_str());

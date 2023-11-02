@@ -3,7 +3,7 @@
 
 int main(int argc, const char **argv)
 {
-    args::ArgumentParser parser("A command-line tool for handling hair files:\n  .bin\n  .hair\n  .data\n  .ply\n  .ma");
+    args::ArgumentParser parser("A command-line tool for handling hair files:\n  .bin\n  .hair\n  .data\n  .ply\n  .ma\n  .abc");
 
     args::Group grp_commands(parser, "Commands:");
     args::Command cmd_convert(grp_commands, "convert", "Convert file type", cmd::parse::convert);
