@@ -8,6 +8,7 @@
 #include <sstream>
 #include <vector>
 #include <unordered_map>
+#include <random>
 
 #include <args.hxx>
 #include <spdlog/spdlog.h>
@@ -29,6 +30,7 @@ namespace globals {
     extern std::function<std::string(void)> output_file;        // For lazy evaluation
     extern std::function<void(void)> check_error;
     extern std::shared_ptr<cyHairFile> (*cmd_exec)(std::shared_ptr<cyHairFile>);
+    extern std::mt19937 rng;
 }
 
 using std::cout;

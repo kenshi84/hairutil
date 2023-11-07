@@ -53,6 +53,8 @@ std::shared_ptr<cyHairFile> cmd::exec::subsample(std::shared_ptr<cyHairFile> hai
     // Init the Poisson disk radius to half the diagonal of the bounding box
     double r = bbox.diagonal().norm() * 0.5;
 
+    std::uniform_int_distribution<int> uniform_dist(0, header_in.hair_count - 1);
+
     // Loop while the number of selected strands is below target
     unsigned int num_selected;
     for ( ; (num_selected = std::accumulate(selected.begin(), selected.end(), 0)) < ::target_count; )
@@ -85,7 +87,7 @@ std::shared_ptr<cyHairFile> cmd::exec::subsample(std::shared_ptr<cyHairFile> hai
         else
         {
             // Randomly select one uncovered root point
-            int i = rand() % header_in.hair_count;                          // Start from a random point
+            int i = uniform_dist(globals::rng);                              // Start from a random point
             while (covered[i]) { i = (i + 1) % header_in.hair_count; }      // Find the first uncovered point
             selected[i] = 1;                                                // Flag it as selected
         }
