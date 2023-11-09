@@ -19,3 +19,6 @@
 [submodule "ext/alembic"]
 	path = ext/alembic
 	url = https://github.com/alembic/alembic
+[submodule "ext/googletest"]
+	path = ext/googletest
+	url = https://github.com/google/googletest

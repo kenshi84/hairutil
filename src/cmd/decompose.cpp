@@ -1,7 +1,7 @@
 #include "cmd.h"
 #include "io.h"
 
-namespace {
+namespace decompose_params {
 bool confirm = false;
 }
 
@@ -9,14 +9,14 @@ void cmd::parse::decompose(args::Subparser &parser) {
     args::Flag confirm(parser, "confirm", "Confirm in case of generating huge number of files", {"confirm"});
     parser.Parse();
     globals::cmd_exec = cmd::exec::decompose;
-    ::confirm = confirm;
+    decompose_params::confirm = confirm;
 }
 
 std::shared_ptr<cyHairFile> cmd::exec::decompose(std::shared_ptr<cyHairFile> hairfile_in) {
     const cyHairFile::Header &header = hairfile_in->GetHeader();
 
     // Confirm generation of huge number of files
-    if (header.hair_count > 20000 && !confirm) {
+    if (header.hair_count > 20000 && !decompose_params::confirm) {
         throw std::runtime_error(fmt::format("Generating {} files. Use --confirm to proceed", header.hair_count));
     }
 
