@@ -56,8 +56,8 @@ std::shared_ptr<cyHairFile> io::load_ma(const std::string &filename) {
     hairfile->SetPointCount(points_array.size() / 3);
 
     // Copy content of segments_array and points_array to hairfile
-    std::copy(segments_array.begin(), segments_array.end(), hairfile->GetSegmentsArray());
-    std::copy(points_array.begin(), points_array.end(), hairfile->GetPointsArray());
+    std::memcpy(hairfile->GetSegmentsArray(), segments_array.data(), segments_array.size() * sizeof(unsigned short));
+    std::memcpy(hairfile->GetPointsArray(), points_array.data(), points_array.size() * sizeof(float));
 
     return hairfile;
 }

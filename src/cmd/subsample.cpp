@@ -106,7 +106,7 @@ std::shared_ptr<cyHairFile> cmd::exec::subsample(std::shared_ptr<cyHairFile> hai
     std::shared_ptr<cyHairFile> hairfile_out = std::make_shared<cyHairFile>();
 
     // Copy header via memcpy
-    memcpy((void*)&hairfile_out->GetHeader(), &header_in, sizeof(cyHairFile::Header));
+    std::memcpy((void*)&hairfile_out->GetHeader(), &header_in, sizeof(cyHairFile::Header));
 
     // Set hair_count & point_count, allocate arrays
     hairfile_out->SetHairCount(out_hair_count);

@@ -52,7 +52,7 @@ std::shared_ptr<cyHairFile> io::load_bin(const std::string &filename) {
 
     // Copy content of points_array to hairfile->GetPointsArray()
     hairfile->SetPointCount(points_array.size() / 3);
-    std::copy(points_array.begin(), points_array.end(), hairfile->GetPointsArray());
+    std::memcpy(hairfile->GetPointsArray(), points_array.data(), points_array.size() * sizeof(float));
 
     return hairfile;
 }

@@ -106,7 +106,7 @@ std::shared_ptr<cyHairFile> io::load_ply(const std::string &filename) {
 
     // Copy segments array if available, otherwise set default
     if (!segments_array.empty()) {
-        std::copy(segments_array.begin(), segments_array.end(), hairfile->GetSegmentsArray());
+        std::memcpy(hairfile->GetSegmentsArray(), segments_array.data(), segments_array.size() * sizeof(unsigned short));
     } else {
         hairfile->SetDefaultSegmentCount(globals::ply_load_default_nsegs);
     }
@@ -164,13 +164,13 @@ void io::save_ply(const std::string &filename, const std::shared_ptr<cyHairFile>
     }
 
     // Create array for "strand" element
-    std::vector<unsigned short> segments_array;
+    std::vector<unsigned short> segments_array(header.hair_count);
     if (header.arrays & _CY_HAIR_FILE_SEGMENTS_BIT) {
         // Copy segments array if available
-        std::copy(hairfile->GetSegmentsArray(), hairfile->GetSegmentsArray() + header.hair_count, std::back_inserter(segments_array));
+        std::memcpy(segments_array.data(), hairfile->GetSegmentsArray(), header.hair_count * sizeof(unsigned short));
     } else {
         // Otherwise, fill with default
-        segments_array.resize(header.hair_count, header.d_segments);
+        std::fill(segments_array.begin(), segments_array.end(), header.d_segments);
     }
 
     happly::PLYData ply;
