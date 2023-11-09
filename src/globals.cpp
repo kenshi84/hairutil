@@ -6,7 +6,7 @@ namespace globals {
     std::string output_ext;
     bool overwrite;
     unsigned int ply_load_default_nsegs;
-    bool ply_save_binary;
+    bool ply_save_ascii;
 
     // Other global variables
     std::string input_file_wo_ext;

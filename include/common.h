@@ -23,7 +23,7 @@ namespace globals {
     extern std::string output_ext;
     extern bool overwrite;
     extern unsigned int ply_load_default_nsegs;
-    extern bool ply_save_binary;
+    extern bool ply_save_ascii;
 
     extern std::string input_file_wo_ext;
     extern std::string input_ext;

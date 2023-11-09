@@ -219,5 +219,5 @@ void io::save_ply(const std::string &filename, const std::shared_ptr<cyHairFile>
     ply.getElement("edge").addProperty<int>("vertex2", edge_vertex2);
 
     // Write to file
-    ply.write(filename, globals::ply_save_binary ? happly::DataFormat::Binary : happly::DataFormat::ASCII);
+    ply.write(filename, globals::ply_save_ascii ? happly::DataFormat::ASCII : happly::DataFormat::Binary);
 }

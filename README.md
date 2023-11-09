@@ -26,7 +26,7 @@ $ hairutil --help
         --overwrite                       Overwrite when output file exists
         --ply-load-default-nsegs=[N]      Default number of segments per strand
                                           for PLY files [0]
-        --ply-save-binary                 Save PLY files in binary format
+        --ply-save-ascii                  Save PLY files in ASCII format
         -v[NAME], --verbosity=[NAME]      Verbosity level name
                                           {trace,debug,info,warn,error,critical,off}
                                           [info]

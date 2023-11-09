@@ -19,7 +19,7 @@ int main(int argc, const char **argv)
     args::ValueFlag<std::string> globals_output_ext(grp_globals, "EXT", "Output file extension", {'o', "output-ext"}, "");
     args::Flag globals_overwrite(grp_globals, "overwrite", "Overwrite when output file exists", {"overwrite"});
     args::ValueFlag<unsigned int> globals_ply_load_default_nsegs(grp_globals, "N", "Default number of segments per strand for PLY files [0]", {"ply-load-default-nsegs"}, 0);
-    args::Flag globals_ply_save_binary(grp_globals, "ply-save-binary", "Save PLY files in binary format", {"ply-save-binary"});
+    args::Flag globals_ply_save_ascii(grp_globals, "ply-save-ascii", "Save PLY files in ASCII format", {"ply-save-ascii"});
     args::ValueFlag<std::string> globals_verbosity(grp_globals, "NAME", "Verbosity level name {trace,debug,info,warn,error,critical,off} [info]", {'v', "verbosity"}, "info");
     args::ValueFlag<int> globals_seed(grp_globals, "N", "Seed for random number generator (-1 for time-based seed) [-1]", {"seed"}, -1);
     args::HelpFlag globals_help(grp_globals, "help", "Show this help message", {'h', "help"});
@@ -55,7 +55,7 @@ int main(int argc, const char **argv)
     globals::output_ext = *globals_output_ext;
     globals::overwrite = globals_overwrite;
     globals::ply_load_default_nsegs = *globals_ply_load_default_nsegs;
-    globals::ply_save_binary = globals_ply_save_binary;
+    globals::ply_save_ascii = globals_ply_save_ascii;
 
     // Seed the random number generator
     int seed = *globals_seed;
