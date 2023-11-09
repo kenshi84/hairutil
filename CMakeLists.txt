@@ -20,6 +20,7 @@ add_executable(hairutil
     src/cmd/convert.cpp
     src/cmd/decompose.cpp
     src/cmd/info.cpp
+    src/cmd/resample.cpp
     src/cmd/subsample.cpp
     src/io/abc.cpp
     src/io/bin.cpp

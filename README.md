@@ -17,6 +17,7 @@ $ hairutil --help
         convert                           Convert file type
         decompose                         Decompose into individual curves
         info                              Print information
+        resample                          Resample strands
         subsample                         Subsample strands
 
       Common options:
@@ -69,6 +70,12 @@ hairutil info --input-file ~/cemyuksel/wCurly.hair
 [info] Default transparency: 0.4
 [info] Default color: (0.28718513, 0.22646429, 0.14465585)
 [info] ================================================================
+```
+
+### `resample` command
+```
+hairutil resample -i ~/Dataset/CT2Hair/output/Bangs.bin -o ply
+# Output saved to ~/CT2Hair/output/Bangs_resampled.ply
 ```
 
 ### `subsample` command
