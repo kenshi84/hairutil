@@ -1,5 +1,7 @@
 # hairutil
-A command-line tool for handling hair files:
+A command-line tool for handling hair files.
+
+Supported file formats:
 - .bin
 - .hair
 - .data

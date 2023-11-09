@@ -5,16 +5,27 @@ project(hairutil)
 set(CMAKE_CXX_STANDARD 17)
 
 include_directories(
-    ${CMAKE_CURRENT_SOURCE_DIR}/ext/args
-    ${CMAKE_CURRENT_SOURCE_DIR}/ext/cyCodeBase
-    ${CMAKE_CURRENT_SOURCE_DIR}/ext/eigen
-    ${CMAKE_CURRENT_SOURCE_DIR}/ext/happly
-    ${CMAKE_CURRENT_SOURCE_DIR}/ext/nanoflann/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/ext/spdlog/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ext/args
+    ext/cyCodeBase
+    ext/eigen
+    ext/happly
+    ext/nanoflann/include
+    ext/spdlog/include
+    include
 )
 
 add_subdirectory(ext/alembic)
+
+set(VERSIONTAG "unknown")
+find_package(Git QUIET)
+if (GIT_FOUND OR Git_FOUND)
+  execute_process(COMMAND "${GIT_EXECUTABLE}" rev-parse --short HEAD RESULT_VARIABLE RET OUTPUT_VARIABLE COMMIT OUTPUT_STRIP_TRAILING_WHITESPACE)
+  if (NOT RET)
+    set(VERSIONTAG "${COMMIT}")
+  endif()
+endif()
+message(STATUS "Version tag: ${VERSIONTAG}")
+configure_file("src/version.cpp.in" "version.cpp")
 
 add_executable(hairutil
     src/cmd/convert.cpp
@@ -30,6 +41,7 @@ add_executable(hairutil
     src/io/ply.cpp
     src/globals.cpp
     src/main.cpp
+    version.cpp
 )
 
 target_link_libraries(hairutil

@@ -31,6 +31,7 @@ namespace globals {
     extern std::function<void(void)> check_error;
     extern std::shared_ptr<cyHairFile> (*cmd_exec)(std::shared_ptr<cyHairFile>);
     extern std::mt19937 rng;
+    extern const char* const VERSIONTAG;
 }
 
 using std::cout;
