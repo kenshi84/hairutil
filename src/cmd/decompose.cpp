@@ -3,13 +3,23 @@
 
 namespace decompose_params {
 bool confirm = false;
+std::set<int> indices;
 }
 
 void cmd::parse::decompose(args::Subparser &parser) {
     args::Flag confirm(parser, "confirm", "Confirm in case of generating huge number of files", {"confirm"});
+    args::ValueFlag<std::string> indices(parser, "indices", "Comma-separated list of indices to extract", {"indices"});
     parser.Parse();
     globals::cmd_exec = cmd::exec::decompose;
     decompose_params::confirm = confirm;
+
+    if (indices) {
+        std::stringstream ss(*indices);
+        std::string token;
+        while (std::getline(ss, token, ',')) {
+            decompose_params::indices.insert(std::stoi(token));
+        }
+    }
 }
 
 std::shared_ptr<cyHairFile> cmd::exec::decompose(std::shared_ptr<cyHairFile> hairfile_in) {
@@ -32,12 +42,18 @@ std::shared_ptr<cyHairFile> cmd::exec::decompose(std::shared_ptr<cyHairFile> hai
 
     unsigned int offset = 0;
     for (unsigned int i = 0; i < header.hair_count; ++i) {
+        const unsigned int segment_count = (header.arrays & _CY_HAIR_FILE_SEGMENTS_BIT) ? hairfile_in->GetSegmentsArray()[i] : header.d_segments;
+
+        if (!decompose_params::indices.empty() && !decompose_params::indices.count(i)) {
+            offset += segment_count + 1;
+            continue;
+        }
+
         auto hairfile_out = std::make_shared<cyHairFile>();
 
         hairfile_out->SetHairCount(1);
 
         // Figure out number of points on this strand
-        const unsigned int segment_count = (header.arrays & _CY_HAIR_FILE_SEGMENTS_BIT) ? hairfile_in->GetSegmentsArray()[i] : header.d_segments;
         hairfile_out->SetPointCount(segment_count + 1);
         hairfile_out->SetDefaultSegmentCount(segment_count);
 
@@ -63,7 +79,7 @@ std::shared_ptr<cyHairFile> cmd::exec::decompose(std::shared_ptr<cyHairFile> hai
 
         // Save
         const std::string output_file = fmt::format("{}/{}.{}", output_dir, i, globals::output_ext);
-        if (header.hair_count < 1000 || (i > 0 && i % 1000 == 0)) {
+        if (header.hair_count < 1000 || (i > 0 && i % 1000 == 0) || !decompose_params::indices.empty()) {
             spdlog::info("Saving to {} ...", output_file);
         }
         globals::save_func(output_file, hairfile_out);
