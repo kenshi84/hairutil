@@ -30,6 +30,7 @@ message(STATUS "Version tag: ${VERSIONTAG}")
 configure_file("src/version.cpp.in" "version.cpp")
 
 add_library(hairutil_cmd
+  src/cmd/autofix.cpp
   src/cmd/convert.cpp
   src/cmd/decompose.cpp
   src/cmd/info.cpp

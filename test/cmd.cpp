@@ -5,6 +5,74 @@
 #include "cmd.h"
 #include "io.h"
 
+namespace {
+
+std::shared_ptr<cyHairFile> generate_test_data() {
+    // Prepare data
+    const std::vector<unsigned short> segments_array = { 3, 4, 0, 6, 7 };
+    const unsigned int hair_count = segments_array.size();
+
+    const unsigned int point_count = std::accumulate(segments_array.begin(), segments_array.end(), hair_count);
+
+    std::vector<float> points_array(point_count * 3);
+    std::vector<float> thickness_array(point_count);
+    std::vector<float> transparency_array(point_count);
+    std::vector<float> colors_array(point_count * 3);
+
+    unsigned int offset = 0;
+    for (unsigned int i = 0; i < hair_count; ++i) {
+        const unsigned short segments = segments_array[i];
+        for (unsigned short j = 0; j <= segments; ++j) {
+            points_array[3*(offset+j) + 0] = i;
+            points_array[3*(offset+j) + 1] = j;
+            points_array[3*(offset+j) + 2] = 0;
+
+            thickness_array[offset+j] = 0.1f * (1 + i) * (1 + j);
+
+            transparency_array[offset+j] = 0.5f;
+
+            colors_array[3*(offset+j) + 0] = (i + 1.0f) / hair_count;
+            colors_array[3*(offset+j) + 1] = (j + 1.0f) / segments;
+            colors_array[3*(offset+j) + 2] = 0.5f;
+        }
+        offset += segments + 1;
+    }
+
+    // Store in the cyHairFile structure
+    std::shared_ptr<cyHairFile> hairfile = std::make_shared<cyHairFile>();
+
+    hairfile->SetArrays(
+        _CY_HAIR_FILE_SEGMENTS_BIT |
+        _CY_HAIR_FILE_POINTS_BIT |
+        _CY_HAIR_FILE_THICKNESS_BIT |
+        _CY_HAIR_FILE_TRANSPARENCY_BIT |
+        _CY_HAIR_FILE_COLORS_BIT
+    );
+    hairfile->SetHairCount(hair_count);
+    hairfile->SetPointCount(point_count);
+
+    std::memcpy(hairfile->GetSegmentsArray(), segments_array.data(), sizeof(unsigned short) * hair_count);
+    std::memcpy(hairfile->GetPointsArray(), points_array.data(), sizeof(float) * point_count * 3);
+    std::memcpy(hairfile->GetThicknessArray(), thickness_array.data(), sizeof(float) * point_count);
+    std::memcpy(hairfile->GetTransparencyArray(), transparency_array.data(), sizeof(float) * point_count);
+    std::memcpy(hairfile->GetColorsArray(), colors_array.data(), sizeof(float) * point_count * 3);
+
+    hairfile->SetDefaultSegmentCount(10);
+    hairfile->SetDefaultThickness(0.1f);
+    hairfile->SetDefaultTransparency(0.5f);
+    hairfile->SetDefaultColor(0.25f, 0.5f, 0.75f);
+
+    return hairfile;
+}
+
+}
+
+TEST(cmd_autofix, empty_strand) {
+    auto hairfile = generate_test_data();
+    auto hairfile_fixed = cmd::exec::autofix(hairfile);
+    EXPECT_NE(hairfile_fixed, nullptr);
+}
+
 TEST(cmd_convert, bin_to_abc) {
     auto hairfile_in = io::load_bin(TEST_DATA_DIR "/Bangs_100.bin"); 
     auto hairfile_out = cmd::exec::convert(hairfile_in);
@@ -51,6 +119,7 @@ TEST(cmd_subsample, bin_to_ply) {
 }
 
 int main(int argc, char **argv) {
+    spdlog::set_level(spdlog::level::trace);
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }

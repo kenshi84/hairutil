@@ -16,6 +16,7 @@ int main(int argc, const char **argv)
         "  .abc", globals::VERSIONTAG));
 
     args::Group grp_commands(parser, "Commands:");
+    args::Command cmd_autofix(grp_commands, "autofix", "Auto-fix issues", cmd::parse::autofix);
     args::Command cmd_convert(grp_commands, "convert", "Convert file type", cmd::parse::convert);
     args::Command cmd_decompose(grp_commands, "decompose", "Decompose into individual curves", cmd::parse::decompose);
     args::Command cmd_info(grp_commands, "info", "Print information", cmd::parse::info);
@@ -30,6 +31,7 @@ int main(int argc, const char **argv)
     args::Flag globals_ply_save_ascii(grp_globals, "ply-save-ascii", "Save PLY files in ASCII format", {"ply-save-ascii"});
     args::ValueFlag<std::string> globals_verbosity(grp_globals, "NAME", "Verbosity level name {trace,debug,info,warn,error,critical,off} [info]", {'v', "verbosity"}, "info");
     args::ValueFlag<int> globals_seed(grp_globals, "N", "Seed for random number generator (-1 for time-based seed) [-1]", {"seed"}, -1);
+    args::Flag globals_no_autofix(grp_globals, "no-autofix", "Do not auto-fix issues in input", {"no-autofix"});
     args::HelpFlag globals_help(grp_globals, "help", "Show this help message", {'h', "help"});
 
     args::GlobalOptions global_options(parser, grp_globals);
@@ -73,7 +75,7 @@ int main(int argc, const char **argv)
     }
     globals::rng.seed(seed);
 
-    if (globals::cmd_exec == cmd::exec::info) {
+    if (globals::cmd_exec == cmd::exec::info || globals::cmd_exec == cmd::exec::autofix) {
         if (globals::output_ext != "") {
             spdlog::warn("Ignoring --output-ext");
         }
@@ -92,6 +94,12 @@ int main(int argc, const char **argv)
         return 1;
     }
     globals::load_func = globals::supported_ext.at(globals::input_ext).first;
+
+    if (globals::cmd_exec == cmd::exec::autofix) {
+        if (globals_no_autofix)
+            spdlog::warn("Ignoring --no-autofix");
+        globals::output_ext = globals::input_ext;
+    }
 
     // Check if output file extension is supported
     if (globals::cmd_exec != cmd::exec::info) {
@@ -120,6 +128,13 @@ int main(int argc, const char **argv)
 
         spdlog::info("Loading from {} ...", globals::input_file);
         auto hairfile_in = globals::load_func(globals::input_file);
+
+        // Auto-fix issues in input
+        if (!globals_no_autofix && globals::cmd_exec != cmd::exec::autofix) {
+            auto hairfile_fixed = cmd::exec::autofix(hairfile_in);
+            if (hairfile_fixed)
+                hairfile_in = hairfile_fixed;
+        }
 
         spdlog::info("Number of strands: {}", hairfile_in->GetHeader().hair_count);
         spdlog::info("Number of points: {}", hairfile_in->GetHeader().point_count);
