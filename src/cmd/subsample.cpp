@@ -117,12 +117,15 @@ std::shared_ptr<cyHairFile> cmd::exec::subsample(std::shared_ptr<cyHairFile> hai
     in_point_offset = 0;
     unsigned int out_hair_idx = 0;
     unsigned int out_point_offset = 0;
+    spdlog::debug("Input-output index mapping (strand idx ; root vertex idx):");
     for (unsigned int in_hair_idx = 0; in_hair_idx < header_in.hair_count; ++in_hair_idx)
     {
         const unsigned int nsegs = hairfile_in->GetSegmentsArray() ? hairfile_in->GetSegmentsArray()[in_hair_idx] : header_in.d_segments;
 
         if (selected[in_hair_idx])
         {
+            spdlog::debug("  {} -> {} ; {} -> {}", in_hair_idx, out_hair_idx, in_point_offset, out_point_offset);
+
             // Copy segment info if available
             if (header_in.arrays & _CY_HAIR_FILE_SEGMENTS_BIT)
                 hairfile_out->GetSegmentsArray()[out_hair_idx++] = nsegs;
