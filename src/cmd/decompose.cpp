@@ -8,7 +8,7 @@ std::set<int> indices;
 
 void cmd::parse::decompose(args::Subparser &parser) {
     args::Flag confirm(parser, "confirm", "Confirm in case of generating huge number of files", {"confirm"});
-    args::ValueFlag<std::string> indices(parser, "indices", "Comma-separated list of indices to extract", {"indices"});
+    args::ValueFlag<std::string> indices(parser, "indices", "Comma-separated list of strand indices to extract", {"indices"});
     parser.Parse();
     globals::cmd_exec = cmd::exec::decompose;
     decompose_params::confirm = confirm;
@@ -26,7 +26,7 @@ std::shared_ptr<cyHairFile> cmd::exec::decompose(std::shared_ptr<cyHairFile> hai
     const cyHairFile::Header &header = hairfile_in->GetHeader();
 
     // Confirm generation of huge number of files
-    if (header.hair_count > 20000 && !decompose_params::confirm) {
+    if (decompose_params::indices.empty() && header.hair_count > 20000 && !decompose_params::confirm) {
         throw std::runtime_error(fmt::format("Generating {} files. Use --confirm to proceed", header.hair_count));
     }
 
