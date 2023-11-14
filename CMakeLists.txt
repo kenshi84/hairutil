@@ -36,6 +36,7 @@ add_library(hairutil_cmd
   src/cmd/info.cpp
   src/cmd/resample.cpp
   src/cmd/subsample.cpp
+  src/cmd/transform.cpp
 )
 
 add_library(hairutil_io
@@ -88,3 +89,11 @@ target_link_libraries(test_cmd
   gtest_main
 )
 add_test(NAME test_cmd COMMAND test_cmd)
+
+add_executable(test_util
+  test/util.cpp
+)
+target_link_libraries(test_util
+  gtest_main
+)
+add_test(NAME test_util COMMAND test_util)

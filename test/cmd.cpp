@@ -5,6 +5,8 @@
 #include "cmd.h"
 #include "io.h"
 
+using namespace Eigen;
+
 namespace {
 
 std::shared_ptr<cyHairFile> generate_test_data() {
@@ -116,6 +118,23 @@ TEST(cmd_subsample, bin_to_ply) {
     auto hairfile_out = cmd::exec::subsample(hairfile_in);
 
     io::save_ply("test_cmd_subsample_out.ply", hairfile_out);
+}
+
+namespace transform_params {
+extern float s;
+extern Vector3f t;
+extern Matrix3f R;
+}
+TEST(cmd_transform, bin_to_ply) {
+    auto hairfile_in = io::load_bin(TEST_DATA_DIR "/Bangs_100.bin");
+
+    transform_params::s = 1.2;
+    transform_params::t << 12.3, 45.6, 78.9;
+    transform_params::R = AngleAxisf(1.2, Vector3f(1, 2, 3).normalized()).toRotationMatrix();
+
+    auto hairfile_out = cmd::exec::transform(hairfile_in);
+
+    io::save_ply("test_cmd_transform_out.ply", hairfile_out);
 }
 
 int main(int argc, char **argv) {

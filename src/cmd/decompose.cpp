@@ -1,5 +1,6 @@
 #include "cmd.h"
 #include "io.h"
+#include "util.h"
 
 namespace decompose_params {
 bool confirm = false;
@@ -8,17 +9,14 @@ std::set<int> indices;
 
 void cmd::parse::decompose(args::Subparser &parser) {
     args::Flag confirm(parser, "confirm", "Confirm in case of generating huge number of files", {"confirm"});
-    args::ValueFlag<std::string> indices(parser, "indices", "Comma-separated list of strand indices to extract", {"indices"});
+    args::ValueFlag<std::string> indices(parser, "N,...", "Comma-separated list of strand indices to extract", {"indices"});
     parser.Parse();
     globals::cmd_exec = cmd::exec::decompose;
     decompose_params::confirm = confirm;
 
     if (indices) {
-        std::stringstream ss(*indices);
-        std::string token;
-        while (std::getline(ss, token, ',')) {
-            decompose_params::indices.insert(std::stoi(token));
-        }
+        const std::vector<int> indices_vec = util::parse_comma_separated_values<int>(*indices);
+        decompose_params::indices.insert(indices_vec.begin(), indices_vec.end());
     }
 }
 

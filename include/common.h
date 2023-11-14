@@ -13,6 +13,7 @@
 
 #include <args.hxx>
 #include <spdlog/spdlog.h>
+#include <spdlog/fmt/ostr.h>
 #include <Eigen/Geometry>
 
 #define CY_NO_INTRIN_H

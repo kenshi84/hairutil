@@ -22,6 +22,7 @@ int main(int argc, const char **argv)
     args::Command cmd_info(grp_commands, "info", "Print information", cmd::parse::info);
     args::Command cmd_resample(grp_commands, "resample", "Resample strands s.t. every segment is shorter than twice the shortest segment", cmd::parse::resample);
     args::Command cmd_subsample(grp_commands, "subsample", "Subsample strands", cmd::parse::subsample);
+    args::Command cmd_transform(grp_commands, "transform", "Transform strand points", cmd::parse::transform);
 
     args::Group grp_globals("Common options:");
     args::ValueFlag<std::string> globals_input_file(grp_globals, "PATH", "(REQUIRED) Input file", {'i', "input-file"}, args::Options::Required);

@@ -21,6 +21,7 @@ $ hairutil --help
         info                              Print information
         resample                          Resample strands
         subsample                         Subsample strands
+        transform                         Transform strand points
 
       Common options:
         -i[PATH], --input-file=[PATH]     (REQUIRED) Input file
