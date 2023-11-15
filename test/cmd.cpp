@@ -1,9 +1,8 @@
-#include <filesystem>
-
 #include <gtest/gtest.h>
 
-#include "cmd.h"
 #include "io.h"
+
+extern int test_main(int argc, const char **argv);
 
 using namespace Eigen;
 
@@ -70,71 +69,87 @@ std::shared_ptr<cyHairFile> generate_test_data() {
 }
 
 TEST(cmd_autofix, empty_strand) {
-    auto hairfile = generate_test_data();
-    auto hairfile_fixed = cmd::exec::autofix(hairfile);
-    EXPECT_NE(hairfile_fixed, nullptr);
+    io::save_ply("autofix_test.ply", generate_test_data());
+    std::vector<const char*> args = {
+        "test_cmd",
+        "autofix",
+        "-i", "autofix_test.ply",
+        "--overwrite"
+    };
+    EXPECT_EQ(test_main(args.size(), args.data()), 0);
 }
 
 TEST(cmd_convert, bin_to_abc) {
-    auto hairfile_in = io::load_bin(TEST_DATA_DIR "/Bangs_100.bin"); 
-    auto hairfile_out = cmd::exec::convert(hairfile_in);
-    io::save_abc("test_cmd_convert_out.abc", hairfile_out);
+    std::vector<const char*> args = {
+        "test_cmd",
+        "convert",
+        "-i", TEST_DATA_DIR "/Bangs_100.bin",
+        "-o", "abc",
+        "--overwrite"
+    };
+    EXPECT_EQ(test_main(args.size(), args.data()), 0);
 }
 
 TEST(cmd_decompose, bin_to_ply) {
-    std::filesystem::copy(TEST_DATA_DIR "/Bangs_20.bin", "test_cmd_decompose.bin", std::filesystem::copy_options::overwrite_existing);
-
-    auto hairfile_in = io::load_bin("test_cmd_decompose.bin");
-    globals::input_file_wo_ext = "test_cmd_decompose";
-    globals::output_ext = "ply";
-    globals::overwrite = true;
-    globals::save_func = io::save_ply;
-
-    cmd::exec::decompose(hairfile_in);
+    std::vector<const char*> args = {
+        "test_cmd",
+        "decompose",
+        "-i", TEST_DATA_DIR "/Bangs_20.bin",
+        "-o", "ply",
+        "--overwrite"
+    };
+    EXPECT_EQ(test_main(args.size(), args.data()), 0);
 }
 
 TEST(cmd_info, ply) {
-    auto hairfile = io::load_ply(TEST_DATA_DIR "/Bangs_100_binary.ply");
-    cmd::exec::info(hairfile);
+    std::vector<const char*> args = {
+        "test_cmd",
+        "info",
+        "-i", TEST_DATA_DIR "/Bangs_100_binary.ply",
+    };
+    EXPECT_EQ(test_main(args.size(), args.data()), 0);
 }
 
 TEST(cmd_resample, bin_to_ply) {
-    auto hairfile_in = io::load_bin(TEST_DATA_DIR "/Bangs_20.bin");
-    auto hairfile_out = cmd::exec::resample(hairfile_in);
-    io::save_ply("test_cmd_resample_out.ply", hairfile_out);
-}
-
-namespace susbample_params {
-extern unsigned int target_count;
-extern float scale_factor;
+    std::vector<const char*> args = {
+        "test_cmd",
+        "resample",
+        "-i", TEST_DATA_DIR "/Bangs_100.bin",
+        "-o", "ply",
+        "--overwrite",
+    };
+    EXPECT_EQ(test_main(args.size(), args.data()), 0);
 }
 
 TEST(cmd_subsample, bin_to_ply) {
-    auto hairfile_in = io::load_bin(TEST_DATA_DIR "/Bangs_100.bin");
-
-    globals::rng.seed(0);
-    susbample_params::target_count = 20;
-    susbample_params::scale_factor = 0.9;
-    auto hairfile_out = cmd::exec::subsample(hairfile_in);
-
-    io::save_ply("test_cmd_subsample_out.ply", hairfile_out);
+    std::vector<const char*> args = {
+        "test_cmd",
+        "subsample",
+        "-i", TEST_DATA_DIR "/Bangs_100.bin",
+        "-o", "ply",
+        "--overwrite",
+        "--target-count", "20",
+        "--scale-factor", "0.9",
+        "--seed", "0"
+    };
+    EXPECT_EQ(test_main(args.size(), args.data()), 0);
 }
 
-namespace transform_params {
-extern float s;
-extern Vector3f t;
-extern Matrix3f R;
-}
 TEST(cmd_transform, bin_to_ply) {
-    auto hairfile_in = io::load_bin(TEST_DATA_DIR "/Bangs_100.bin");
-
-    transform_params::s = 1.2;
-    transform_params::t << 12.3, 45.6, 78.9;
-    transform_params::R = AngleAxisf(1.2, Vector3f(1, 2, 3).normalized()).toRotationMatrix();
-
-    auto hairfile_out = cmd::exec::transform(hairfile_in);
-
-    io::save_ply("test_cmd_transform_out.ply", hairfile_out);
+    std::vector<const char*> args = {
+        "test_cmd",
+        "transform",
+        "-i", TEST_DATA_DIR "/Bangs_100.bin",
+        "-o", "ply",
+        "--overwrite",
+        "--scale", "1.2",
+        "--translate", "12.3,45.6,78.9",
+        "--rotate",
+        "0.407903582,-0.656201959,0.634833455,"
+        "0.838385462,0.54454118,0.0241773129,"
+        "-0.361558199,0.52237314,0.77227056"
+    };
+    EXPECT_EQ(test_main(args.size(), args.data()), 0);
 }
 
 int main(int argc, char **argv) {

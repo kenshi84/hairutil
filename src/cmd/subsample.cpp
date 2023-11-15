@@ -4,7 +4,7 @@
 
 using namespace Eigen;
 
-namespace susbample_params {
+namespace {
 unsigned int target_count;
 float scale_factor;
 }
@@ -14,20 +14,20 @@ void cmd::parse::subsample(args::Subparser &parser) {
     args::ValueFlag<float> scale_factor(parser, "R", "Factor for scaling down the Poisson disk radius [0.9]", {"scale-factor"}, 0.9);
     parser.Parse();
     globals::cmd_exec = cmd::exec::subsample;
-    globals::output_file = [](){ return globals::input_file_wo_ext + "_" + std::to_string(susbample_params::target_count) + "." + globals::output_ext; };
+    globals::output_file = [](){ return globals::input_file_wo_ext + "_" + std::to_string(::target_count) + "." + globals::output_ext; };
     globals::check_error = [](){
-        if (susbample_params::scale_factor >= 1.0) {
+        if (::scale_factor >= 1.0) {
             throw std::runtime_error("--scale-factor must be less than 1.0");
         }
     };
-    susbample_params::target_count = *target_count;
-    susbample_params::scale_factor = *scale_factor;
+    ::target_count = *target_count;
+    ::scale_factor = *scale_factor;
 }
 
 std::shared_ptr<cyHairFile> cmd::exec::subsample(std::shared_ptr<cyHairFile> hairfile_in) {
     const auto& header_in = hairfile_in->GetHeader();
 
-    if (header_in.hair_count < susbample_params::target_count) {
+    if (header_in.hair_count < ::target_count) {
         throw std::runtime_error("Target number of hair strands must be less than the number of hair strands in the input file");
     }
 
@@ -57,7 +57,7 @@ std::shared_ptr<cyHairFile> cmd::exec::subsample(std::shared_ptr<cyHairFile> hai
 
     // Loop while the number of selected strands is below target
     unsigned int num_selected;
-    for ( ; (num_selected = std::accumulate(selected.begin(), selected.end(), 0)) < susbample_params::target_count; )
+    for ( ; (num_selected = std::accumulate(selected.begin(), selected.end(), 0)) < ::target_count; )
     {
         if (num_selected && num_selected % 100 == 0)
             spdlog::info("Selected {} strands", num_selected);
@@ -82,7 +82,7 @@ std::shared_ptr<cyHairFile> cmd::exec::subsample(std::shared_ptr<cyHairFile> hai
         // If all points are covered, reduce the Poisson disk radius
         if (std::accumulate(covered.begin(), covered.end(), 0) == header_in.hair_count)
         {
-            r *= susbample_params::scale_factor;
+            r *= ::scale_factor;
         }
         else
         {

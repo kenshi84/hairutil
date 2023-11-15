@@ -32,4 +32,8 @@
 *.app
 
 build/
+test/data/Bangs_100_20.ply
+test/data/Bangs_100_resampled.ply
+test/data/Bangs_100_tfm_*.ply
+test/data/Bangs_20_decomposed_ply
 .vscode/

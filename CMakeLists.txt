@@ -65,10 +65,11 @@ target_link_libraries(hairutil
 add_subdirectory(ext/googletest)
 enable_testing()
 
+# Test data directory
 set(REL_TEST_DATA_DIR "${CMAKE_CURRENT_SOURCE_DIR}/test/data/")
 get_filename_component(TEST_DATA_DIR "${REL_TEST_DATA_DIR}" ABSOLUTE)
-add_definitions(-DTEST_DATA_DIR=\"${TEST_DATA_DIR}\")
 
+# IO tests
 add_executable(test_io
   src/globals.cpp
   test/io.cpp
@@ -77,16 +78,26 @@ target_link_libraries(test_io
   hairutil_io
   gtest_main
 )
+target_compile_definitions(test_io
+  PRIVATE TEST_DATA_DIR="${TEST_DATA_DIR}"
+)
 add_test(NAME test_io COMMAND test_io)
 
+# Command tests
 add_executable(test_cmd
   src/globals.cpp
+  src/main.cpp
   test/cmd.cpp
+  version.cpp
 )
 target_link_libraries(test_cmd
   hairutil_cmd
   hairutil_io
   gtest_main
+)
+target_compile_definitions(test_cmd
+  PRIVATE TEST_DATA_DIR="${TEST_DATA_DIR}"
+  PRIVATE TEST_MODE=1
 )
 add_test(NAME test_cmd COMMAND test_cmd)
 

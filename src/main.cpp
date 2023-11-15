@@ -3,7 +3,11 @@
 #include "cmd.h"
 #include "io.h"
 
+#ifdef TEST_MODE
+int test_main(int argc, const char **argv)
+#else
 int main(int argc, const char **argv)
+#endif
 {
     args::ArgumentParser parser(fmt::format(
         "A command-line tool for handling hair files (version: {})\n"
