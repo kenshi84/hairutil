@@ -1,5 +1,7 @@
 #include "cmd.h"
 
+using namespace Eigen;
+
 void cmd::parse::autofix(args::Subparser &parser) {
     parser.Parse();
     globals::cmd_exec = cmd::exec::autofix;
@@ -25,6 +27,7 @@ std::shared_ptr<cyHairFile> cmd::exec::autofix(std::shared_ptr<cyHairFile> hairf
 
     bool fixed = false;
 
+    unsigned int total_num_err_segments = 0;
     unsigned int out_hair_count = 0;
     unsigned int offset = 0;
     for (unsigned int i = 0; i < in_hair_count; ++i) {
@@ -37,11 +40,20 @@ std::shared_ptr<cyHairFile> cmd::exec::autofix(std::shared_ptr<cyHairFile> hairf
             continue;
         }
 
-        if (has_segments) {
-            out_segments.push_back(num_segments);
-        }
+        int num_err_segments = 0;
 
+        Vector3f prev_point;
         for (unsigned int j = 0; j <= num_segments; ++j) {
+            const Vector3f point = Map<Vector3f>(hairfile_in->GetPointsArray() + 3*(offset + j));
+
+            if (j > 0 && prev_point == point) {
+                spdlog::warn("Strand {} has duplicated point at segment {}, removed", i, j);
+                fixed = true;
+                ++num_err_segments;
+                continue;
+            }
+            prev_point = point;
+
             for (unsigned int k = 0; k < 3; ++k) {
                 out_points.push_back(hairfile_in->GetPointsArray()[3*(offset + j) + k]);
                 if (has_color) {
@@ -56,6 +68,9 @@ std::shared_ptr<cyHairFile> cmd::exec::autofix(std::shared_ptr<cyHairFile> hairf
             }
         }
 
+        out_segments.push_back(num_segments - num_err_segments);
+
+        total_num_err_segments += num_err_segments;
         ++out_hair_count;
         offset += num_segments + 1;
     }
@@ -75,9 +90,18 @@ std::shared_ptr<cyHairFile> cmd::exec::autofix(std::shared_ptr<cyHairFile> hairf
     hairfile_out->SetPointCount(out_points.size() / 3);
     hairfile_out->SetArrays(header_in.arrays);
 
+    if (total_num_err_segments > 0) {
+        hairfile_out->SetArrays(header_in.arrays | _CY_HAIR_FILE_SEGMENTS_BIT);
+        hairfile_out->SetDefaultSegmentCount(0);
+    }
+
     // Copy data to arrays of hairfile_out
     std::memcpy(hairfile_out->GetPointsArray(), out_points.data(), out_points.size() * sizeof(float));
-    if (has_segments) std::memcpy(hairfile_out->GetSegmentsArray(), out_segments.data(), out_segments.size() * sizeof(unsigned short));
+
+    if (has_segments || total_num_err_segments > 0) {
+        std::memcpy(hairfile_out->GetSegmentsArray(), out_segments.data(), out_segments.size() * sizeof(unsigned short));
+    }
+
     if (has_thickness) std::memcpy(hairfile_out->GetThicknessArray(), out_thickness.data(), out_thickness.size() * sizeof(float));
     if (has_transparency) std::memcpy(hairfile_out->GetTransparencyArray(), out_transparency.data(), out_transparency.size() * sizeof(float));
     if (has_color) std::memcpy(hairfile_out->GetColorsArray(), out_color.data(), out_color.size() * sizeof(float));
