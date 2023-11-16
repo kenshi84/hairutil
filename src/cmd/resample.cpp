@@ -2,10 +2,21 @@
 
 using namespace Eigen;
 
+namespace {
+float ignore_segment_length_ratio;
+}
+
 void cmd::parse::resample(args::Subparser &parser) {
+    args::ValueFlag<float> ignore_segment_length_ratio(parser, "R", "Ignore segments shorter than this ratio times the maximum segment length [0.2]", {"ignore-segment-length-ratio"}, 0.2f);
     parser.Parse();
     globals::cmd_exec = cmd::exec::resample;
     globals::output_file = [](){ return globals::input_file_wo_ext + "_resampled." + globals::output_ext; };
+    globals::check_error = [](){
+        if (::ignore_segment_length_ratio < 0 || ::ignore_segment_length_ratio >= 1) {
+            throw std::runtime_error(fmt::format("Invalid ignore segment length ratio: {}", ::ignore_segment_length_ratio));
+        }
+    };
+    ::ignore_segment_length_ratio = *ignore_segment_length_ratio;
 }
 
 std::shared_ptr<cyHairFile> cmd::exec::resample(std::shared_ptr<cyHairFile> hairfile_in) {
@@ -28,37 +39,86 @@ std::shared_ptr<cyHairFile> cmd::exec::resample(std::shared_ptr<cyHairFile> hair
         if (i > 0 && i % 100 == 0)
             spdlog::debug("Processing hair {}/{}", i, hair_count);
 
+        // Insert the first point
+        const Vector3f& p_first = Map<Vector3f>(hairfile_in->GetPointsArray() + 3 * offset);
+        points_per_strand[i].insert(points_per_strand[i].end(), p_first.data(), p_first.data() + 3);
+        if (has_thickness) {
+            const float& t_first = hairfile_in->GetThicknessArray()[offset];
+            thickness_per_strand[i].push_back(t_first);
+        }
+        if (has_transparency) {
+            const float& t_first = hairfile_in->GetTransparencyArray()[offset];
+            transparency_per_strand[i].push_back(t_first);
+        }
+        if (has_color) {
+            const Vector3f& c_first = Map<Vector3f>(hairfile_in->GetColorsArray() + 3 * (offset));
+            color_per_strand[i].insert(color_per_strand[i].end(), c_first.data(), c_first.data() + 3);
+        }
+
         const unsigned int num_segments = has_segments ? hairfile_in->GetSegmentsArray()[i] : header_in.d_segments;
 
         // Compute segment length
         std::vector<float> segment_length(num_segments);
+        std::vector<Vector3f> segment_delta(num_segments);
         for (unsigned int j = 0; j < num_segments; ++j) {
             const Vector3f& p0 = Map<Vector3f>(hairfile_in->GetPointsArray() + 3 * (offset + j));
             const Vector3f& p1 = Map<Vector3f>(hairfile_in->GetPointsArray() + 3 * (offset + j + 1));
-            segment_length[j] = (p1 - p0).norm();
+            segment_delta[j] = p1 - p0;
+            segment_length[j] = segment_delta[j].norm();
         }
 
-        // Get the minimum segment length
-        const float segment_length_min = *std::min_element(segment_length.begin(), segment_length.end());
+        // Get the maximum segment length
+        const auto segment_length_max = std::max_element(segment_length.begin(), segment_length.end());
+        const float ignore_segment_length_threshold = ignore_segment_length_ratio * (*segment_length_max);
+
+        // Determine which segments to ignore
+        std::vector<unsigned char> segment_ignored(num_segments);
+        std::transform(segment_length.begin(), segment_length.end(), segment_ignored.begin(),
+            [&](float l) { return l < ignore_segment_length_threshold; }
+        );
+
+        const unsigned int num_ignored_segments = std::accumulate(segment_ignored.begin(), segment_ignored.end(), 0,
+            [](unsigned int sum, unsigned char b){ return sum + b; }
+        );
+        if (num_ignored_segments > 0) {
+            spdlog::warn("Hair {} has {} ignored segments", i, num_ignored_segments);
+            spdlog::debug("Segment lengths:");
+            for (unsigned int j = 0; j < num_segments; ++j) {
+                spdlog::debug("  {}: {}", j, segment_length[j]);
+            }
+            spdlog::debug("Max at {}: {}", std::distance(segment_length.begin(), segment_length_max), *segment_length_max);
+            spdlog::debug("Length threshold: {}", ignore_segment_length_threshold);
+            spdlog::debug("Ignored segments:");
+            for (unsigned int j = 0; j < num_segments; ++j) {
+                if (segment_ignored[j])
+                    spdlog::debug("  {}: {}", j, segment_length[j]);
+            }
+        }
+
+        // Get the minimum segment length among the non-ignored segments
+        const float segment_length_min = [&](){
+            float res = std::numeric_limits<float>::max();
+            for (unsigned int j = 0; j < num_segments; ++j) {
+                if (!segment_ignored[j])
+                    res = std::min(res, segment_length[j]);
+            }
+            return res;
+        }();
 
         // Subdivide each segment
-        std::vector<std::vector<float>> points_per_segment(num_segments);
+        std::vector<std::vector<Vector3f>> deltas_per_segment(num_segments);
         std::vector<std::vector<float>> thickness_per_segment(num_segments);
         std::vector<std::vector<float>> transparency_per_segment(num_segments);
         std::vector<std::vector<float>> color_per_segment(num_segments);
 
         for (unsigned int j = 0; j < num_segments; ++j) {
+            if (segment_ignored[j])
+                continue;
+
             const unsigned int num_subsegments = std::floor(segment_length[j] / segment_length_min);
 
             // Point
-            points_per_segment[j].resize(3*num_subsegments);
-            const Vector3f& p0 = Map<Vector3f>(hairfile_in->GetPointsArray() + 3 * (offset + j));
-            const Vector3f& p1 = Map<Vector3f>(hairfile_in->GetPointsArray() + 3 * (offset + j + 1));
-            Vector3f p = p0;
-            Vector3f dp = (p1 - p0) / num_subsegments;
-            for (unsigned int k = 0; k < num_subsegments; ++k, p += dp) {
-                std::memcpy(points_per_segment[j].data() + 3*k, p.data(), 3*sizeof(float));
-            }
+            deltas_per_segment[j].resize(num_subsegments, segment_delta[j] / num_subsegments);
 
             // Thickness
             if (has_thickness) {
@@ -66,8 +126,9 @@ std::shared_ptr<cyHairFile> cmd::exec::resample(std::shared_ptr<cyHairFile> hair
                 const float& t0 = hairfile_in->GetThicknessArray()[offset + j];
                 const float& t1 = hairfile_in->GetThicknessArray()[offset + j + 1];
                 const float dt = (t1 - t0) / num_subsegments;
-                for (unsigned int k = 0; k < num_subsegments; ++k) {
-                    thickness_per_segment[j][k] = t0 + k * dt;
+                float t = t0 + dt;
+                for (unsigned int k = 0; k < num_subsegments; ++k, t += dt) {
+                    thickness_per_segment[j][k] = t;
                 }
             }
 
@@ -77,8 +138,9 @@ std::shared_ptr<cyHairFile> cmd::exec::resample(std::shared_ptr<cyHairFile> hair
                 const float& t0 = hairfile_in->GetTransparencyArray()[offset + j];
                 const float& t1 = hairfile_in->GetTransparencyArray()[offset + j + 1];
                 const float dt = (t1 - t0) / num_subsegments;
-                for (unsigned int k = 0; k < num_subsegments; ++k) {
-                    transparency_per_segment[j][k] = t0 + k * dt;
+                float t = t0 + dt;
+                for (unsigned int k = 0; k < num_subsegments; ++k, t += dt) {
+                    transparency_per_segment[j][k] = t;
                 }
             }
 
@@ -87,8 +149,8 @@ std::shared_ptr<cyHairFile> cmd::exec::resample(std::shared_ptr<cyHairFile> hair
                 color_per_segment[j].resize(3*num_subsegments);
                 const Vector3f& c0 = Map<Vector3f>(hairfile_in->GetColorsArray() + 3 * (offset + j));
                 const Vector3f& c1 = Map<Vector3f>(hairfile_in->GetColorsArray() + 3 * (offset + j + 1));
-                Vector3f c = c0;
                 Vector3f dc = (c1 - c0) / num_subsegments;
+                Vector3f c = c0 + dc;
                 for (unsigned int k = 0; k < num_subsegments; ++k, c += dc) {
                     std::memcpy(color_per_segment[j].data() + 3*k, c.data(), 3*sizeof(float));
                 }
@@ -96,13 +158,20 @@ std::shared_ptr<cyHairFile> cmd::exec::resample(std::shared_ptr<cyHairFile> hair
         }
 
         // Determine the total number of subsegments
-        const unsigned int num_subsegments_total = std::accumulate(points_per_segment.begin(), points_per_segment.end(), 0, [](unsigned int sum, const std::vector<float>& v){ return sum + v.size() / 3; });
+        const unsigned int num_subsegments_total = std::accumulate(deltas_per_segment.begin(), deltas_per_segment.end(), 0, 
+            [](unsigned int sum, const std::vector<Vector3f>& v){ return sum + v.size(); }
+        );
 
-        // Merge all the subdivided segments
+        // Integrate all the subsegment deltas
         points_per_strand[i].reserve(3*(num_subsegments_total + 1));
+        Vector3f p = Map<Vector3f>(points_per_strand[i].data());
         for (unsigned int j = 0; j < num_segments; ++j) {
-            points_per_strand[i].insert(points_per_strand[i].end(), points_per_segment[j].begin(), points_per_segment[j].end());
+            for (size_t k = 0; k < deltas_per_segment[j].size(); ++k) {
+                p += deltas_per_segment[j][k];
+                points_per_strand[i].insert(points_per_strand[i].end(), p.data(), p.data() + 3);
+            }
         }
+        // Merge all the subsegment arrays for thickness, transparency, and color
         if (has_thickness) {
             thickness_per_strand[i].reserve(num_subsegments_total + 1);
             for (unsigned int j = 0; j < num_segments; ++j) {
@@ -122,26 +191,12 @@ std::shared_ptr<cyHairFile> cmd::exec::resample(std::shared_ptr<cyHairFile> hair
             }
         }
 
-        // Append the last point
-        const Vector3f& p_last = Map<Vector3f>(hairfile_in->GetPointsArray() + 3 * (offset + num_segments));
-        points_per_strand[i].insert(points_per_strand[i].end(), p_last.data(), p_last.data() + 3);
-        if (has_thickness) {
-            const float& t_last = hairfile_in->GetThicknessArray()[offset + num_segments];
-            thickness_per_strand[i].push_back(t_last);
-        }
-        if (has_transparency) {
-            const float& t_last = hairfile_in->GetTransparencyArray()[offset + num_segments];
-            transparency_per_strand[i].push_back(t_last);
-        }
-        if (has_color) {
-            const Vector3f& c_last = Map<Vector3f>(hairfile_in->GetColorsArray() + 3 * (offset + num_segments));
-            color_per_strand[i].insert(color_per_strand[i].end(), c_last.data(), c_last.data() + 3);
-        }
-
         offset += num_segments + 1;
     }
 
-    const unsigned int num_points_total = std::accumulate(points_per_strand.begin(), points_per_strand.end(), 0, [](unsigned int sum, const std::vector<float>& v){ return sum + v.size() / 3; });
+    const unsigned int num_points_total = std::accumulate(points_per_strand.begin(), points_per_strand.end(), 0,
+        [](unsigned int sum, const std::vector<float>& v){ return sum + v.size() / 3; }
+    );
 
     // Create output hair file
     std::shared_ptr<cyHairFile> hairfile_out = std::make_shared<cyHairFile>();
