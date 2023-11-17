@@ -90,4 +90,14 @@ inline std::vector<T> parse_comma_separated_values(const std::string& str) {
     return values;
 }
 
+template <class Container>
+inline std::string join_vector_to_string(const Container& c, const char delimiter) {
+    std::string res;
+    for (const auto& i : c) {
+        res += std::to_string(i) + delimiter;
+    }
+    res.pop_back();
+    return res;
+}
+
 }

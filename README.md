@@ -106,10 +106,17 @@ $ hairutil subsample --help
       --target-count=[N]                (*)Target number of hair strands
       --scale-factor=[R]                Factor for scaling down the Poisson disk
                                         radius [0.9]
+      --indices=[N,...]                 Comma-separated list of strand indices
+                                        to extract
 ```
 
 Example:
 ```
 hairutil subsample --input-file ~/CT2Hair/output/Bangs.bin --output-ext bin --target-count 1000
 # Output saved to ~/CT2Hair/output/Bangs_1000.bin
+```
+
+```
+hairutil subsample -i test/data/Bangs_100.bin -o ply --indices 65,32,4,36,0
+# Output saved to test/data/Bangs_100_indices_0_4_32_36_65.ply
 ```

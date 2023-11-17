@@ -55,6 +55,11 @@ int main(int argc, const char **argv)
         std::cerr << e.what() << std::endl << parser;
         return 1;
     }
+    catch (const std::exception &e)
+    {
+        spdlog::error("{}", e.what());
+        return 1;
+    }
 
     spdlog::info("verbosity: {}", *globals_verbosity);
     spdlog::set_level(

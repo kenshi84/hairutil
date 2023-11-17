@@ -135,6 +135,17 @@ TEST(cmd_subsample, bin_to_ply) {
     EXPECT_EQ(test_main(args.size(), args.data()), 0);
 }
 
+TEST(cmd_subsample, indices) {
+    std::vector<const char*> args = {
+        "test_cmd",
+        "subsample",
+        "-i", TEST_DATA_DIR "/Bangs_100.bin",
+        "-o", "ply",
+        "--indices", "65,32,4,36,0"
+    };
+    EXPECT_EQ(test_main(args.size(), args.data()), 0);
+}
+
 TEST(cmd_transform, bin_to_ply) {
     std::vector<const char*> args = {
         "test_cmd",
