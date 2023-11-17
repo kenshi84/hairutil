@@ -28,7 +28,7 @@ std::shared_ptr<cyHairFile> io::load_bin(const std::string &filename) {
 
     for (int hair_idx = 0; hair_idx < hair_count; ++hair_idx) {
         if (hair_idx > 0 && hair_idx % 100 == 0)
-            spdlog::debug("Processing hair {}/{}", hair_idx, hair_count);
+            spdlog::trace("Processing hair {}/{}", hair_idx, hair_count);
 
         // Read the number of points in the strand
         int num_points;
@@ -74,7 +74,7 @@ void io::save_bin(const std::string &filename, const std::shared_ptr<cyHairFile>
 
     for (int hair_idx = 0; hair_idx < header.hair_count; ++hair_idx) {
         if (hair_idx > 0 && hair_idx % 100 == 0)
-            spdlog::debug("Processing hair {}/{}", hair_idx, header.hair_count);
+            spdlog::trace("Processing hair {}/{}", hair_idx, header.hair_count);
 
         // Write the number of points in the strand
         int num_points = (hairfile->GetSegmentsArray() ? hairfile->GetSegmentsArray()[hair_idx] : header.d_segments) + 1;

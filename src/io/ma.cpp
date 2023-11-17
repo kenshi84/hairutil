@@ -20,7 +20,7 @@ std::shared_ptr<cyHairFile> io::load_ma(const std::string &filename) {
     // Loop until the end of file
     for ( ; std::getline(ifs, line); ) {
         if (segments_array.size() && segments_array.size() % 100 == 0)
-            spdlog::debug("Processing hair {}", segments_array.size());
+            spdlog::trace("Processing hair {}", segments_array.size());
 
         // Skip the first 5 lines
         for (int i = 0; i < 5; ++i)
@@ -74,7 +74,7 @@ void io::save_ma(const std::string &filename, const std::shared_ptr<cyHairFile> 
 
     for (int hair_idx = 0; hair_idx < header.hair_count; ++hair_idx) {
         if (hair_idx && (hair_idx % 100 == 0))
-            spdlog::debug("Processing hair {}/{}", hair_idx, header.hair_count);
+            spdlog::trace("Processing hair {}/{}", hair_idx, header.hair_count);
 
         ofs << "createNode transform -n \"curve" << (hair_idx + 1) << "\" -p \"group1\";" << endl;
         ofs << "createNode nurbsCurve -n \"curveShape" << (hair_idx + 1) << "\" -p \"curve" << (hair_idx + 1) << "\";" << endl;
