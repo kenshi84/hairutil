@@ -23,7 +23,7 @@ int main(int argc, const char **argv)
     args::Command cmd_autofix(grp_commands, "autofix", "Auto-fix issues", cmd::parse::autofix);
     args::Command cmd_convert(grp_commands, "convert", "Convert file type", cmd::parse::convert);
     args::Command cmd_decompose(grp_commands, "decompose", "Decompose into individual curves", cmd::parse::decompose);
-    args::Command cmd_info(grp_commands, "info", "Print information", cmd::parse::info);
+    args::Command cmd_info(grp_commands, "info", "Print information (with stats when verbosity <= debug)", cmd::parse::info);
     args::Command cmd_resample(grp_commands, "resample", "Resample strands s.t. every segment is shorter than twice the shortest segment", cmd::parse::resample);
     args::Command cmd_subsample(grp_commands, "subsample", "Subsample strands", cmd::parse::subsample);
     args::Command cmd_transform(grp_commands, "transform", "Transform strand points", cmd::parse::transform);

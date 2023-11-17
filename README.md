@@ -18,7 +18,8 @@ $ hairutil --help
       Commands:
         convert                           Convert file type
         decompose                         Decompose into individual curves
-        info                              Print information
+        info                              Print information (with stats when
+                                          verbosity <= debug)
         resample                          Resample strands
         subsample                         Subsample strands
         transform                         Transform strand points
@@ -59,6 +60,18 @@ hairutil decompose --input-file ~/CT2Hair/output/Bangs.bin --output-ext ply --co
 ```
 
 ### `info` command
+```
+$ hairutil info --help
+  hairutil info {OPTIONS}
+
+    Print information (with stats when verbosity <= debug)
+
+  OPTIONS:
+
+      --stats-sort-size=[N]             N for top-N sorted list of items in
+                                        stats when verbosity <= debug [10]
+```
+Example:
 ```
 hairutil info --input-file ~/cemyuksel/wCurly.hair
 [info] Number of strands: 50000
