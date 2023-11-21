@@ -11,6 +11,7 @@ struct StrandInfo {
     size_t idx;
     unsigned int nsegs;
     float length;
+    float turning_angle_sum;
 };
 struct SegmentInfo {
     size_t idx;
@@ -51,6 +52,7 @@ std::shared_ptr<cyHairFile> cmd::exec::stats(std::shared_ptr<cyHairFile> hairfil
         const unsigned int nsegs = header.arrays & _CY_HAIR_FILE_SEGMENTS_BIT ? hairfile_in->GetSegmentsArray()[i] : header.d_segments;
 
         float strand_length = 0.0f;
+        float turning_angle_sum = 0.0f;
         Vector3f prev_point = Map<const Vector3f>(hairfile_in->GetPointsArray() + 3 * offset);
         for (unsigned int j = 0; j < nsegs; ++j) {
             const Vector3f point = Map<const Vector3f>(hairfile_in->GetPointsArray() + 3 * (offset + j + 1));
@@ -81,6 +83,8 @@ std::shared_ptr<cyHairFile> cmd::exec::stats(std::shared_ptr<cyHairFile> hairfil
                     circumradius_reciprocal,
                     turning_angle
                 });
+
+                turning_angle_sum += turning_angle;
             }
 
             strand_length += segment_length;
@@ -90,7 +94,8 @@ std::shared_ptr<cyHairFile> cmd::exec::stats(std::shared_ptr<cyHairFile> hairfil
         strand_info.push_back({
             strand_info.size(),
             nsegs,
-            strand_length
+            strand_length,
+            turning_angle_sum
         });
 
         offset += nsegs + 1;
@@ -123,6 +128,19 @@ std::shared_ptr<cyHairFile> cmd::exec::stats(std::shared_ptr<cyHairFile> hairfil
         for (const auto& i : strand_nsegs_stats.largest) spdlog::info("    [{}] {}", i.idx, i.nsegs);
         spdlog::info("  top {} smallest:", ::sort_size);
         for (const auto& i : strand_nsegs_stats.smallest) spdlog::info("    [{}] {}", i.idx, i.nsegs);
+    }
+    spdlog::info("----------------------------------------------------------------");
+    const auto& strand_tas_stats = util::get_stats(strand_info, [](const auto& a) { return a.turning_angle_sum; }, ::sort_size);
+    spdlog::info("*** turning angle sum (degree) ***");
+    spdlog::info("  min: [{}] {}", strand_tas_stats.min.idx, strand_tas_stats.min.turning_angle_sum);
+    spdlog::info("  max: [{}] {}", strand_tas_stats.max.idx, strand_tas_stats.max.turning_angle_sum);
+    spdlog::info("  median: [{}] {}", strand_tas_stats.median.idx, strand_tas_stats.median.turning_angle_sum);
+    spdlog::info("  average: {}", strand_tas_stats.average);
+    if (::sort_size > 0) {
+        spdlog::info("  top {} largest:", ::sort_size);
+        for (const auto& i : strand_tas_stats.largest) spdlog::info("    [{}] {}", i.idx, i.turning_angle_sum);
+        spdlog::info("  top {} smallest:", ::sort_size);
+        for (const auto& i : strand_tas_stats.smallest) spdlog::info("    [{}] {}", i.idx, i.turning_angle_sum);
     }
 
     spdlog::info("================================================================");
