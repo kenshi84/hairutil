@@ -57,10 +57,6 @@ void cmd::parse::stats(args::Subparser &parser) {
 std::shared_ptr<cyHairFile> cmd::exec::stats(std::shared_ptr<cyHairFile> hairfile_in) {
     const auto& header = hairfile_in->GetHeader();
 
-    if (::param.sort_size > header.hair_count) {
-        throw std::runtime_error(fmt::format("sort_size ({}) > hair_count ({})", ::param.sort_size, header.hair_count));
-    }
-
     std::vector<StrandInfo> strand_info_vec;    strand_info_vec.reserve(header.hair_count);
     std::vector<SegmentInfo> segment_info_vec;  segment_info_vec.reserve(header.point_count);
     std::vector<PointInfo> point_info_vec;      point_info_vec.reserve(header.point_count);
@@ -74,6 +70,7 @@ std::shared_ptr<cyHairFile> cmd::exec::stats(std::shared_ptr<cyHairFile> hairfil
         strand_info.nsegs = nsegs;
 
         Vector3f prev_point = Map<const Vector3f>(hairfile_in->GetPointsArray() + 3 * offset);
+        float prev_turning_angle;
         for (unsigned int j = 0; j < nsegs; ++j) {
             const Vector3f point = Map<const Vector3f>(hairfile_in->GetPointsArray() + 3 * (offset + j + 1));
             const float segment_length = (point - prev_point).norm();
@@ -103,7 +100,13 @@ std::shared_ptr<cyHairFile> cmd::exec::stats(std::shared_ptr<cyHairFile> hairfil
                 point_info.turning_angle = turning_angle;
                 point_info_vec.push_back(point_info);
 
-                segment_info.turning_angle_diff = turning_angle;        // Will be differenced later
+                if (j > 0) {
+                    segment_info.turning_angle_diff = std::abs(turning_angle - prev_turning_angle);
+
+                    strand_info.max_segment_turning_angle_diff = std::max(strand_info.max_segment_turning_angle_diff, segment_info.turning_angle_diff);
+                    strand_info.min_segment_turning_angle_diff = std::min(strand_info.min_segment_turning_angle_diff, segment_info.turning_angle_diff);
+                }
+                prev_turning_angle = turning_angle;
 
                 strand_info.turning_angle_sum += turning_angle;
 
@@ -118,15 +121,6 @@ std::shared_ptr<cyHairFile> cmd::exec::stats(std::shared_ptr<cyHairFile> hairfil
             strand_info.max_segment_length = std::max(strand_info.max_segment_length, segment_length);
             strand_info.min_segment_length = std::min(strand_info.min_segment_length, segment_length);
             prev_point = point;
-        }
-
-        // Computer each segment's turning angle difference (only defined for 1,...,nsegs-2)
-        unsigned int j = 0;
-        for (auto iter = segment_info_vec.rbegin()+1; j < nsegs - 2; ++iter, ++j) {
-            iter->turning_angle_diff = std::abs(iter->turning_angle_diff - (iter+1)->turning_angle_diff);
-
-            strand_info.max_segment_turning_angle_diff = std::max(strand_info.max_segment_turning_angle_diff, iter->turning_angle_diff);
-            strand_info.min_segment_turning_angle_diff = std::min(strand_info.min_segment_turning_angle_diff, iter->turning_angle_diff);
         }
 
         strand_info_vec.push_back(strand_info);
@@ -219,9 +213,10 @@ std::shared_ptr<cyHairFile> cmd::exec::stats(std::shared_ptr<cyHairFile> hairfil
     spdlog::info("  median: [{}] {}", strand_##KEY##_stats.median.idx, strand_##KEY##_stats.median.KEY); \
     spdlog::info("  average (stddev): {} ({})", strand_##KEY##_stats.average, strand_##KEY##_stats.stddev); \
     if (::param.sort_size > 0) { \
-        spdlog::info("  top {} largest:", ::param.sort_size); \
+        const size_t n = strand_##KEY##_stats.largest.size(); \
+        spdlog::info("  top {} largest:", n); \
         for (const auto& i : strand_##KEY##_stats.largest) spdlog::info("    [{}] {}", i.idx, i.KEY); \
-        spdlog::info("  top {} smallest:", ::param.sort_size); \
+        spdlog::info("  top {} smallest:", n); \
         for (const auto& i : strand_##KEY##_stats.smallest) spdlog::info("    [{}] {}", i.idx, i.KEY); \
     }
 
@@ -234,9 +229,10 @@ std::shared_ptr<cyHairFile> cmd::exec::stats(std::shared_ptr<cyHairFile> hairfil
     spdlog::info("  median: [{}/{}/{}] {}", NAME##_##KEY##_stats.median.idx, NAME##_##KEY##_stats.median.strand_idx, NAME##_##KEY##_stats.median.local_idx, NAME##_##KEY##_stats.median.KEY); \
     spdlog::info("  average (stddev): {} ({})", NAME##_##KEY##_stats.average, NAME##_##KEY##_stats.stddev); \
     if (::param.sort_size > 0) { \
-        spdlog::info("  top {} largest:", ::param.sort_size); \
+        const size_t n = NAME##_##KEY##_stats.largest.size(); \
+        spdlog::info("  top {} largest:", n); \
         for (const auto& i : NAME##_##KEY##_stats.largest) spdlog::info("    [{}/{}/{}] {}", i.idx, i.strand_idx, i.local_idx, i.KEY); \
-        spdlog::info("  top {} smallest:", ::param.sort_size); \
+        spdlog::info("  top {} smallest:", n); \
         for (const auto& i : NAME##_##KEY##_stats.smallest) spdlog::info("    [{}/{}/{}] {}", i.idx, i.strand_idx, i.local_idx, i.KEY); \
     }
 

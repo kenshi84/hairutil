@@ -41,6 +41,7 @@ inline StatsInfo<T> get_stats(std::vector<T>& vec, GetScore get_score, unsigned 
 
     // Partial sort
     if (sort_size > 0) {
+        sort_size = std::min<unsigned int>(sort_size, n);
         std::partial_sort(first, first + sort_size, last, comp_gt);
         res.largest = std::vector<T>(first, first + sort_size);
         std::partial_sort(first, first + sort_size, last, comp_lt);
