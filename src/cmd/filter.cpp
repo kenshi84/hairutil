@@ -19,6 +19,8 @@ const std::set<std::string> keys_set = {
     "tasum",
     "maxseglength",
     "minseglength",
+    "maxsegtadiff",
+    "minsegtadiff",
     "maxptcrr",
     "minptcrr",
     "maxptta",
@@ -35,6 +37,8 @@ void cmd::parse::filter(args::Subparser &parser) {
         "tasum (Turning angle sum)\n"
         "maxseglength (Maximum of segment length)\n"
         "minseglength (Minimum of segment length)\n"
+        "maxsegtadiff (Maximum of segment turning angle difference)\n"
+        "minsegtadiff (Minimum of segment turning angle difference)\n"
         "maxptcrr (Maximum of point circumradius reciprocal)\n"
         "minptcrr (Minimum of point circumradius reciprocal)\n"
         "maxptta (Maximum of point turning angle)\n"
@@ -91,12 +95,15 @@ std::shared_ptr<cyHairFile> cmd::exec::filter(std::shared_ptr<cyHairFile> hairfi
         float turning_angle_sum = 0.0f;
         float max_segment_length = 0.0f;
         float min_segment_length = std::numeric_limits<float>::max();
+        float max_segment_turning_angle_difference = 0.0f;
+        float min_segment_turning_angle_difference = std::numeric_limits<float>::max();
         float max_point_circumradius_reciprocal = 0.0f;
         float min_point_circumradius_reciprocal = std::numeric_limits<float>::max();
         float max_point_turning_angle = 0.0f;
         float min_point_turning_angle = std::numeric_limits<float>::max();
 
         Vector3f prev_point = Map<const Vector3f>(hairfile_in->GetPointsArray() + 3 * offset);
+        float prev_turning_angle;
         for (unsigned int j = 0; j < nsegs; ++j) {
             const Vector3f point = Map<const Vector3f>(hairfile_in->GetPointsArray() + 3 * (offset + j + 1));
             const float segment_length = (point - prev_point).norm();
@@ -121,6 +128,13 @@ std::shared_ptr<cyHairFile> cmd::exec::filter(std::shared_ptr<cyHairFile> hairfi
                 min_point_turning_angle = std::min(min_point_turning_angle, turning_angle);
 
                 turning_angle_sum += turning_angle;
+
+                if (j > 0) {
+                    const float turning_angle_difference = std::abs(turning_angle - prev_turning_angle);
+                    max_segment_turning_angle_difference = std::max(max_segment_turning_angle_difference, turning_angle_difference);
+                    min_segment_turning_angle_difference = std::min(min_segment_turning_angle_difference, turning_angle_difference);
+                }
+                prev_turning_angle = turning_angle;
             }
 
             strand_length += segment_length;
@@ -135,6 +149,8 @@ std::shared_ptr<cyHairFile> cmd::exec::filter(std::shared_ptr<cyHairFile> hairfi
         if (::param.key == "tasum") value = turning_angle_sum;
         if (::param.key == "maxseglength") value = max_segment_length;
         if (::param.key == "minseglength") value = min_segment_length;
+        if (::param.key == "maxsegtadiff") value = max_segment_turning_angle_difference;
+        if (::param.key == "minsegtadiff") value = min_segment_turning_angle_difference;
         if (::param.key == "maxptcrr") value = max_point_circumradius_reciprocal;
         if (::param.key == "minptcrr") value = min_point_circumradius_reciprocal;
         if (::param.key == "maxptta") value = max_point_turning_angle;

@@ -17,6 +17,8 @@ struct StrandInfo {
     float turning_angle_sum = 0;
     float max_segment_length = 0;
     float min_segment_length = std::numeric_limits<float>::max();
+    float max_segment_turning_angle_diff = 0;
+    float min_segment_turning_angle_diff = std::numeric_limits<float>::max();
     float max_point_circumradius_reciprocal = 0;
     float min_point_circumradius_reciprocal = std::numeric_limits<float>::max();
     float max_point_turning_angle = 0;
@@ -27,6 +29,7 @@ struct SegmentInfo {
     unsigned int strand_idx = 0;
     unsigned int local_idx = 0;         // Index of the segment within the strand
     float length = 0;
+    float turning_angle_diff = 0;
 };
 struct PointInfo {
     size_t idx = 0;                   // Index of the center point into the global points array
@@ -77,7 +80,6 @@ std::shared_ptr<cyHairFile> cmd::exec::stats(std::shared_ptr<cyHairFile> hairfil
             segment_info.strand_idx = i;
             segment_info.local_idx = j;
             segment_info.length = segment_length;
-            segment_info_vec.push_back(segment_info);
 
             if (j < nsegs - 1) {
                 // Compute the circumradius of the wedge triangle
@@ -98,6 +100,8 @@ std::shared_ptr<cyHairFile> cmd::exec::stats(std::shared_ptr<cyHairFile> hairfil
                 point_info.turning_angle = turning_angle;
                 point_info_vec.push_back(point_info);
 
+                segment_info.turning_angle_diff = turning_angle;        // Will be differenced later
+
                 strand_info.turning_angle_sum += turning_angle;
 
                 strand_info.max_point_circumradius_reciprocal = std::max(strand_info.max_point_circumradius_reciprocal, circumradius_reciprocal);
@@ -105,11 +109,21 @@ std::shared_ptr<cyHairFile> cmd::exec::stats(std::shared_ptr<cyHairFile> hairfil
                 strand_info.max_point_turning_angle = std::max(strand_info.max_point_turning_angle, turning_angle);
                 strand_info.min_point_turning_angle = std::min(strand_info.min_point_turning_angle, turning_angle);
             }
+            segment_info_vec.push_back(segment_info);
 
             strand_info.length += segment_length;
             strand_info.max_segment_length = std::max(strand_info.max_segment_length, segment_length);
             strand_info.min_segment_length = std::min(strand_info.min_segment_length, segment_length);
             prev_point = point;
+        }
+
+        // Computer each segment's turning angle difference (only defined for 1,...,nsegs-2)
+        unsigned int j = 0;
+        for (auto iter = segment_info_vec.rbegin()+1; j < nsegs - 2; ++iter, ++j) {
+            iter->turning_angle_diff = std::abs(iter->turning_angle_diff - (iter+1)->turning_angle_diff);
+
+            strand_info.max_segment_turning_angle_diff = std::max(strand_info.max_segment_turning_angle_diff, iter->turning_angle_diff);
+            strand_info.min_segment_turning_angle_diff = std::min(strand_info.min_segment_turning_angle_diff, iter->turning_angle_diff);
         }
 
         strand_info_vec.push_back(strand_info);
@@ -121,8 +135,8 @@ std::shared_ptr<cyHairFile> cmd::exec::stats(std::shared_ptr<cyHairFile> hairfil
         std::ofstream ofs;
 
         ofs.open(globals::input_file_wo_ext + "_stats_strand.csv");
-        ofs << "idx,nsegs,length,turning_angle_sum,max_segment_length,min_segment_length,max_point_circumradius_reciprocal,min_point_circumradius_reciprocal,max_point_turning_angle,min_point_turning_angle\n";
-        for (const auto& i : strand_info_vec) ofs << i.idx << "," << i.nsegs << "," << i.length << "," << i.turning_angle_sum << "," << i.max_segment_length << "," << i.min_segment_length << "," << i.max_point_circumradius_reciprocal << "," << i.min_point_circumradius_reciprocal << "," << i.max_point_turning_angle << "," << i.min_point_turning_angle << "\n";
+        ofs << "idx,nsegs,length,turning_angle_sum,max_segment_length,min_segment_length,max_segment_turning_angle_diff,min_segment_turning_angle_diff,max_point_circumradius_reciprocal,min_point_circumradius_reciprocal,max_point_turning_angle,min_point_turning_angle\n";
+        for (const auto& i : strand_info_vec) ofs << i.idx << "," << i.nsegs << "," << i.length << "," << i.turning_angle_sum << "," << i.max_segment_length << "," << i.min_segment_length << "," << i.max_segment_turning_angle_diff << "," << i.min_segment_turning_angle_diff << "," << i.max_point_circumradius_reciprocal << "," << i.min_point_circumradius_reciprocal << "," << i.max_point_turning_angle << "," << i.min_point_turning_angle << "\n";
         ofs.close();
 
         ofs.open(globals::input_file_wo_ext + "_stats_segment.csv");
@@ -187,11 +201,17 @@ std::shared_ptr<cyHairFile> cmd::exec::stats(std::shared_ptr<cyHairFile> hairfil
     PRINT_STRAND_STATS(max_point_turning_angle);
     spdlog::info("----------------------------------------------------------------");
     PRINT_STRAND_STATS(min_point_turning_angle);
+    spdlog::info("----------------------------------------------------------------");
+    PRINT_STRAND_STATS(max_segment_turning_angle_diff);
+    spdlog::info("----------------------------------------------------------------");
+    PRINT_STRAND_STATS(min_segment_turning_angle_diff);
 
     spdlog::info("================================================================");
     spdlog::info("Segment stats:");
     spdlog::info("================================================================");
     PRINT_OTHER_STATS(segment, length);
+    spdlog::info("----------------------------------------------------------------");
+    PRINT_OTHER_STATS(segment, turning_angle_diff);
 
     spdlog::info("================================================================");
     spdlog::info("Point stats:");
