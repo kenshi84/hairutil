@@ -135,18 +135,71 @@ std::shared_ptr<cyHairFile> cmd::exec::stats(std::shared_ptr<cyHairFile> hairfil
         std::ofstream ofs;
 
         ofs.open(globals::input_file_wo_ext + "_stats_strand.csv");
-        ofs << "idx,nsegs,length,turning_angle_sum,max_segment_length,min_segment_length,max_segment_turning_angle_diff,min_segment_turning_angle_diff,max_point_circumradius_reciprocal,min_point_circumradius_reciprocal,max_point_turning_angle,min_point_turning_angle\n";
-        for (const auto& i : strand_info_vec) ofs << i.idx << "," << i.nsegs << "," << i.length << "," << i.turning_angle_sum << "," << i.max_segment_length << "," << i.min_segment_length << "," << i.max_segment_turning_angle_diff << "," << i.min_segment_turning_angle_diff << "," << i.max_point_circumradius_reciprocal << "," << i.min_point_circumradius_reciprocal << "," << i.max_point_turning_angle << "," << i.min_point_turning_angle << "\n";
+        ofs << fmt::format("{},{},{},{},{},{},{},{},{},{},{},{}\n",
+            "idx",
+            "nsegs",
+            "length",
+            "turning_angle_sum",
+            "max_segment_length",
+            "min_segment_length",
+            "max_segment_turning_angle_diff",
+            "min_segment_turning_angle_diff",
+            "max_point_circumradius_reciprocal",
+            "min_point_circumradius_reciprocal",
+            "max_point_turning_angle",
+            "min_point_turning_angle"
+        );
+        for (const auto& i : strand_info_vec)
+            ofs << fmt::format("{},{},{},{},{},{},{},{},{},{},{},{}\n",
+                i.idx,
+                i.nsegs,
+                i.length,
+                i.turning_angle_sum,
+                i.max_segment_length,
+                i.min_segment_length,
+                i.max_segment_turning_angle_diff,
+                i.min_segment_turning_angle_diff,
+                i.max_point_circumradius_reciprocal,
+                i.min_point_circumradius_reciprocal,
+                i.max_point_turning_angle,
+                i.min_point_turning_angle
+            );
         ofs.close();
 
         ofs.open(globals::input_file_wo_ext + "_stats_segment.csv");
-        ofs << "idx,strand_idx,local_idx,length\n";
-        for (const auto& i : segment_info_vec) ofs << i.idx << "," << i.strand_idx << "," << i.local_idx << "," << i.length << "\n";
+        ofs << fmt::format("{},{},{},{},{}\n",
+            "idx",
+            "strand_idx",
+            "local_idx",
+            "length",
+            "turning_angle_diff"
+        );
+        for (const auto& i : segment_info_vec)
+            ofs << fmt::format("{},{},{},{},{}\n",
+                i.idx,
+                i.strand_idx,
+                i.local_idx,
+                i.length,
+                i.turning_angle_diff
+            );
         ofs.close();
 
         ofs.open(globals::input_file_wo_ext + "_stats_point.csv");
-        ofs << "idx,strand_idx,local_idx,circumradius_reciprocal,turning_angle\n";
-        for (const auto& i : point_info_vec) ofs << i.idx << "," << i.strand_idx << "," << i.local_idx << "," << i.circumradius_reciprocal << "," << i.turning_angle << "\n";
+        ofs << fmt::format("{},{},{},{},{}\n",
+            "idx",
+            "strand_idx",
+            "local_idx",
+            "circumradius_reciprocal",
+            "turning_angle"
+        );
+        for (const auto& i : point_info_vec)
+            ofs << fmt::format("{},{},{},{},{}\n",
+                i.idx,
+                i.strand_idx,
+                i.local_idx,
+                i.circumradius_reciprocal,
+                i.turning_angle
+            );
         ofs.close();
 
         spdlog::info("Exported raw data tables to {}_stats_*.csv", globals::input_file_wo_ext);
