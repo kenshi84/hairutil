@@ -136,7 +136,7 @@ std::shared_ptr<cyHairFile> cmd::exec::stats(std::shared_ptr<cyHairFile> hairfil
     spdlog::info("  min: [{}] {}", strand_length_stats.min.idx, strand_length_stats.min.length);
     spdlog::info("  max: [{}] {}", strand_length_stats.max.idx, strand_length_stats.max.length);
     spdlog::info("  median: [{}] {}", strand_length_stats.median.idx, strand_length_stats.median.length);
-    spdlog::info("  average: {}", strand_length_stats.average);
+    spdlog::info("  average (stddev): {} ({})", strand_length_stats.average, strand_length_stats.stddev);
     if (::param.sort_size > 0) {
         spdlog::info("  top {} largest:", ::param.sort_size);
         for (const auto& i : strand_length_stats.largest) spdlog::info("    [{}] {}", i.idx, i.length);
@@ -149,7 +149,7 @@ std::shared_ptr<cyHairFile> cmd::exec::stats(std::shared_ptr<cyHairFile> hairfil
     spdlog::info("  min: [{}] {}", strand_nsegs_stats.min.idx, strand_nsegs_stats.min.nsegs);
     spdlog::info("  max: [{}] {}", strand_nsegs_stats.max.idx, strand_nsegs_stats.max.nsegs);
     spdlog::info("  median: [{}] {}", strand_nsegs_stats.median.idx, strand_nsegs_stats.median.nsegs);
-    spdlog::info("  average: {}", strand_nsegs_stats.average);
+    spdlog::info("  average (stddev): {} ({})", strand_nsegs_stats.average, strand_nsegs_stats.stddev);
     if (::param.sort_size > 0) {
         spdlog::info("  top {} largest:", ::param.sort_size);
         for (const auto& i : strand_nsegs_stats.largest) spdlog::info("    [{}] {}", i.idx, i.nsegs);
@@ -162,7 +162,7 @@ std::shared_ptr<cyHairFile> cmd::exec::stats(std::shared_ptr<cyHairFile> hairfil
     spdlog::info("  min: [{}] {}", strand_tas_stats.min.idx, strand_tas_stats.min.turning_angle_sum);
     spdlog::info("  max: [{}] {}", strand_tas_stats.max.idx, strand_tas_stats.max.turning_angle_sum);
     spdlog::info("  median: [{}] {}", strand_tas_stats.median.idx, strand_tas_stats.median.turning_angle_sum);
-    spdlog::info("  average: {}", strand_tas_stats.average);
+    spdlog::info("  average (stddev): {} ({})", strand_tas_stats.average, strand_tas_stats.stddev);
     if (::param.sort_size > 0) {
         spdlog::info("  top {} largest:", ::param.sort_size);
         for (const auto& i : strand_tas_stats.largest) spdlog::info("    [{}] {}", i.idx, i.turning_angle_sum);
@@ -179,7 +179,7 @@ std::shared_ptr<cyHairFile> cmd::exec::stats(std::shared_ptr<cyHairFile> hairfil
     spdlog::info("  min: [{}/{}/{}] {}", segment_stats.min.idx, segment_stats.min.strand_idx, segment_stats.min.local_idx, segment_stats.min.length);
     spdlog::info("  max: [{}/{}/{}] {}", segment_stats.max.idx, segment_stats.max.strand_idx, segment_stats.max.local_idx, segment_stats.max.length);
     spdlog::info("  median: [{}/{}/{}] {}", segment_stats.median.idx, segment_stats.median.strand_idx, segment_stats.median.local_idx, segment_stats.median.length);
-    spdlog::info("  average: {}", segment_stats.average);
+    spdlog::info("  average (stddev): {} ({})", segment_stats.average, segment_stats.stddev);
     if (::param.sort_size > 0) {
         spdlog::info("  top {} largest:", ::param.sort_size);
         for (const auto& i : segment_stats.largest) spdlog::info("    [{}/{}/{}] {}", i.idx, i.strand_idx, i.local_idx, i.length);
@@ -196,7 +196,7 @@ std::shared_ptr<cyHairFile> cmd::exec::stats(std::shared_ptr<cyHairFile> hairfil
     spdlog::info("  min: [{}/{}/{}] {}", point_crr_stats.min.idx, point_crr_stats.min.strand_idx, point_crr_stats.min.local_idx, point_crr_stats.min.circumradius_reciprocal);
     spdlog::info("  max: [{}/{}/{}] {}", point_crr_stats.max.idx, point_crr_stats.max.strand_idx, point_crr_stats.max.local_idx, point_crr_stats.max.circumradius_reciprocal);
     spdlog::info("  median: [{}/{}/{}] {}", point_crr_stats.median.idx, point_crr_stats.median.strand_idx, point_crr_stats.median.local_idx, point_crr_stats.median.circumradius_reciprocal);
-    spdlog::info("  average: {}", point_crr_stats.average);
+    spdlog::info("  average (stddev): {} ({})", point_crr_stats.average, point_crr_stats.stddev);
     if (::param.sort_size > 0) {
         spdlog::info("  top {} largest:", ::param.sort_size);
         for (const auto& i : point_crr_stats.largest) spdlog::info("    [{}/{}/{}] {}", i.idx, i.strand_idx, i.local_idx, i.circumradius_reciprocal);
@@ -210,7 +210,7 @@ std::shared_ptr<cyHairFile> cmd::exec::stats(std::shared_ptr<cyHairFile> hairfil
     spdlog::info("  min: [{}/{}/{}] {}", point_ta_stats.min.idx, point_ta_stats.min.strand_idx, point_ta_stats.min.local_idx, point_ta_stats.min.turning_angle);
     spdlog::info("  max: [{}/{}/{}] {}", point_ta_stats.max.idx, point_ta_stats.max.strand_idx, point_ta_stats.max.local_idx, point_ta_stats.max.turning_angle);
     spdlog::info("  median: [{}/{}/{}] {}", point_ta_stats.median.idx, point_ta_stats.median.strand_idx, point_ta_stats.median.local_idx, point_ta_stats.median.turning_angle);
-    spdlog::info("  average: {}", point_ta_stats.average);
+    spdlog::info("  average (stddev): {} ({})", point_ta_stats.average, point_ta_stats.stddev);
     if (::param.sort_size > 0) {
         spdlog::info("  top {} largest:", ::param.sort_size);
         for (const auto& i : point_ta_stats.largest) spdlog::info("    [{}/{}/{}] {}", i.idx, i.strand_idx, i.local_idx, i.turning_angle);

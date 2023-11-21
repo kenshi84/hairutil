@@ -7,7 +7,7 @@ std::shared_ptr<cyHairFile> get_subset(std::shared_ptr<cyHairFile> hairfile_in, 
 template <typename T>
 struct StatsInfo {
     T min, max, median;
-    double average;
+    double average, stddev;
     std::vector<T> largest;
     std::vector<T> smallest;
 };
@@ -35,6 +35,9 @@ inline StatsInfo<T> get_stats(std::vector<T>& vec, GetScore get_score, unsigned 
 
     // Average
     res.average = std::accumulate(first, last, 0.0, [&](const double a, const auto& b) { return a + get_score(b); }) / (double)n;
+
+    // Standard deviation
+    res.stddev = std::sqrt(std::accumulate(first, last, 0.0, [&](const double a, const auto& b) { return a + std::pow(get_score(b) - res.average, 2); }) / (double)n);
 
     // Partial sort
     if (sort_size > 0) {
