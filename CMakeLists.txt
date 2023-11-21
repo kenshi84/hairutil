@@ -35,6 +35,7 @@ add_library(hairutil_cmd
   src/cmd/decompose.cpp
   src/cmd/info.cpp
   src/cmd/resample.cpp
+  src/cmd/stats.cpp
   src/cmd/subsample.cpp
   src/cmd/transform.cpp
 )

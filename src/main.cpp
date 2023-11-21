@@ -23,8 +23,9 @@ int main(int argc, const char **argv)
     args::Command cmd_autofix(grp_commands, "autofix", "Auto-fix issues", cmd::parse::autofix);
     args::Command cmd_convert(grp_commands, "convert", "Convert file type", cmd::parse::convert);
     args::Command cmd_decompose(grp_commands, "decompose", "Decompose into individual curves", cmd::parse::decompose);
-    args::Command cmd_info(grp_commands, "info", "Print information (with stats when verbosity <= debug)", cmd::parse::info);
+    args::Command cmd_info(grp_commands, "info", "Print information", cmd::parse::info);
     args::Command cmd_resample(grp_commands, "resample", "Resample strands s.t. every segment is shorter than twice the shortest segment", cmd::parse::resample);
+    args::Command cmd_stats(grp_commands, "stats", "Generate statistics", cmd::parse::stats);
     args::Command cmd_subsample(grp_commands, "subsample", "Subsample strands", cmd::parse::subsample);
     args::Command cmd_transform(grp_commands, "transform", "Transform strand points", cmd::parse::transform);
 
@@ -85,9 +86,10 @@ int main(int argc, const char **argv)
     }
     globals::rng.seed(seed);
 
-    if (globals::cmd_exec == cmd::exec::info || globals::cmd_exec == cmd::exec::autofix) {
+    if (globals::cmd_exec == cmd::exec::info || globals::cmd_exec == cmd::exec::autofix || globals::cmd_exec == cmd::exec::stats) {
         if (globals::output_ext != "") {
             spdlog::warn("Ignoring --output-ext");
+            globals::output_ext = "";
         }
     } else if (globals::output_ext == "") {
         spdlog::error("You must specify output file extension by --output-ext");
@@ -112,7 +114,7 @@ int main(int argc, const char **argv)
     }
 
     // Check if output file extension is supported
-    if (globals::cmd_exec != cmd::exec::info) {
+    if (globals::output_ext != "") {
         if (globals::supported_ext.count(globals::output_ext) == 0) {
             spdlog::error("Unsupported output file extension: {}", globals::output_ext);
             return 1;

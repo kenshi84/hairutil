@@ -18,9 +18,11 @@ $ hairutil --help
       Commands:
         convert                           Convert file type
         decompose                         Decompose into individual curves
-        info                              Print information (with stats when
-                                          verbosity <= debug)
-        resample                          Resample strands
+        info                              Print information
+        resample                          Resample strands s.t. every segment is
+                                          shorter than twice the shortest
+                                          segment
+        stats                             Generate statistics
         subsample                         Subsample strands
         transform                         Transform strand points
 
@@ -61,18 +63,6 @@ hairutil decompose --input-file ~/CT2Hair/output/Bangs.bin --output-ext ply --co
 
 ### `info` command
 ```
-$ hairutil info --help
-  hairutil info {OPTIONS}
-
-    Print information (with stats when verbosity <= debug)
-
-  OPTIONS:
-
-      --stats-sort-size=[N]             N for top-N sorted list of items in
-                                        stats when verbosity <= debug [10]
-```
-Example:
-```
 hairutil info --input-file ~/cemyuksel/wCurly.hair
 [info] Number of strands: 50000
 [info] Number of points: 3441580
@@ -92,6 +82,18 @@ hairutil info --input-file ~/cemyuksel/wCurly.hair
 ```
 hairutil resample -i ~/Dataset/CT2Hair/output/Bangs.bin -o ply
 # Output saved to ~/CT2Hair/output/Bangs_resampled.ply
+```
+
+### `stats` command
+```
+$ hairutil stats --help
+  hairutil stats {OPTIONS}
+
+    Generate statistics
+
+  OPTIONS:
+
+      --stats-sort-size=[N]             Print top-N sorted list of items [10]
 ```
 
 ### `subsample` command
