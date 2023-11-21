@@ -11,6 +11,7 @@
 #include <set>
 #include <unordered_map>
 #include <random>
+#include <optional>
 
 #include <args.hxx>
 #include <spdlog/spdlog.h>
