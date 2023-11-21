@@ -9,6 +9,7 @@ std::shared_ptr<cyHairFile> util::get_subset(std::shared_ptr<cyHairFile> hairfil
         spdlog::warn("No strand is selected");
         return {};
     }
+    spdlog::info("Selected {} strands", num_selected);
 
     // Count the number of selected strands and their points
     unsigned int out_hair_count = num_selected;
