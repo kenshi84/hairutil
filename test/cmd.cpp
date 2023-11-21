@@ -76,6 +76,7 @@ TEST(cmd_autofix, empty_strand) {
         "-i", "autofix_test.ply",
         "--overwrite"
     };
+    globals::clear();
     EXPECT_EQ(test_main(args.size(), args.data()), 0);
 }
 
@@ -87,6 +88,7 @@ TEST(cmd_convert, bin_to_abc) {
         "-o", "abc",
         "--overwrite"
     };
+    globals::clear();
     EXPECT_EQ(test_main(args.size(), args.data()), 0);
 }
 
@@ -98,7 +100,64 @@ TEST(cmd_decompose, bin_to_ply) {
         "-o", "ply",
         "--overwrite"
     };
+    globals::clear();
     EXPECT_EQ(test_main(args.size(), args.data()), 0);
+}
+
+TEST(cmd_filter, geq) {
+    std::vector<const char*> args = {
+        "test_cmd",
+        "filter",
+        "-i", TEST_DATA_DIR "/Bangs_100.bin",
+        "-o", "ply",
+        "--overwrite",
+        "-k", "length",
+        "--geq", "174.96289",
+    };
+    globals::clear();
+    EXPECT_EQ(test_main(args.size(), args.data()), 0);
+}
+
+TEST(cmd_filter, fail_geq_gt) {
+    std::vector<const char*> args = {
+        "test_cmd",
+        "filter",
+        "-i", TEST_DATA_DIR "/Bangs_100.bin",
+        "-o", "ply",
+        "--overwrite",
+        "-k", "length",
+        "--geq", "174.96289",
+        "--gt", "174.96289",
+    };
+    globals::clear();
+    EXPECT_EQ(test_main(args.size(), args.data()), 1);
+}
+
+TEST(cmd_filter, fail_bad_key) {
+    std::vector<const char*> args = {
+        "test_cmd",
+        "filter",
+        "-i", TEST_DATA_DIR "/Bangs_100.bin",
+        "-o", "ply",
+        "--overwrite",
+        "-k", "angle",
+        "--geq", "174.96289",
+    };
+    globals::clear();
+    EXPECT_EQ(test_main(args.size(), args.data()), 1);
+}
+
+TEST(cmd_filter, fail_no_threshold) {
+    std::vector<const char*> args = {
+        "test_cmd",
+        "filter",
+        "-i", TEST_DATA_DIR "/Bangs_100.bin",
+        "-o", "ply",
+        "--overwrite",
+        "-k", "length",
+    };
+    globals::clear();
+    EXPECT_EQ(test_main(args.size(), args.data()), 1);
 }
 
 TEST(cmd_info, ply) {
@@ -107,6 +166,7 @@ TEST(cmd_info, ply) {
         "info",
         "-i", TEST_DATA_DIR "/Bangs_100_binary.ply",
     };
+    globals::clear();
     EXPECT_EQ(test_main(args.size(), args.data()), 0);
 }
 
@@ -118,6 +178,7 @@ TEST(cmd_resample, bin_to_ply) {
         "-o", "ply",
         "--overwrite",
     };
+    globals::clear();
     EXPECT_EQ(test_main(args.size(), args.data()), 0);
 }
 
@@ -132,6 +193,7 @@ TEST(cmd_subsample, bin_to_ply) {
         "--scale-factor", "0.9",
         "--seed", "0"
     };
+    globals::clear();
     EXPECT_EQ(test_main(args.size(), args.data()), 0);
 }
 
@@ -141,8 +203,10 @@ TEST(cmd_subsample, indices) {
         "subsample",
         "-i", TEST_DATA_DIR "/Bangs_100.bin",
         "-o", "ply",
-        "--indices", "65,32,4,36,0"
+        "--indices", "65,32,4,36,0",
+        "--overwrite",
     };
+    globals::clear();
     EXPECT_EQ(test_main(args.size(), args.data()), 0);
 }
 
@@ -160,6 +224,7 @@ TEST(cmd_transform, bin_to_ply) {
         "0.838385462,0.54454118,0.0241773129,"
         "-0.361558199,0.52237314,0.77227056"
     };
+    globals::clear();
     EXPECT_EQ(test_main(args.size(), args.data()), 0);
 }
 

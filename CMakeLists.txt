@@ -33,6 +33,7 @@ add_library(hairutil_cmd
   src/cmd/autofix.cpp
   src/cmd/convert.cpp
   src/cmd/decompose.cpp
+  src/cmd/filter.cpp
   src/cmd/info.cpp
   src/cmd/resample.cpp
   src/cmd/stats.cpp
@@ -55,6 +56,7 @@ target_link_libraries(hairutil_io
 add_executable(hairutil
   src/globals.cpp
   src/main.cpp
+  src/util.cpp
   version.cpp
 )
 target_link_libraries(hairutil
@@ -88,6 +90,7 @@ add_test(NAME test_io COMMAND test_io)
 add_executable(test_cmd
   src/globals.cpp
   src/main.cpp
+  src/util.cpp
   test/cmd.cpp
   version.cpp
 )

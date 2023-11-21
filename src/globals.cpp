@@ -27,4 +27,20 @@ namespace globals {
 
     ::io::load_func_t load_func;
     ::io::save_func_t save_func;
+
+    void clear() {
+        input_file = {};
+        output_ext = {};
+        overwrite = {};
+        ply_load_default_nsegs = {};
+        ply_save_ascii = {};
+        input_file_wo_ext = {};
+        input_ext = {};
+        output_file = {};
+        check_error = {};
+        cmd_exec = nullptr;
+        rng = {};
+        load_func = {};
+        save_func = {};
+    }
 }

@@ -23,6 +23,7 @@ int main(int argc, const char **argv)
     args::Command cmd_autofix(grp_commands, "autofix", "Auto-fix issues", cmd::parse::autofix);
     args::Command cmd_convert(grp_commands, "convert", "Convert file type", cmd::parse::convert);
     args::Command cmd_decompose(grp_commands, "decompose", "Decompose into individual curves", cmd::parse::decompose);
+    args::Command cmd_filter(grp_commands, "filter", "Extract strands that pass given filter", cmd::parse::filter);
     args::Command cmd_info(grp_commands, "info", "Print information", cmd::parse::info);
     args::Command cmd_resample(grp_commands, "resample", "Resample strands s.t. every segment is shorter than twice the shortest segment", cmd::parse::resample);
     args::Command cmd_stats(grp_commands, "stats", "Generate statistics", cmd::parse::stats);
@@ -161,6 +162,7 @@ int main(int argc, const char **argv)
     catch (const std::exception &e)
     {
         spdlog::error("{}", e.what());
+        return 1;
     }
 
     spdlog::info("Done");

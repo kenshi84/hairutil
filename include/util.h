@@ -1,11 +1,8 @@
-#include <algorithm>
-#include <numeric>
-#include <cctype>
-#include <vector>
-#include <sstream>
-#include <string>
+#include "common.h"
 
 namespace util {
+
+std::shared_ptr<cyHairFile> get_subset(std::shared_ptr<cyHairFile> hairfile_in, const std::vector<unsigned char>& selected);
 
 template <typename T>
 struct StatsInfo {

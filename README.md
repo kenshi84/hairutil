@@ -18,6 +18,7 @@ $ hairutil --help
       Commands:
         convert                           Convert file type
         decompose                         Decompose into individual curves
+        filter                            Extract strands that pass given filter
         info                              Print information
         resample                          Resample strands s.t. every segment is
                                           shorter than twice the shortest
@@ -61,6 +62,39 @@ hairutil decompose --input-file ~/CT2Hair/output/Bangs.bin --output-ext ply --co
 # Output saved to ~/CT2Hair/output/Bangs_decomposed_ply/*.ply
 ```
 
+### `filter` command
+```
+$ hairutil filter --help
+  hairutil filter {OPTIONS}
+
+    Extract strands that pass given filter
+
+  OPTIONS:
+
+      -k[KEY], --key=[KEY]              Filtering key chosen from:
+                                        length (Total length)
+                                        nsegs (Number of segments)
+                                        tasum (Turning angle sum)
+                                        maxseglength (Maximum of segment length)
+                                        minseglength (Minimum of segment length)
+                                        maxptcrr (Maximum of point circumradius
+                                        reciprocal)
+                                        minptcrr (Minimum of point circumradius
+                                        reciprocal)
+                                        maxptta (Maximum of point turning angle)
+                                        minptta (Minimum of point turning angle)
+      --lt=[R]                          Less-than threshold
+      --gt=[R]                          Greater-than threshold
+      --leq=[R]                         Less-than or equal-to threshold
+      --geq=[R]                         Greater-than or equal-to threshold
+```
+
+Example:
+```
+hairutil filter -i ~/CT2Hair/output/Bangs.bin -o ply --overwrite --key length --geq 174.96289
+# Output saved to ~/CT2Hair/output/Bangs_filtered_length_geq_174.96289.ply
+```
+
 ### `info` command
 ```
 hairutil info --input-file ~/cemyuksel/wCurly.hair
@@ -93,7 +127,7 @@ $ hairutil stats --help
 
   OPTIONS:
 
-      --stats-sort-size=[N]             Print top-N sorted list of items [10]
+      --sort-size=[N]                   Print top-N sorted list of items [10]
       --export-csv                      Export raw data tables as CSV files
 ```
 

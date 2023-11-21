@@ -31,7 +31,7 @@ struct PointInfo {
 }
 
 void cmd::parse::stats(args::Subparser &parser) {
-    args::ValueFlag<unsigned int> sort_size(parser, "N", "Print top-N sorted list of items [10]", {"stats-sort-size"}, 10);
+    args::ValueFlag<unsigned int> sort_size(parser, "N", "Print top-N sorted list of items [10]", {"sort-size"}, 10);
     args::Flag export_csv(parser, "export-csv", "Export raw data tables as CSV files", {"export-csv"});
     parser.Parse();
     globals::cmd_exec = cmd::exec::stats;
