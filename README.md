@@ -94,6 +94,7 @@ $ hairutil stats --help
   OPTIONS:
 
       --stats-sort-size=[N]             Print top-N sorted list of items [10]
+      --export-csv                      Export raw data tables as CSV files
 ```
 
 ### `subsample` command

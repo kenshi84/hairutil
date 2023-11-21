@@ -6,6 +6,7 @@ using namespace Eigen;
 namespace {
 
 unsigned int sort_size;
+bool export_csv;
 
 struct StrandInfo {
     size_t idx;
@@ -31,9 +32,11 @@ struct PointInfo {
 
 void cmd::parse::stats(args::Subparser &parser) {
     args::ValueFlag<unsigned int> sort_size(parser, "N", "Print top-N sorted list of items [10]", {"stats-sort-size"}, 10);
+    args::Flag export_csv(parser, "export-csv", "Export raw data tables as CSV files", {"export-csv"});
     parser.Parse();
     globals::cmd_exec = cmd::exec::stats;
     ::sort_size = *sort_size;
+    ::export_csv = export_csv;
 }
 
 std::shared_ptr<cyHairFile> cmd::exec::stats(std::shared_ptr<cyHairFile> hairfile_in) {
@@ -99,6 +102,27 @@ std::shared_ptr<cyHairFile> cmd::exec::stats(std::shared_ptr<cyHairFile> hairfil
         });
 
         offset += nsegs + 1;
+    }
+
+    if (::export_csv) {
+        std::ofstream ofs;
+
+        ofs.open(globals::input_file_wo_ext + "_stats_strand.csv");
+        ofs << "idx,nsegs,length,turning_angle_sum\n";
+        for (const auto& i : strand_info) ofs << i.idx << "," << i.nsegs << "," << i.length << "," << i.turning_angle_sum << "\n";
+        ofs.close();
+
+        ofs.open(globals::input_file_wo_ext + "_stats_segment.csv");
+        ofs << "idx,strand_idx,local_idx,length\n";
+        for (const auto& i : segment_info) ofs << i.idx << "," << i.strand_idx << "," << i.local_idx << "," << i.length << "\n";
+        ofs.close();
+
+        ofs.open(globals::input_file_wo_ext + "_stats_point.csv");
+        ofs << "idx,strand_idx,local_idx,circumradius_reciprocal,turning_angle\n";
+        for (const auto& i : point_info) ofs << i.idx << "," << i.strand_idx << "," << i.local_idx << "," << i.circumradius_reciprocal << "," << i.turning_angle << "\n";
+        ofs.close();
+
+        spdlog::info("Exported raw data tables to {}_stats_*.csv", globals::input_file_wo_ext);
     }
 
     spdlog::info("================================================================");
