@@ -138,52 +138,67 @@ std::shared_ptr<cyHairFile> cmd::exec::stats(std::shared_ptr<cyHairFile> hairfil
         spdlog::info("Exported raw data tables to {}_stats_*.csv", globals::input_file_wo_ext);
     }
 
-#define PRINT_STATS(NAME, KEY) \
+#define PRINT_STRAND_STATS(KEY) \
+    const auto& strand_##KEY##_stats = util::get_stats(strand_info_vec, [](const auto& a) { return a.KEY; }, ::param.sort_size); \
+    spdlog::info("*** " #KEY " ***"); \
+    spdlog::info("  min: [{}] {}", strand_##KEY##_stats.min.idx, strand_##KEY##_stats.min.KEY); \
+    spdlog::info("  max: [{}] {}", strand_##KEY##_stats.max.idx, strand_##KEY##_stats.max.KEY); \
+    spdlog::info("  median: [{}] {}", strand_##KEY##_stats.median.idx, strand_##KEY##_stats.median.KEY); \
+    spdlog::info("  average (stddev): {} ({})", strand_##KEY##_stats.average, strand_##KEY##_stats.stddev); \
+    if (::param.sort_size > 0) { \
+        spdlog::info("  top {} largest:", ::param.sort_size); \
+        for (const auto& i : strand_##KEY##_stats.largest) spdlog::info("    [{}] {}", i.idx, i.KEY); \
+        spdlog::info("  top {} smallest:", ::param.sort_size); \
+        for (const auto& i : strand_##KEY##_stats.smallest) spdlog::info("    [{}] {}", i.idx, i.KEY); \
+    }
+
+#define PRINT_OTHER_STATS(NAME, KEY) \
     const auto& NAME##_##KEY##_stats = util::get_stats(NAME##_info_vec, [](const auto& a) { return a.KEY; }, ::param.sort_size); \
     spdlog::info("*** " #KEY " ***"); \
-    spdlog::info("  min: [{}] {}", NAME##_##KEY##_stats.min.idx, NAME##_##KEY##_stats.min.KEY); \
-    spdlog::info("  max: [{}] {}", NAME##_##KEY##_stats.max.idx, NAME##_##KEY##_stats.max.KEY); \
-    spdlog::info("  median: [{}] {}", NAME##_##KEY##_stats.median.idx, NAME##_##KEY##_stats.median.KEY); \
+    spdlog::info("       [idx/strand_idx/local_idx]"); \
+    spdlog::info("  min: [{}/{}/{}] {}", NAME##_##KEY##_stats.min.idx, NAME##_##KEY##_stats.min.strand_idx, NAME##_##KEY##_stats.min.local_idx, NAME##_##KEY##_stats.min.KEY); \
+    spdlog::info("  max: [{}/{}/{}] {}", NAME##_##KEY##_stats.max.idx, NAME##_##KEY##_stats.max.strand_idx, NAME##_##KEY##_stats.max.local_idx, NAME##_##KEY##_stats.max.KEY); \
+    spdlog::info("  median: [{}/{}/{}] {}", NAME##_##KEY##_stats.median.idx, NAME##_##KEY##_stats.median.strand_idx, NAME##_##KEY##_stats.median.local_idx, NAME##_##KEY##_stats.median.KEY); \
     spdlog::info("  average (stddev): {} ({})", NAME##_##KEY##_stats.average, NAME##_##KEY##_stats.stddev); \
     if (::param.sort_size > 0) { \
         spdlog::info("  top {} largest:", ::param.sort_size); \
-        for (const auto& i : NAME##_##KEY##_stats.largest) spdlog::info("    [{}] {}", i.idx, i.KEY); \
+        for (const auto& i : NAME##_##KEY##_stats.largest) spdlog::info("    [{}/{}/{}] {}", i.idx, i.strand_idx, i.local_idx, i.KEY); \
         spdlog::info("  top {} smallest:", ::param.sort_size); \
-        for (const auto& i : NAME##_##KEY##_stats.smallest) spdlog::info("    [{}] {}", i.idx, i.KEY); \
+        for (const auto& i : NAME##_##KEY##_stats.smallest) spdlog::info("    [{}/{}/{}] {}", i.idx, i.strand_idx, i.local_idx, i.KEY); \
     }
 
     spdlog::info("================================================================");
     spdlog::info("Strand stats:");
     spdlog::info("================================================================");
-    PRINT_STATS(strand, length);
+    PRINT_STRAND_STATS(length);
     spdlog::info("----------------------------------------------------------------");
-    PRINT_STATS(strand, nsegs);
+    PRINT_STRAND_STATS(nsegs);
     spdlog::info("----------------------------------------------------------------");
-    PRINT_STATS(strand, turning_angle_sum);
+    PRINT_STRAND_STATS(turning_angle_sum);
     spdlog::info("----------------------------------------------------------------");
-    PRINT_STATS(strand, max_segment_length);
+    PRINT_STRAND_STATS(max_segment_length);
     spdlog::info("----------------------------------------------------------------");
-    PRINT_STATS(strand, min_segment_length);
+    PRINT_STRAND_STATS(min_segment_length);
     spdlog::info("----------------------------------------------------------------");
-    PRINT_STATS(strand, max_point_circumradius_reciprocal);
+    PRINT_STRAND_STATS(max_point_circumradius_reciprocal);
     spdlog::info("----------------------------------------------------------------");
-    PRINT_STATS(strand, min_point_circumradius_reciprocal);
+    PRINT_STRAND_STATS(min_point_circumradius_reciprocal);
     spdlog::info("----------------------------------------------------------------");
-    PRINT_STATS(strand, max_point_turning_angle);
+    PRINT_STRAND_STATS(max_point_turning_angle);
     spdlog::info("----------------------------------------------------------------");
-    PRINT_STATS(strand, min_point_turning_angle);
+    PRINT_STRAND_STATS(min_point_turning_angle);
 
     spdlog::info("================================================================");
     spdlog::info("Segment stats:");
     spdlog::info("================================================================");
-    PRINT_STATS(segment, length);
+    PRINT_OTHER_STATS(segment, length);
 
     spdlog::info("================================================================");
     spdlog::info("Point stats:");
     spdlog::info("================================================================");
-    PRINT_STATS(point, circumradius_reciprocal);
+    PRINT_OTHER_STATS(point, circumradius_reciprocal);
     spdlog::info("----------------------------------------------------------------");
-    PRINT_STATS(point, turning_angle);
+    PRINT_OTHER_STATS(point, turning_angle);
 
     return {};
 }
