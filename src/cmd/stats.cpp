@@ -8,6 +8,7 @@ namespace {
 struct {
     unsigned int sort_size;
     bool export_csv;
+    bool no_print;
 } param;
 
 struct StrandInfo {
@@ -44,11 +45,13 @@ struct PointInfo {
 void cmd::parse::stats(args::Subparser &parser) {
     args::ValueFlag<unsigned int> sort_size(parser, "N", "Print top-N sorted list of items [10]", {"sort-size"}, 10);
     args::Flag export_csv(parser, "export-csv", "Export raw data tables as CSV files", {"export-csv"});
+    args::Flag no_print(parser, "no-print", "Do not print the stats", {"no-print"});
     parser.Parse();
     globals::cmd_exec = cmd::exec::stats;
     ::param = {};
     ::param.sort_size = *sort_size;
     ::param.export_csv = export_csv;
+    ::param.no_print = no_print;
 }
 
 std::shared_ptr<cyHairFile> cmd::exec::stats(std::shared_ptr<cyHairFile> hairfile_in) {
@@ -204,6 +207,9 @@ std::shared_ptr<cyHairFile> cmd::exec::stats(std::shared_ptr<cyHairFile> hairfil
 
         spdlog::info("Exported raw data tables to {}_stats_*.csv", globals::input_file_wo_ext);
     }
+
+    if (::param.no_print)
+        return {};
 
 #define PRINT_STRAND_STATS(KEY) \
     const auto& strand_##KEY##_stats = util::get_stats(strand_info_vec, [](const auto& a) { return a.KEY; }, ::param.sort_size); \
