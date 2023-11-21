@@ -148,10 +148,5 @@ std::shared_ptr<cyHairFile> cmd::exec::filter(std::shared_ptr<cyHairFile> hairfi
         selected[i] = 1;
     }
 
-    if (std::accumulate(selected.begin(), selected.end(), 0) == 0) {
-        spdlog::warn("No strand is selected");
-        return {};
-    }
-
     return util::get_subset(hairfile_in, selected);
 }

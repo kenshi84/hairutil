@@ -5,6 +5,11 @@ std::shared_ptr<cyHairFile> util::get_subset(std::shared_ptr<cyHairFile> hairfil
 
     const unsigned int num_selected = std::accumulate(selected.begin(), selected.end(), 0);
 
+    if (num_selected == 0) {
+        spdlog::warn("No strand is selected");
+        return {};
+    }
+
     // Count the number of selected strands and their points
     unsigned int out_hair_count = num_selected;
     unsigned int out_point_count = 0;
