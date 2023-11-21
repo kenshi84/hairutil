@@ -4,11 +4,15 @@
 using namespace Eigen;
 
 namespace {
-std::string key;
-std::optional<float> lt;
-std::optional<float> gt;
-std::optional<float> leq;
-std::optional<float> geq;
+
+struct {
+    std::string key;
+    std::optional<float> lt;
+    std::optional<float> gt;
+    std::optional<float> leq;
+    std::optional<float> geq;
+} param;
+
 const std::set<std::string> keys_set = {
     "length",
     "nsegs",
@@ -20,6 +24,7 @@ const std::set<std::string> keys_set = {
     "maxptta",
     "minptta"
 };
+
 }
 
 void cmd::parse::filter(args::Subparser &parser) {
@@ -42,33 +47,34 @@ void cmd::parse::filter(args::Subparser &parser) {
     parser.Parse();
     globals::cmd_exec = cmd::exec::filter;
     globals::check_error = [](){
-        if (::keys_set.count(::key) == 0) {
-            throw std::runtime_error(fmt::format("Invalid key: {}", ::key));
+        if (::keys_set.count(::param.key) == 0) {
+            throw std::runtime_error(fmt::format("Invalid key: {}", ::param.key));
         }
-        if (::lt && ::leq) {
+        if (::param.lt && ::param.leq) {
             throw std::runtime_error("Cannot specify both --lt and --leq");
         }
-        if (::gt && ::geq) {
+        if (::param.gt && ::param.geq) {
             throw std::runtime_error("Cannot specify both --gt and --geq");
         }
-        if (!::lt && !::gt && !::leq && !::geq) {
+        if (!::param.lt && !::param.gt && !::param.leq && !::param.geq) {
             throw std::runtime_error("Must specify one of --lt, --gt, --leq, or --geq");
         }
     };
+    ::param = {};
     globals::output_file = [](){
         std::string suffix;
-        if (::gt) suffix += fmt::format("_gt_{}", *::gt);
-        if (::geq) suffix += fmt::format("_geq_{}", *::geq);
-        if (::lt) suffix += fmt::format("_lt_{}", *::lt);
-        if (::leq) suffix += fmt::format("_leq_{}", *::leq);
-        return fmt::format("{}_filtered_{}{}.{}", globals::input_file_wo_ext, ::key, suffix, globals::output_ext);
+        if (::param.gt) suffix += fmt::format("_gt_{}", *::param.gt);
+        if (::param.geq) suffix += fmt::format("_geq_{}", *::param.geq);
+        if (::param.lt) suffix += fmt::format("_lt_{}", *::param.lt);
+        if (::param.leq) suffix += fmt::format("_leq_{}", *::param.leq);
+        return fmt::format("{}_filtered_{}{}.{}", globals::input_file_wo_ext, ::param.key, suffix, globals::output_ext);
     };
 
-    ::key = *key;
-    if (lt) ::lt = *lt;
-    if (gt) ::gt = *gt;
-    if (leq) ::leq = *leq;
-    if (geq) ::geq = *geq;
+    ::param.key = *key;
+    if (lt) ::param.lt = *lt;
+    if (gt) ::param.gt = *gt;
+    if (leq) ::param.leq = *leq;
+    if (geq) ::param.geq = *geq;
 }
 
 std::shared_ptr<cyHairFile> cmd::exec::filter(std::shared_ptr<cyHairFile> hairfile_in) {
@@ -124,20 +130,20 @@ std::shared_ptr<cyHairFile> cmd::exec::filter(std::shared_ptr<cyHairFile> hairfi
         offset += nsegs + 1;
 
         double value;
-        if (::key == "length") value = strand_length;
-        if (::key == "nsegs") value = nsegs;
-        if (::key == "tasum") value = turning_angle_sum;
-        if (::key == "maxseglength") value = max_segment_length;
-        if (::key == "minseglength") value = min_segment_length;
-        if (::key == "maxptcrr") value = max_point_circumradius_reciprocal;
-        if (::key == "minptcrr") value = min_point_circumradius_reciprocal;
-        if (::key == "maxptta") value = max_point_turning_angle;
-        if (::key == "minptta") value = min_point_turning_angle;
+        if (::param.key == "length") value = strand_length;
+        if (::param.key == "nsegs") value = nsegs;
+        if (::param.key == "tasum") value = turning_angle_sum;
+        if (::param.key == "maxseglength") value = max_segment_length;
+        if (::param.key == "minseglength") value = min_segment_length;
+        if (::param.key == "maxptcrr") value = max_point_circumradius_reciprocal;
+        if (::param.key == "minptcrr") value = min_point_circumradius_reciprocal;
+        if (::param.key == "maxptta") value = max_point_turning_angle;
+        if (::param.key == "minptta") value = min_point_turning_angle;
 
-        if (::lt && value >= *::lt) continue;
-        if (::gt && value <= *::gt) continue;
-        if (::leq && value > *::leq) continue;
-        if (::geq && value < *::geq) continue;
+        if (::param.lt && value >= *::param.lt) continue;
+        if (::param.gt && value <= *::param.gt) continue;
+        if (::param.leq && value > *::param.leq) continue;
+        if (::param.geq && value < *::param.geq) continue;
 
         selected[i] = 1;
     }

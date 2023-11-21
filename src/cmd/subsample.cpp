@@ -6,9 +6,11 @@
 using namespace Eigen;
 
 namespace {
-unsigned int target_count;
-float scale_factor;
-std::set<int> indices;
+struct {
+    unsigned int target_count;
+    float scale_factor;
+    std::set<int> indices;
+} param;
 }
 
 void cmd::parse::subsample(args::Subparser &parser) {
@@ -18,36 +20,37 @@ void cmd::parse::subsample(args::Subparser &parser) {
     parser.Parse();
     globals::cmd_exec = cmd::exec::subsample;
     globals::output_file = []() -> std::string {
-        if (::indices.empty()) {
-            return fmt::format("{}_{}.{}", globals::input_file_wo_ext, ::target_count, globals::output_ext);
+        if (::param.indices.empty()) {
+            return fmt::format("{}_{}.{}", globals::input_file_wo_ext, ::param.target_count, globals::output_ext);
         } else {
-            std::string indices_str = util::join_vector_to_string(::indices, '_');
+            std::string indices_str = util::join_vector_to_string(::param.indices, '_');
             if (indices_str.size() > 100)
                 indices_str.resize(100);
             return fmt::format("{}_indices_{}.{}", globals::input_file_wo_ext, indices_str, globals::output_ext);
         }
     };
     globals::check_error = [](){
-        if (::scale_factor >= 1.0) {
+        if (::param.scale_factor >= 1.0) {
             throw std::runtime_error("--scale-factor must be less than 1.0");
         }
     };
     if (!target_count && !indices || target_count && indices) {
         throw std::runtime_error("Either --target-count or --indices (not both) must be specified");
     }
-    ::target_count = *target_count;
-    ::scale_factor = *scale_factor;
+    ::param = {};
+    ::param.target_count = *target_count;
+    ::param.scale_factor = *scale_factor;
 
     if (indices) {
         const std::vector<int> indices_vec = util::parse_comma_separated_values<int>(*indices);
-        ::indices.insert(indices_vec.begin(), indices_vec.end());
+        ::param.indices.insert(indices_vec.begin(), indices_vec.end());
     }
 }
 
 std::shared_ptr<cyHairFile> cmd::exec::subsample(std::shared_ptr<cyHairFile> hairfile_in) {
     const auto& header_in = hairfile_in->GetHeader();
 
-    if (header_in.hair_count < ::target_count) {
+    if (header_in.hair_count < ::param.target_count) {
         throw std::runtime_error("Target number of hair strands must be less than the number of hair strands in the input file");
     }
 
@@ -62,9 +65,9 @@ std::shared_ptr<cyHairFile> cmd::exec::subsample(std::shared_ptr<cyHairFile> hai
     std::uniform_int_distribution<int> uniform_dist(0, header_in.hair_count - 1);
     unsigned int num_selected;
 
-    if (!::indices.empty()) {
+    if (!::param.indices.empty()) {
         for (unsigned int i = 0; i < header_in.hair_count; ++i) {
-            if (::indices.count(i)) {
+            if (::param.indices.count(i)) {
                 selected[i] = 1;
             }
         }
@@ -89,7 +92,7 @@ std::shared_ptr<cyHairFile> cmd::exec::subsample(std::shared_ptr<cyHairFile> hai
     r = bbox.diagonal().norm() * 0.5;
 
     // Loop while the number of selected strands is below target
-    for ( ; (num_selected = std::accumulate(selected.begin(), selected.end(), 0)) < ::target_count; )
+    for ( ; (num_selected = std::accumulate(selected.begin(), selected.end(), 0)) < ::param.target_count; )
     {
         if (num_selected && num_selected % 100 == 0)
             spdlog::info("Selected {} strands", num_selected);
@@ -114,7 +117,7 @@ std::shared_ptr<cyHairFile> cmd::exec::subsample(std::shared_ptr<cyHairFile> hai
         // If all points are covered, reduce the Poisson disk radius
         if (std::accumulate(covered.begin(), covered.end(), 0) == header_in.hair_count)
         {
-            r *= ::scale_factor;
+            r *= ::param.scale_factor;
         }
         else
         {

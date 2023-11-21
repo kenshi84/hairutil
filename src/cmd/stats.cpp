@@ -5,8 +5,10 @@ using namespace Eigen;
 
 namespace {
 
-unsigned int sort_size;
-bool export_csv;
+struct {
+    unsigned int sort_size;
+    bool export_csv;
+} param;
 
 struct StrandInfo {
     size_t idx;
@@ -35,15 +37,16 @@ void cmd::parse::stats(args::Subparser &parser) {
     args::Flag export_csv(parser, "export-csv", "Export raw data tables as CSV files", {"export-csv"});
     parser.Parse();
     globals::cmd_exec = cmd::exec::stats;
-    ::sort_size = *sort_size;
-    ::export_csv = export_csv;
+    ::param = {};
+    ::param.sort_size = *sort_size;
+    ::param.export_csv = export_csv;
 }
 
 std::shared_ptr<cyHairFile> cmd::exec::stats(std::shared_ptr<cyHairFile> hairfile_in) {
     const auto& header = hairfile_in->GetHeader();
 
-    if (::sort_size > header.hair_count) {
-        throw std::runtime_error(fmt::format("sort_size ({}) > hair_count ({})", ::sort_size, header.hair_count));
+    if (::param.sort_size > header.hair_count) {
+        throw std::runtime_error(fmt::format("sort_size ({}) > hair_count ({})", ::param.sort_size, header.hair_count));
     }
 
     std::vector<StrandInfo> strand_info;    strand_info.reserve(header.hair_count);
@@ -104,7 +107,7 @@ std::shared_ptr<cyHairFile> cmd::exec::stats(std::shared_ptr<cyHairFile> hairfil
         offset += nsegs + 1;
     }
 
-    if (::export_csv) {
+    if (::param.export_csv) {
         std::ofstream ofs;
 
         ofs.open(globals::input_file_wo_ext + "_stats_strand.csv");
@@ -128,90 +131,90 @@ std::shared_ptr<cyHairFile> cmd::exec::stats(std::shared_ptr<cyHairFile> hairfil
     spdlog::info("================================================================");
     spdlog::info("Strand stats:");
     spdlog::info("================================================================");
-    const auto& strand_length_stats = util::get_stats(strand_info, [](const auto& a) { return a.length; }, ::sort_size);
+    const auto& strand_length_stats = util::get_stats(strand_info, [](const auto& a) { return a.length; }, ::param.sort_size);
     spdlog::info("*** length ***");
     spdlog::info("  min: [{}] {}", strand_length_stats.min.idx, strand_length_stats.min.length);
     spdlog::info("  max: [{}] {}", strand_length_stats.max.idx, strand_length_stats.max.length);
     spdlog::info("  median: [{}] {}", strand_length_stats.median.idx, strand_length_stats.median.length);
     spdlog::info("  average: {}", strand_length_stats.average);
-    if (::sort_size > 0) {
-        spdlog::info("  top {} largest:", ::sort_size);
+    if (::param.sort_size > 0) {
+        spdlog::info("  top {} largest:", ::param.sort_size);
         for (const auto& i : strand_length_stats.largest) spdlog::info("    [{}] {}", i.idx, i.length);
-        spdlog::info("  top {} smallest:", ::sort_size);
+        spdlog::info("  top {} smallest:", ::param.sort_size);
         for (const auto& i : strand_length_stats.smallest) spdlog::info("    [{}] {}", i.idx, i.length);
     }
     spdlog::info("----------------------------------------------------------------");
-    const auto& strand_nsegs_stats = util::get_stats(strand_info, [](const auto& a) { return a.nsegs; }, ::sort_size);
+    const auto& strand_nsegs_stats = util::get_stats(strand_info, [](const auto& a) { return a.nsegs; }, ::param.sort_size);
     spdlog::info("*** nsegs ***");
     spdlog::info("  min: [{}] {}", strand_nsegs_stats.min.idx, strand_nsegs_stats.min.nsegs);
     spdlog::info("  max: [{}] {}", strand_nsegs_stats.max.idx, strand_nsegs_stats.max.nsegs);
     spdlog::info("  median: [{}] {}", strand_nsegs_stats.median.idx, strand_nsegs_stats.median.nsegs);
     spdlog::info("  average: {}", strand_nsegs_stats.average);
-    if (::sort_size > 0) {
-        spdlog::info("  top {} largest:", ::sort_size);
+    if (::param.sort_size > 0) {
+        spdlog::info("  top {} largest:", ::param.sort_size);
         for (const auto& i : strand_nsegs_stats.largest) spdlog::info("    [{}] {}", i.idx, i.nsegs);
-        spdlog::info("  top {} smallest:", ::sort_size);
+        spdlog::info("  top {} smallest:", ::param.sort_size);
         for (const auto& i : strand_nsegs_stats.smallest) spdlog::info("    [{}] {}", i.idx, i.nsegs);
     }
     spdlog::info("----------------------------------------------------------------");
-    const auto& strand_tas_stats = util::get_stats(strand_info, [](const auto& a) { return a.turning_angle_sum; }, ::sort_size);
+    const auto& strand_tas_stats = util::get_stats(strand_info, [](const auto& a) { return a.turning_angle_sum; }, ::param.sort_size);
     spdlog::info("*** turning angle sum (degree) ***");
     spdlog::info("  min: [{}] {}", strand_tas_stats.min.idx, strand_tas_stats.min.turning_angle_sum);
     spdlog::info("  max: [{}] {}", strand_tas_stats.max.idx, strand_tas_stats.max.turning_angle_sum);
     spdlog::info("  median: [{}] {}", strand_tas_stats.median.idx, strand_tas_stats.median.turning_angle_sum);
     spdlog::info("  average: {}", strand_tas_stats.average);
-    if (::sort_size > 0) {
-        spdlog::info("  top {} largest:", ::sort_size);
+    if (::param.sort_size > 0) {
+        spdlog::info("  top {} largest:", ::param.sort_size);
         for (const auto& i : strand_tas_stats.largest) spdlog::info("    [{}] {}", i.idx, i.turning_angle_sum);
-        spdlog::info("  top {} smallest:", ::sort_size);
+        spdlog::info("  top {} smallest:", ::param.sort_size);
         for (const auto& i : strand_tas_stats.smallest) spdlog::info("    [{}] {}", i.idx, i.turning_angle_sum);
     }
 
     spdlog::info("================================================================");
     spdlog::info("Segment stats:");
     spdlog::info("================================================================");
-    const auto& segment_stats = util::get_stats(segment_info, [](const auto& a) { return a.length; }, ::sort_size);
+    const auto& segment_stats = util::get_stats(segment_info, [](const auto& a) { return a.length; }, ::param.sort_size);
     spdlog::info("*** length ***");
     spdlog::info("       [idx/strand_idx/local_idx]");
     spdlog::info("  min: [{}/{}/{}] {}", segment_stats.min.idx, segment_stats.min.strand_idx, segment_stats.min.local_idx, segment_stats.min.length);
     spdlog::info("  max: [{}/{}/{}] {}", segment_stats.max.idx, segment_stats.max.strand_idx, segment_stats.max.local_idx, segment_stats.max.length);
     spdlog::info("  median: [{}/{}/{}] {}", segment_stats.median.idx, segment_stats.median.strand_idx, segment_stats.median.local_idx, segment_stats.median.length);
     spdlog::info("  average: {}", segment_stats.average);
-    if (::sort_size > 0) {
-        spdlog::info("  top {} largest:", ::sort_size);
+    if (::param.sort_size > 0) {
+        spdlog::info("  top {} largest:", ::param.sort_size);
         for (const auto& i : segment_stats.largest) spdlog::info("    [{}/{}/{}] {}", i.idx, i.strand_idx, i.local_idx, i.length);
-        spdlog::info("  top {} smallest:", ::sort_size);
+        spdlog::info("  top {} smallest:", ::param.sort_size);
         for (const auto& i : segment_stats.smallest) spdlog::info("    [{}/{}/{}] {}", i.idx, i.strand_idx, i.local_idx, i.length);
     }
 
     spdlog::info("================================================================");
     spdlog::info("Point stats:");
     spdlog::info("================================================================");
-    const auto& point_crr_stats = util::get_stats(point_info, [](const auto& a) { return a.circumradius_reciprocal; }, ::sort_size);
+    const auto& point_crr_stats = util::get_stats(point_info, [](const auto& a) { return a.circumradius_reciprocal; }, ::param.sort_size);
     spdlog::info("*** circumradius reciprocal ***");
     spdlog::info("       [idx/strand_idx/local_idx]");
     spdlog::info("  min: [{}/{}/{}] {}", point_crr_stats.min.idx, point_crr_stats.min.strand_idx, point_crr_stats.min.local_idx, point_crr_stats.min.circumradius_reciprocal);
     spdlog::info("  max: [{}/{}/{}] {}", point_crr_stats.max.idx, point_crr_stats.max.strand_idx, point_crr_stats.max.local_idx, point_crr_stats.max.circumradius_reciprocal);
     spdlog::info("  median: [{}/{}/{}] {}", point_crr_stats.median.idx, point_crr_stats.median.strand_idx, point_crr_stats.median.local_idx, point_crr_stats.median.circumradius_reciprocal);
     spdlog::info("  average: {}", point_crr_stats.average);
-    if (::sort_size > 0) {
-        spdlog::info("  top {} largest:", ::sort_size);
+    if (::param.sort_size > 0) {
+        spdlog::info("  top {} largest:", ::param.sort_size);
         for (const auto& i : point_crr_stats.largest) spdlog::info("    [{}/{}/{}] {}", i.idx, i.strand_idx, i.local_idx, i.circumradius_reciprocal);
-        spdlog::info("  top {} smallest:", ::sort_size);
+        spdlog::info("  top {} smallest:", ::param.sort_size);
         for (const auto& i : point_crr_stats.smallest) spdlog::info("    [{}/{}/{}] {}", i.idx, i.strand_idx, i.local_idx, i.circumradius_reciprocal);
     }
     spdlog::info("----------------------------------------------------------------");
-    const auto& point_ta_stats = util::get_stats(point_info, [](const auto& a) { return a.turning_angle; }, ::sort_size);
+    const auto& point_ta_stats = util::get_stats(point_info, [](const auto& a) { return a.turning_angle; }, ::param.sort_size);
     spdlog::info("*** turning angle (degree) ***");
     spdlog::info("       [idx/strand_idx/local_idx]");
     spdlog::info("  min: [{}/{}/{}] {}", point_ta_stats.min.idx, point_ta_stats.min.strand_idx, point_ta_stats.min.local_idx, point_ta_stats.min.turning_angle);
     spdlog::info("  max: [{}/{}/{}] {}", point_ta_stats.max.idx, point_ta_stats.max.strand_idx, point_ta_stats.max.local_idx, point_ta_stats.max.turning_angle);
     spdlog::info("  median: [{}/{}/{}] {}", point_ta_stats.median.idx, point_ta_stats.median.strand_idx, point_ta_stats.median.local_idx, point_ta_stats.median.turning_angle);
     spdlog::info("  average: {}", point_ta_stats.average);
-    if (::sort_size > 0) {
-        spdlog::info("  top {} largest:", ::sort_size);
+    if (::param.sort_size > 0) {
+        spdlog::info("  top {} largest:", ::param.sort_size);
         for (const auto& i : point_ta_stats.largest) spdlog::info("    [{}/{}/{}] {}", i.idx, i.strand_idx, i.local_idx, i.turning_angle);
-        spdlog::info("  top {} smallest:", ::sort_size);
+        spdlog::info("  top {} smallest:", ::param.sort_size);
         for (const auto& i : point_ta_stats.smallest) spdlog::info("    [{}/{}/{}] {}", i.idx, i.strand_idx, i.local_idx, i.turning_angle);
     }
 

@@ -3,8 +3,10 @@
 using namespace Eigen;
 
 namespace {
-float ignore_segment_length_ratio;
-unsigned int min_num_segments;
+struct {
+    float ignore_segment_length_ratio;
+    unsigned int min_num_segments;
+} param;
 }
 
 void cmd::parse::resample(args::Subparser &parser) {
@@ -14,12 +16,13 @@ void cmd::parse::resample(args::Subparser &parser) {
     globals::cmd_exec = cmd::exec::resample;
     globals::output_file = [](){ return globals::input_file_wo_ext + "_resampled." + globals::output_ext; };
     globals::check_error = [](){
-        if (::ignore_segment_length_ratio < 0 || ::ignore_segment_length_ratio >= 1) {
-            throw std::runtime_error(fmt::format("Invalid ignore segment length ratio: {}", ::ignore_segment_length_ratio));
+        if (::param.ignore_segment_length_ratio < 0 || ::param.ignore_segment_length_ratio >= 1) {
+            throw std::runtime_error(fmt::format("Invalid ignore segment length ratio: {}", ::param.ignore_segment_length_ratio));
         }
     };
-    ::ignore_segment_length_ratio = *ignore_segment_length_ratio;
-    ::min_num_segments = *min_num_segments;
+    param = {};
+    ::param.ignore_segment_length_ratio = *ignore_segment_length_ratio;
+    ::param.min_num_segments = *min_num_segments;
 }
 
 std::shared_ptr<cyHairFile> cmd::exec::resample(std::shared_ptr<cyHairFile> hairfile_in) {
@@ -72,7 +75,7 @@ std::shared_ptr<cyHairFile> cmd::exec::resample(std::shared_ptr<cyHairFile> hair
 
         // Get the maximum segment length
         const auto segment_length_max = std::max_element(segment_length.begin(), segment_length.end());
-        const float ignore_segment_length_threshold = ignore_segment_length_ratio * (*segment_length_max);
+        const float ignore_segment_length_threshold = ::param.ignore_segment_length_ratio * (*segment_length_max);
 
         // Determine which segments to ignore
         std::vector<unsigned char> segment_ignored(num_segments);
@@ -116,7 +119,7 @@ std::shared_ptr<cyHairFile> cmd::exec::resample(std::shared_ptr<cyHairFile> hair
         }
 
         // Additional subdivision needed to meet the min_num_segments condition
-        const int num_additional_subdiv = std::max<int>(0, ::min_num_segments - std::accumulate(num_subsegments.begin(), num_subsegments.end(), 0));
+        const int num_additional_subdiv = std::max<int>(0, ::param.min_num_segments - std::accumulate(num_subsegments.begin(), num_subsegments.end(), 0));
         if (num_additional_subdiv > 0) {
             spdlog::warn("Hair {} needs {} additional subdivisions", i, num_additional_subdiv);
             for (int j = 0, k = 0; j < num_additional_subdiv; ++j) {
