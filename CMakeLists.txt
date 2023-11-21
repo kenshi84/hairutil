@@ -14,7 +14,8 @@ include_directories(
     include
 )
 
-# Do not include test
+# Do not build Alembic binaries and tests
+set(USE_BINARIES OFF CACHE BOOL "Include Alembic binaries")
 set(USE_TESTS OFF CACHE BOOL "Include Alembic tests")
 add_subdirectory(ext/alembic)
 
