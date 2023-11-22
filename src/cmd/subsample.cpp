@@ -10,6 +10,7 @@ struct {
     unsigned int target_count;
     float scale_factor;
     std::set<int> indices;
+    bool exclude;
 } param;
 }
 
@@ -17,6 +18,7 @@ void cmd::parse::subsample(args::Subparser &parser) {
     args::ValueFlag<unsigned int> target_count(parser, "N", "(*)Target number of hair strands", {"target-count"}, 0);
     args::ValueFlag<float> scale_factor(parser, "R", "Factor for scaling down the Poisson disk radius [0.9]", {"scale-factor"}, 0.9);
     args::ValueFlag<std::string> indices(parser, "N,...", "Comma-separated list of strand indices to extract", {"indices"});
+    args::Flag exclude(parser, "", "Exclude the specified strands instead of including them", {"exclude"});
     parser.Parse();
     globals::cmd_exec = cmd::exec::subsample;
     globals::output_file = []() -> std::string {
@@ -26,6 +28,8 @@ void cmd::parse::subsample(args::Subparser &parser) {
             std::string indices_str = util::join_vector_to_string(::param.indices, '_');
             if (indices_str.size() > 100)
                 indices_str.resize(100);
+            if (::param.exclude)
+                indices_str = "exclude_" + indices_str;
             return fmt::format("{}_indices_{}.{}", globals::input_file_wo_ext, indices_str, globals::output_ext);
         }
     };
@@ -45,6 +49,7 @@ void cmd::parse::subsample(args::Subparser &parser) {
         const std::vector<int> indices_vec = util::parse_comma_separated_values<int>(*indices);
         ::param.indices.insert(indices_vec.begin(), indices_vec.end());
     }
+    ::param.exclude = exclude;
 }
 
 std::shared_ptr<cyHairFile> cmd::exec::subsample(std::shared_ptr<cyHairFile> hairfile_in) {
@@ -69,6 +74,11 @@ std::shared_ptr<cyHairFile> cmd::exec::subsample(std::shared_ptr<cyHairFile> hai
         for (unsigned int i = 0; i < header_in.hair_count; ++i) {
             if (::param.indices.count(i)) {
                 selected[i] = 1;
+            }
+        }
+        if (::param.exclude) {
+            for (unsigned int i = 0; i < header_in.hair_count; ++i) {
+                selected[i] = !selected[i];
             }
         }
         return util::get_subset(hairfile_in, selected);
