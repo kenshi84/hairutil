@@ -1,3 +1,4 @@
+#include "cmd.h"
 #include "io.h"
 
 namespace globals {
@@ -15,6 +16,13 @@ namespace globals {
     std::function<void(void)> check_error;
     std::shared_ptr<cyHairFile> (*cmd_exec)(std::shared_ptr<cyHairFile>) = nullptr;
     std::mt19937 rng;
+
+    const std::set<std::shared_ptr<cyHairFile> (*)(std::shared_ptr<cyHairFile>)> cmd_wo_output = {
+        cmd::exec::info,
+        cmd::exec::autofix,
+        cmd::exec::stats,
+        cmd::exec::findpenet,
+    };
 
     const std::unordered_map<std::string, std::pair<::io::load_func_t, ::io::save_func_t>> supported_ext = {
         {"bin", {::io::load_bin, ::io::save_bin}},

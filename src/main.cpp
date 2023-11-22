@@ -24,6 +24,7 @@ int main(int argc, const char **argv)
     args::Command cmd_convert(grp_commands, "convert", "Convert file type", cmd::parse::convert);
     args::Command cmd_decompose(grp_commands, "decompose", "Decompose into individual curves", cmd::parse::decompose);
     args::Command cmd_filter(grp_commands, "filter", "Extract strands that pass given filter", cmd::parse::filter);
+    args::Command cmd_findpenet(grp_commands, "findpenet", "Find penetration against head mesh", cmd::parse::findpenet);
     args::Command cmd_info(grp_commands, "info", "Print information", cmd::parse::info);
     args::Command cmd_resample(grp_commands, "resample", "Resample strands s.t. every segment is shorter than twice the shortest segment", cmd::parse::resample);
     args::Command cmd_stats(grp_commands, "stats", "Generate statistics", cmd::parse::stats);
@@ -87,7 +88,7 @@ int main(int argc, const char **argv)
     }
     globals::rng.seed(seed);
 
-    if (globals::cmd_exec == cmd::exec::info || globals::cmd_exec == cmd::exec::autofix || globals::cmd_exec == cmd::exec::stats) {
+    if (globals::cmd_wo_output.count(globals::cmd_exec)) {
         if (globals::output_ext != "") {
             spdlog::warn("Ignoring --output-ext");
             globals::output_ext = "";

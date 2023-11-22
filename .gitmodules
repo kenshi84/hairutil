@@ -22,3 +22,6 @@
 [submodule "ext/googletest"]
 	path = ext/googletest
 	url = https://github.com/google/googletest
+[submodule "ext/libigl"]
+	path = ext/libigl
+	url = https://github.com/libigl/libigl

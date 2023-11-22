@@ -9,6 +9,7 @@ include_directories(
     ext/cyCodeBase
     ext/eigen
     ext/happly
+    ext/libigl/include
     ext/nanoflann/include
     ext/spdlog/include
     include
@@ -35,6 +36,7 @@ add_library(hairutil_cmd
   src/cmd/convert.cpp
   src/cmd/decompose.cpp
   src/cmd/filter.cpp
+  src/cmd/findpenet.cpp
   src/cmd/info.cpp
   src/cmd/resample.cpp
   src/cmd/stats.cpp
@@ -79,6 +81,7 @@ add_executable(test_io
   test/io.cpp
 )
 target_link_libraries(test_io
+  hairutil_cmd
   hairutil_io
   gtest_main
 )
