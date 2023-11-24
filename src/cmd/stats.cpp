@@ -326,7 +326,12 @@ std::shared_ptr<cyHairFile> cmd::exec::stats(std::shared_ptr<cyHairFile> hairfil
             ++row;
         };
 
-        row = 1;
+        ws_strand_stats.cell("A1").value("#strands:");
+        ws_strand_stats.cell("B1").value((int)header.hair_count);
+        ws_strand_stats.cell("A2").value("#points:");
+        ws_strand_stats.cell("B2").value((int)header.point_count);
+
+        row = 4;
         append_strand_stats("length", [](const auto& a){ return a.length; });
         append_strand_stats("nsegs", [](const auto& a){ return a.nsegs; });
         append_strand_stats("turning_angle_sum", [](const auto& a){ return a.turning_angle_sum; });
