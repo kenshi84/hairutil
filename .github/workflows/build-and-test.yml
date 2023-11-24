@@ -9,8 +9,9 @@ jobs:
     steps:
     - name: Checkout the repository
       uses: actions/checkout@v4.1.1
-      with:
-        submodules: true
+
+    - name: Checkout submodules
+      run: git submodule update --init --recursive
 
     - name: Configure the project
       uses: threeal/cmake-action@v1.3.0
