@@ -25,3 +25,6 @@
 [submodule "ext/libigl"]
 	path = ext/libigl
 	url = https://github.com/libigl/libigl
+[submodule "ext/libstudxml"]
+	path = ext/libstudxml
+	url = https://git.codesynthesis.com/libstudxml/libstudxml.git
