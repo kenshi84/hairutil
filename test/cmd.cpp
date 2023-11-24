@@ -160,6 +160,17 @@ TEST(cmd_filter, fail_no_threshold) {
     EXPECT_EQ(test_main(args.size(), args.data()), 1);
 }
 
+TEST(cmd_findpenet, Bangs) {
+    std::vector<const char*> args = {
+        "test_cmd",
+        "findpenet",
+        "-i", TEST_DATA_DIR "/Bangs_100.bin",
+        "-m", TEST_DATA_DIR "/Bangs_head.ply",
+    };
+    globals::clear();
+    EXPECT_EQ(test_main(args.size(), args.data()), 0);
+}
+
 TEST(cmd_info, ply) {
     std::vector<const char*> args = {
         "test_cmd",
@@ -176,6 +187,18 @@ TEST(cmd_resample, bin_to_ply) {
         "resample",
         "-i", TEST_DATA_DIR "/Bangs_100.bin",
         "-o", "ply",
+        "--overwrite",
+    };
+    globals::clear();
+    EXPECT_EQ(test_main(args.size(), args.data()), 0);
+}
+
+TEST(cmd_stats, export_raw) {
+    std::vector<const char*> args = {
+        "test_cmd",
+        "stats",
+        "-i", TEST_DATA_DIR "/Bangs_100.bin",
+        "--export-raw",
         "--overwrite",
     };
     globals::clear();

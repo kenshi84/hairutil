@@ -19,6 +19,7 @@ $ hairutil --help
         convert                           Convert file type
         decompose                         Decompose into individual curves
         filter                            Extract strands that pass given filter
+        findpenet                         Find penetration against head mesh
         info                              Print information
         resample                          Resample strands s.t. every segment is
                                           shorter than twice the shortest
@@ -95,6 +96,25 @@ hairutil filter -i ~/CT2Hair/output/Bangs.bin -o ply --overwrite --key length --
 # Output saved to ~/CT2Hair/output/Bangs_filtered_length_geq_174.96289.ply
 ```
 
+### `findpenet` command
+```
+$ hairutil findpenet --help
+  hairutil findpenet {OPTIONS}
+
+    Find penetration against head mesh
+
+  OPTIONS:
+
+      -m[PATH], --mesh-path=[PATH]      (REQUIRED) Path to triangle mesh
+      -d[RATIO],
+      --decimate-ratio=[RATIO]          Ratio for decimating triangle mesh
+                                        [0.25]
+      -t[RATIO],
+      --threshold-ratio=[RATIO]         Threshold ratio [0.3]; detect strand as
+                                        penetrating if #in-points is more than
+                                        this value times #total-points
+```
+
 ### `info` command
 ```
 hairutil info --input-file ~/cemyuksel/wCurly.hair
@@ -128,7 +148,9 @@ $ hairutil stats --help
   OPTIONS:
 
       --sort-size=[N]                   Print top-N sorted list of items [10]
-      --export-csv                      Export raw data tables as CSV files
+      --no-export                       Do not export result to a .xlsx file
+      --export-raw                      Include raw data in exported file
+      --no-print                        Do not print the stats
 ```
 
 ### `subsample` command
@@ -144,7 +166,10 @@ $ hairutil subsample --help
       --scale-factor=[R]                Factor for scaling down the Poisson disk
                                         radius [0.9]
       --indices=[N,...]                 Comma-separated list of strand indices
-                                        to extract
+                                        to extract, or a path to .txt file
+                                        containing such a list
+      --exclude                         Exclude the specified strands instead of
+                                        including them
 ```
 
 Example:
@@ -156,4 +181,27 @@ hairutil subsample --input-file ~/CT2Hair/output/Bangs.bin --output-ext bin --ta
 ```
 hairutil subsample -i test/data/Bangs_100.bin -o ply --indices 65,32,4,36,0
 # Output saved to test/data/Bangs_100_indices_0_4_32_36_65.ply
+```
+
+### `transform` command
+```
+$ hairutil transform --help
+  hairutil transform {OPTIONS}
+
+    Transform strand points
+
+  OPTIONS:
+
+      -s[R], --scale=[R]                Uniform scaling factor [1.0]
+      -t[R,R,R], --translate=[R,R,R]    Comma-separated 3D vector for
+                                        translation [0,0,0]
+      -R[R,R,R,R,R,R,R,R,R],
+      --rotate=[R,R,R,R,R,R,R,R,R]      Comma-separated row-major 3x3 matrix for
+                                        rotation [1,0,0,0,1,0,0,0,1]
+```
+Example:
+```
+hairutil transform -i test/data/Bangs_100.bin -o ply --overwrite --scale 1.2 --translate 12.3,45.6,78.9 --rotate 0.407903582,-0.656201959,0.634833455,0.838385462,0.54454118,0.0241773129,-0.361558199,0
+.52237314,0.77227056
+# Output saved to test/data/Bangs_100_tfm_s_1.2_t_12.3_45.6_78.9_R_0.407904_-0.656202_0.634833_0.838385_0.544541_0.0241773_-0.361558_0.522373_0.772271.ply
 ```
