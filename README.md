@@ -150,7 +150,10 @@ $ hairutil stats --help
 
       --sort-size=[N]                   Print top-N sorted list of items [10]
       --no-export                       Do not export result to a .xlsx file
-      --export-raw                      Include raw data in exported file
+      --export-raw-strand               Include raw strand data in exported file
+      --export-raw-segment              Include raw segment data in exported
+                                        file
+      --export-raw-point                Include raw point data in exported file
       --no-print                        Do not print the stats
 ```
 

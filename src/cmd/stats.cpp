@@ -10,7 +10,9 @@ namespace {
 struct {
     unsigned int sort_size;
     bool no_export;
-    bool export_raw;
+    bool export_raw_strand;
+    bool export_raw_segment;
+    bool export_raw_point;
     bool no_print;
 } param;
 
@@ -48,7 +50,9 @@ struct PointInfo {
 void cmd::parse::stats(args::Subparser &parser) {
     args::ValueFlag<unsigned int> sort_size(parser, "N", "Print top-N sorted list of items [10]", {"sort-size"}, 10);
     args::Flag no_export(parser, "no-export", "Do not export result to a .xlsx file", {"no-export"});
-    args::Flag export_raw(parser, "export-raw", "Include raw data in exported file", {"export-raw"});
+    args::Flag export_raw_strand(parser, "export-raw-strand", "Include raw strand data in exported file", {"export-raw-strand"});
+    args::Flag export_raw_segment(parser, "export-raw-segment", "Include raw segment data in exported file", {"export-raw-segment"});
+    args::Flag export_raw_point(parser, "export-raw-point", "Include raw point data in exported file", {"export-raw-point"});
     args::Flag no_print(parser, "no-print", "Do not print the stats", {"no-print"});
     parser.Parse();
     globals::cmd_exec = cmd::exec::stats;
@@ -56,14 +60,16 @@ void cmd::parse::stats(args::Subparser &parser) {
         if (::param.no_export && ::param.no_print) {
             throw std::runtime_error("Both --no-export and --no-print are specified");
         }
-        if (::param.no_export && ::param.export_raw) {
-            throw std::runtime_error("Both --no-export and --export-raw are specified");
+        if (::param.no_export && (::param.export_raw_strand || ::param.export_raw_segment || ::param.export_raw_point)) {
+            throw std::runtime_error("Both --no-export and --export-raw-* are specified");
         }
     };
     ::param = {};
     ::param.sort_size = *sort_size;
     ::param.no_export = no_export;
-    ::param.export_raw = export_raw;
+    ::param.export_raw_strand = export_raw_strand;
+    ::param.export_raw_segment = export_raw_segment;
+    ::param.export_raw_point = export_raw_point;
     ::param.no_print = no_print;
 
     if (!::param.no_export)
@@ -156,9 +162,9 @@ std::shared_ptr<cyHairFile> cmd::exec::stats(std::shared_ptr<cyHairFile> hairfil
     ws_segment_stats.title("Segment stats");
     ws_point_stats.title("Point stats");
 
-    if (!::param.no_export && ::param.export_raw) {
-        const size_t max_num_rows = 1000000;    // Excel's limit
+    const size_t max_num_rows = 1000000;    // Excel's limit
 
+    if (::param.export_raw_strand) {
         // Strand raw data
         spdlog::info("Writing strand raw data");
         std::vector<xlnt::worksheet> ws_strand_raw(header.hair_count / max_num_rows + 1);
@@ -196,7 +202,9 @@ std::shared_ptr<cyHairFile> cmd::exec::stats(std::shared_ptr<cyHairFile> hairfil
             ws.cell(fmt::format("K{}", i + 2 - ws_idx * max_num_rows)).value(strand_info_vec[i].max_point_turning_angle);
             ws.cell(fmt::format("L{}", i + 2 - ws_idx * max_num_rows)).value(strand_info_vec[i].min_point_turning_angle);
         }
+    }
 
+    if (::param.export_raw_segment) {
         // Segment raw data
         spdlog::info("Writing segment raw data");
         std::vector<xlnt::worksheet> ws_segment_raw(segment_info_vec.size() / max_num_rows + 1);
@@ -220,7 +228,9 @@ std::shared_ptr<cyHairFile> cmd::exec::stats(std::shared_ptr<cyHairFile> hairfil
             ws.cell(fmt::format("D{}", i + 2 - ws_idx * max_num_rows)).value(segment_info_vec[i].length);
             ws.cell(fmt::format("E{}", i + 2 - ws_idx * max_num_rows)).value(segment_info_vec[i].turning_angle_diff);
         }
+    }
 
+    if (::param.export_raw_point) {
         // Point raw data
         spdlog::info("Writing point raw data");
         std::vector<xlnt::worksheet> ws_point_raw(point_info_vec.size() / max_num_rows + 1);
