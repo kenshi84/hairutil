@@ -28,3 +28,6 @@
 [submodule "ext/libstudxml"]
 	path = ext/libstudxml
 	url = https://git.codesynthesis.com/libstudxml/libstudxml.git
+[submodule "ext/xlnt"]
+	path = ext/xlnt
+	url = https://github.com/tfussell/xlnt

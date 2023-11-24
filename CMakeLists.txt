@@ -20,6 +20,8 @@ set(USE_BINARIES OFF CACHE BOOL "Include Alembic binaries")
 set(USE_TESTS OFF CACHE BOOL "Include Alembic tests")
 add_subdirectory(ext/alembic)
 
+add_subdirectory(ext/xlnt)
+
 set(VERSIONTAG "unknown")
 find_package(Git QUIET)
 if (GIT_FOUND OR Git_FOUND)
@@ -54,6 +56,7 @@ add_library(hairutil_io
 )
 target_link_libraries(hairutil_io
   Alembic::Alembic
+  xlnt
 )
 
 add_executable(hairutil
