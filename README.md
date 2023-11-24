@@ -113,6 +113,7 @@ $ hairutil findpenet --help
       --threshold-ratio=[RATIO]         Threshold ratio [0.3]; detect strand as
                                         penetrating if #in-points is more than
                                         this value times #total-points
+      --no-export                       Do not export result to txt
 ```
 
 ### `info` command
