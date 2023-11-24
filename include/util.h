@@ -84,10 +84,14 @@ inline std::vector<T> parse_comma_separated_values(const std::string& str) {
     std::string::size_type start = 0;
     std::string::size_type end = 0;
     while ((end = str.find(',', start)) != std::string::npos) {
-        values.push_back(lexical_cast<T>(str.substr(start, end - start)));
+        const std::string substr = str.substr(start, end - start);
+        if (!substr.empty())
+            values.push_back(lexical_cast<T>(substr));
         start = end + 1;
     }
-    values.push_back(lexical_cast<T>(str.substr(start)));
+    const std::string substr = str.substr(start);
+    if (!substr.empty())
+        values.push_back(lexical_cast<T>(substr));
     return values;
 }
 

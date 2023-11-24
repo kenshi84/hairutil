@@ -17,7 +17,7 @@ struct {
 void cmd::parse::subsample(args::Subparser &parser) {
     args::ValueFlag<unsigned int> target_count(parser, "N", "(*)Target number of hair strands", {"target-count"}, 0);
     args::ValueFlag<float> scale_factor(parser, "R", "Factor for scaling down the Poisson disk radius [0.9]", {"scale-factor"}, 0.9);
-    args::ValueFlag<std::string> indices(parser, "N,...", "Comma-separated list of strand indices to extract", {"indices"});
+    args::ValueFlag<std::string> indices(parser, "N,...", "Comma-separated list of strand indices to extract, or a path to .txt file containing such a list", {"indices"});
     args::Flag exclude(parser, "", "Exclude the specified strands instead of including them", {"exclude"});
     parser.Parse();
     globals::cmd_exec = cmd::exec::subsample;
@@ -46,8 +46,21 @@ void cmd::parse::subsample(args::Subparser &parser) {
     ::param.scale_factor = *scale_factor;
 
     if (indices) {
-        const std::vector<int> indices_vec = util::parse_comma_separated_values<int>(*indices);
-        ::param.indices.insert(indices_vec.begin(), indices_vec.end());
+        if (indices->substr(indices->size() - 4) == ".txt") {
+            // Read indices from file
+            std::ifstream file(*indices);
+            if (!file.is_open()) {
+                throw std::runtime_error(fmt::format("Failed to open file: {}", *indices));
+            }
+            std::string line;
+            while (std::getline(file, line)) {
+                const std::vector<int> indices_vec = util::parse_comma_separated_values<int>(line);
+                ::param.indices.insert(indices_vec.begin(), indices_vec.end());
+            }
+        } else {
+            const std::vector<int> indices_vec = util::parse_comma_separated_values<int>(*indices);
+            ::param.indices.insert(indices_vec.begin(), indices_vec.end());
+        }
     }
     ::param.exclude = exclude;
 }
