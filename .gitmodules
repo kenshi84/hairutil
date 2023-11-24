@@ -25,3 +25,6 @@
 [submodule "ext/libigl"]
 	path = ext/libigl
 	url = https://github.com/libigl/libigl
+[submodule "ext/xlnt"]
+	path = ext/xlnt
+	url = https://github.com/tfussell/xlnt
