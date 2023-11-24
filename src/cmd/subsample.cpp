@@ -80,7 +80,7 @@ std::shared_ptr<cyHairFile> cmd::exec::subsample(std::shared_ptr<cyHairFile> hai
     AlignedBox3d bbox;
     unsigned int in_point_offset;
     double r;
-    std::uniform_int_distribution<int> uniform_dist(0, header_in.hair_count - 1);
+    UniformIntDistribution<int> uniform_dist(0, header_in.hair_count - 1);
     unsigned int num_selected;
 
     if (!::param.indices.empty()) {

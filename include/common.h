@@ -21,6 +21,8 @@
 #define CY_NO_INTRIN_H
 #include <cyHairFile.h>
 
+#include "random.h"
+
 namespace globals {
     // Given as command line arguments
     extern std::string input_file;

@@ -149,7 +149,7 @@ void io::save_ply(const std::string &filename, const std::shared_ptr<cyHairFile>
 
     // If color is not available, assign random value per strand
     if (vertex_red.empty()) {
-        std::uniform_int_distribution<unsigned char> uniform_dist(0, 255);
+        UniformIntDistribution<unsigned char> uniform_dist(0, 255);
         for (unsigned int i = 0; i < header.hair_count; ++i) {
             const unsigned short nsegs = header.arrays & _CY_HAIR_FILE_SEGMENTS_BIT ? hairfile->GetSegmentsArray()[i] : header.d_segments;
 
