@@ -166,6 +166,7 @@ TEST(cmd_findpenet, Bangs) {
         "findpenet",
         "-i", TEST_DATA_DIR "/Bangs_100.bin",
         "-m", TEST_DATA_DIR "/Bangs_head.ply",
+        "--overwrite",
     };
     globals::clear();
     EXPECT_EQ(test_main(args.size(), args.data()), 0);
@@ -198,7 +199,7 @@ TEST(cmd_stats, export_raw) {
         "test_cmd",
         "stats",
         "-i", TEST_DATA_DIR "/Bangs_100.bin",
-        "--export-raw",
+        "--export-raw-strand",
         "--overwrite",
     };
     globals::clear();
