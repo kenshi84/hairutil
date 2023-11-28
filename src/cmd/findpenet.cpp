@@ -12,6 +12,7 @@ std::string mesh_path;
 float decimate_ratio;
 float threshold_ratio;
 bool no_export;
+bool no_print;
 } param;
 }
 
@@ -20,6 +21,7 @@ void cmd::parse::findpenet(args::Subparser &parser) {
     args::ValueFlag<float> decimate_ratio(parser, "RATIO", "Ratio for decimating triangle mesh [0.25]", {'d', "decimate-ratio"}, 0.25f);
     args::ValueFlag<float> threshold_ratio(parser, "RATIO", "Threshold ratio [0.3]; detect strand as penetrating if #in-points is more than this value times #total-points", {'t', "threshold-ratio"}, 0.3f);
     args::Flag no_export(parser, "no-export", "Do not export result to txt", {"no-export"});
+    args::Flag no_print(parser, "no-print", "Do not print result to stdout", {"no-print"});
     parser.Parse();
     globals::cmd_exec = cmd::exec::findpenet;
     globals::check_error = [](){
@@ -35,6 +37,7 @@ void cmd::parse::findpenet(args::Subparser &parser) {
     ::param.decimate_ratio = *decimate_ratio;
     ::param.threshold_ratio = *threshold_ratio;
     ::param.no_export = no_export;
+    ::param.no_print = no_print;
     if (!::param.no_export) {
         globals::output_file = [](){ return fmt::format("{}_penet.txt", globals::input_file_wo_ext); };
     }
@@ -97,7 +100,7 @@ std::shared_ptr<cyHairFile> cmd::exec::findpenet(std::shared_ptr<cyHairFile> hai
     if (!penetrating.empty()) {
         std::stringstream ss;
         std::copy(penetrating.begin(), penetrating.end(), std::ostream_iterator<unsigned int>(ss, ","));
-        spdlog::warn("Found {} strands penetrating the mesh:\n{}", penetrating.size(), ss.str());
+        spdlog::warn("Found {} strands penetrating the mesh:\n{}", penetrating.size(), ::param.no_print ? std::string() : ss.str());
         if (!::param.no_export) {
             std::ofstream ofs(globals::output_file());
             ofs << ss.str();
