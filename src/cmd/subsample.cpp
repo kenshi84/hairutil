@@ -46,7 +46,7 @@ void cmd::parse::subsample(args::Subparser &parser) {
     ::param.scale_factor = *scale_factor;
 
     if (indices) {
-        if (indices->substr(indices->size() - 4) == ".txt") {
+        if (indices->size() > 4 && indices->substr(indices->size() - 4) == ".txt") {
             // Read indices from file
             std::ifstream file(*indices);
             if (!file.is_open()) {
