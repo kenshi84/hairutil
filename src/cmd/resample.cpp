@@ -10,7 +10,7 @@ struct {
 }
 
 void cmd::parse::resample(args::Subparser &parser) {
-    args::ValueFlag<float> ignore_segment_length_ratio(parser, "R", "Ignore segments shorter than this ratio times the maximum segment length [0.2]", {"ignore-segment-length-ratio"}, 0.2f);
+    args::ValueFlag<float> ignore_segment_length_ratio(parser, "R", "Ignore segments shorter than this ratio times the maximum segment length [0.0]", {"ignore-segment-length-ratio"}, 0.0f);
     args::ValueFlag<unsigned int> min_num_segments(parser, "N", "Minimum number of segments per hair [20]", {"min-num-segments"}, 20);
     parser.Parse();
     globals::cmd_exec = cmd::exec::resample;
