@@ -22,8 +22,8 @@ $ hairutil --help
         findpenet                         Find penetration against head mesh
         info                              Print information
         resample                          Resample strands s.t. every segment is
-                                          shorter than twice the shortest
-                                          segment
+                                          shorter than twice the target segment
+                                          length
         stats                             Generate statistics
         subsample                         Subsample strands
         transform                         Transform strand points
@@ -135,8 +135,16 @@ hairutil info --input-file ~/cemyuksel/wCurly.hair
 
 ### `resample` command
 ```
-hairutil resample -i ~/Dataset/CT2Hair/output/Bangs.bin -o ply
-# Output saved to ~/CT2Hair/output/Bangs_resampled.ply
+$ hairutil resample --help
+  hairutil resample {OPTIONS}
+
+    Resample strands s.t. every segment is shorter than twice the target segment
+    length
+
+  OPTIONS:
+
+      --target-segment-length=[R]       Target segment length [2.0]
+      --min-num-segments=[N]            Minimum number of segments per hair [20]
 ```
 
 ### `stats` command
