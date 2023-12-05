@@ -38,7 +38,7 @@ int main(int argc, const char **argv)
     args::ValueFlag<unsigned int> globals_ply_load_default_nsegs(grp_globals, "N", "Default number of segments per strand for PLY files [0]", {"ply-load-default-nsegs"}, 0);
     args::Flag globals_ply_save_ascii(grp_globals, "ply-save-ascii", "Save PLY files in ASCII format", {"ply-save-ascii"});
     args::ValueFlag<std::string> globals_verbosity(grp_globals, "NAME", "Verbosity level name {trace,debug,info,warn,error,critical,off} [info]", {'v', "verbosity"}, "info");
-    args::ValueFlag<int> globals_seed(grp_globals, "N", "Seed for random number generator (-1 for time-based seed) [-1]", {"seed"}, -1);
+    args::ValueFlag<int> globals_seed(grp_globals, "N", "Seed for random number generator (-1 for time-based seed) [0]", {"seed"}, 0);
     args::Flag globals_no_autofix(grp_globals, "no-autofix", "Do not auto-fix issues in input", {"no-autofix"});
     args::HelpFlag globals_help(grp_globals, "help", "Show this help message", {'h', "help"});
 
