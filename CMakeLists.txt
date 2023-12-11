@@ -4,17 +4,6 @@ project(hairutil)
 
 set(CMAKE_CXX_STANDARD 20)
 
-include_directories(
-    ext/args
-    ext/cyCodeBase
-    ext/eigen
-    ext/happly
-    ext/libigl/include
-    ext/nanoflann/include
-    ext/spdlog/include
-    include
-)
-
 # Do not build Alembic binaries and tests
 set(USE_BINARIES OFF CACHE BOOL "Include Alembic binaries")
 set(USE_TESTS OFF CACHE BOOL "Include Alembic tests")
@@ -57,6 +46,17 @@ add_library(hairutil_core
 target_link_libraries(hairutil_core
   Alembic::Alembic
   xlnt
+)
+target_include_directories(hairutil_core
+  PUBLIC
+  include
+  ext/args
+  ext/cyCodeBase
+  ext/eigen
+  ext/happly
+  ext/libigl/include
+  ext/nanoflann/include
+  ext/spdlog/include
 )
 
 add_executable(hairutil
@@ -106,6 +106,7 @@ add_executable(test_util
   test/util.cpp
 )
 target_link_libraries(test_util
+  hairutil_core
   gtest_main
 )
 add_test(NAME test_util COMMAND test_util)
