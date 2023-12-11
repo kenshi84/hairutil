@@ -4,13 +4,25 @@ project(hairutil)
 
 set(CMAKE_CXX_STANDARD 20)
 
-# Do not build Alembic binaries and tests
+
+
+#########################################
+# External libraries that require build #
+#########################################
+
+# Alembic
 set(USE_BINARIES OFF CACHE BOOL "Include Alembic binaries")
 set(USE_TESTS OFF CACHE BOOL "Include Alembic tests")
 add_subdirectory(ext/alembic)
 
+# xlnt
 add_subdirectory(ext/xlnt)
 
+
+
+#########################
+# Version tag using git #
+#########################
 set(VERSIONTAG "unknown")
 find_package(Git QUIET)
 if (GIT_FOUND OR Git_FOUND)
@@ -22,6 +34,11 @@ endif()
 message(STATUS "Version tag: ${VERSIONTAG}")
 configure_file("src/version.cpp.in" "version.cpp")
 
+
+
+######################
+# Core functionality #
+######################
 add_library(hairutil_core
   src/cmd/autofix.cpp
   src/cmd/convert.cpp
@@ -59,14 +76,17 @@ target_include_directories(hairutil_core
   ext/spdlog/include
 )
 
-add_executable(hairutil
-  src/main.cpp
-)
-target_link_libraries(hairutil
-  hairutil_core
-)
+###################
+# Main executable #
+###################
+add_executable(hairutil src/main.cpp)
+target_link_libraries(hairutil hairutil_core)
 
-# Test
+
+
+#########################
+# Test using GoogleTest #
+#########################
 add_subdirectory(ext/googletest)
 enable_testing()
 
@@ -75,38 +95,21 @@ set(REL_TEST_DATA_DIR "${CMAKE_CURRENT_SOURCE_DIR}/test/data/")
 get_filename_component(TEST_DATA_DIR "${REL_TEST_DATA_DIR}" ABSOLUTE)
 
 # IO tests
-add_executable(test_io
-  test/io.cpp
-)
-target_link_libraries(test_io
-  hairutil_core
-  gtest_main
-)
-target_compile_definitions(test_io
-  PRIVATE TEST_DATA_DIR="${TEST_DATA_DIR}"
-)
+add_executable(test_io test/io.cpp)
+target_link_libraries(test_io hairutil_core gtest_main)
+target_compile_definitions(test_io PRIVATE TEST_DATA_DIR="${TEST_DATA_DIR}")
 add_test(NAME test_io COMMAND test_io)
 
 # Command tests
-add_executable(test_cmd
-  src/main.cpp
-  test/cmd.cpp
-)
-target_link_libraries(test_cmd
-  hairutil_core
-  gtest_main
-)
+add_executable(test_cmd src/main.cpp test/cmd.cpp)
+target_link_libraries(test_cmd hairutil_core gtest_main)
 target_compile_definitions(test_cmd
   PRIVATE TEST_DATA_DIR="${TEST_DATA_DIR}"
   PRIVATE TEST_MODE=1
 )
 add_test(NAME test_cmd COMMAND test_cmd)
 
-add_executable(test_util
-  test/util.cpp
-)
-target_link_libraries(test_util
-  hairutil_core
-  gtest_main
-)
+# Util tests
+add_executable(test_util test/util.cpp)
+target_link_libraries(test_util hairutil_core gtest_main)
 add_test(NAME test_util COMMAND test_util)
