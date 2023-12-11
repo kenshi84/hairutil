@@ -33,7 +33,7 @@ endif()
 message(STATUS "Version tag: ${VERSIONTAG}")
 configure_file("src/version.cpp.in" "version.cpp")
 
-add_library(hairutil_cmd
+add_library(hairutil_core
   src/cmd/autofix.cpp
   src/cmd/convert.cpp
   src/cmd/decompose.cpp
@@ -44,32 +44,26 @@ add_library(hairutil_cmd
   src/cmd/stats.cpp
   src/cmd/subsample.cpp
   src/cmd/transform.cpp
-)
-target_link_libraries(hairutil_cmd
-  xlnt
-)
-
-add_library(hairutil_io
+  src/globals.cpp
   src/io/abc.cpp
   src/io/bin.cpp
   src/io/data.cpp
   src/io/hair.cpp
   src/io/ma.cpp
   src/io/ply.cpp
-)
-target_link_libraries(hairutil_io
-  Alembic::Alembic
-)
-
-add_executable(hairutil
-  src/globals.cpp
-  src/main.cpp
   src/util.cpp
   version.cpp
 )
+target_link_libraries(hairutil_core
+  Alembic::Alembic
+  xlnt
+)
+
+add_executable(hairutil
+  src/main.cpp
+)
 target_link_libraries(hairutil
-  hairutil_cmd
-  hairutil_io
+  hairutil_core
 )
 
 # Test
@@ -82,12 +76,10 @@ get_filename_component(TEST_DATA_DIR "${REL_TEST_DATA_DIR}" ABSOLUTE)
 
 # IO tests
 add_executable(test_io
-  src/globals.cpp
   test/io.cpp
 )
 target_link_libraries(test_io
-  hairutil_cmd
-  hairutil_io
+  hairutil_core
   gtest_main
 )
 target_compile_definitions(test_io
@@ -97,15 +89,11 @@ add_test(NAME test_io COMMAND test_io)
 
 # Command tests
 add_executable(test_cmd
-  src/globals.cpp
   src/main.cpp
-  src/util.cpp
   test/cmd.cpp
-  version.cpp
 )
 target_link_libraries(test_cmd
-  hairutil_cmd
-  hairutil_io
+  hairutil_core
   gtest_main
 )
 target_compile_definitions(test_cmd
