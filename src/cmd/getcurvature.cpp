@@ -45,6 +45,8 @@ std::shared_ptr<cyHairFile> cmd::exec::getcurvature(std::shared_ptr<cyHairFile> 
         const MatrixX3f tangent = edge.array().colwise() / edge_length.array();
         const VectorXf vertex_length = 0.5 * (edge_length.head(nsegs[i]-1) + edge_length.tail(nsegs[i]-1));
 
+        H5Easy::dump(file, fmt::format("/{}/edge_length", i), edge_length);
+
         // Get cross-product of consecutive tangent vectors
         MatrixX3f tangent_cross(nsegs[i]-1, 3);
         for (int j = 0; j < nsegs[i]-1; ++j)
@@ -53,8 +55,16 @@ std::shared_ptr<cyHairFile> cmd::exec::getcurvature(std::shared_ptr<cyHairFile> 
         const VectorXf turning_angle = tangent_cross_norm.array().asin();
 
         const VectorXi is_straight = (turning_angle.array() < ::param.angle_threshold * std::numbers::pi / 180.0).cast<int>();
+
+        // If the strand is completely straight, simply set binormal to a random vector
         if (is_straight.sum() == nsegs[i]-1) {
-            throw std::runtime_error(fmt::format("Strand {} is completely straight", i));
+            spdlog::warn("Strand {} is completely straight", i);
+            RowVector3f binormal = RowVector3f::Random();
+            binormal = (binormal - binormal.dot(tangent.row(0)) * tangent.row(0)).normalized();
+            H5Easy::dump(file, fmt::format("/{}/binormal", i),  binormal.replicate(nsegs[i]-1, 1));
+            H5Easy::dump(file, fmt::format("/{}/kappa", i), std::vector<float>(nsegs[i]-1, 0.0));
+            H5Easy::dump(file, fmt::format("/{}/tau", i), std::vector<float>(nsegs[i]-2, 0.0));
+            continue;
         }
 
         MatrixX3f binormal = tangent_cross.array().colwise() / tangent_cross_norm.array();
@@ -132,7 +142,6 @@ std::shared_ptr<cyHairFile> cmd::exec::getcurvature(std::shared_ptr<cyHairFile> 
         H5Easy::dump(file, fmt::format("/{}/binormal", i), binormal);
         H5Easy::dump(file, fmt::format("/{}/kappa", i), kappa);
         H5Easy::dump(file, fmt::format("/{}/tau", i), tau);
-        H5Easy::dump(file, fmt::format("/{}/length", i), edge_length);
 
         offset += nsegs[i] + 1;
     }
