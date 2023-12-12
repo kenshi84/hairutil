@@ -7,6 +7,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Install dependencies
+      run: sudo apt update && sudo apt install libhdf5-dev
+
     - name: Checkout the repository
       uses: actions/checkout@v4.1.1
 

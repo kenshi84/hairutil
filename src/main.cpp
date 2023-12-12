@@ -25,6 +25,7 @@ int main(int argc, const char **argv)
     args::Command cmd_decompose(grp_commands, "decompose", "Decompose into individual curves", cmd::parse::decompose);
     args::Command cmd_filter(grp_commands, "filter", "Extract strands that pass given filter", cmd::parse::filter);
     args::Command cmd_findpenet(grp_commands, "findpenet", "Find penetration against head mesh", cmd::parse::findpenet);
+    args::Command cmd_getcurvature(grp_commands, "getcurvature", "Get discrete curvature & torsion", cmd::parse::getcurvature);
     args::Command cmd_info(grp_commands, "info", "Print information", cmd::parse::info);
     args::Command cmd_resample(grp_commands, "resample", "Resample strands s.t. every segment is shorter than twice the target segment length", cmd::parse::resample);
     args::Command cmd_stats(grp_commands, "stats", "Generate statistics", cmd::parse::stats);

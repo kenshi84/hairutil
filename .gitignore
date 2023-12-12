@@ -32,7 +32,9 @@
 *.app
 
 build/
+temp*
 test/data/Bangs_100_20.ply
+test/data/Bangs_100_cvtr.hdf5
 test/data/Bangs_100_filtered_length_geq_174.96289.ply
 test/data/Bangs_100_indices_0_4_32_36_65.ply
 test/data/Bangs_100_indices_10.ply

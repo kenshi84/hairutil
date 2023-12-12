@@ -6,6 +6,13 @@ set(CMAKE_CXX_STANDARD 20)
 
 
 
+##############################################################
+# External libraries that should be installed prior to build #
+##############################################################
+find_package(HDF5 REQUIRED)
+
+
+
 #########################################
 # External libraries that require build #
 #########################################
@@ -45,6 +52,7 @@ add_library(hairutil_core
   src/cmd/decompose.cpp
   src/cmd/filter.cpp
   src/cmd/findpenet.cpp
+  src/cmd/getcurvature.cpp
   src/cmd/info.cpp
   src/cmd/resample.cpp
   src/cmd/stats.cpp
@@ -62,6 +70,7 @@ add_library(hairutil_core
 )
 target_link_libraries(hairutil_core
   Alembic::Alembic
+  HDF5::HDF5
   xlnt
 )
 target_include_directories(hairutil_core
@@ -71,6 +80,7 @@ target_include_directories(hairutil_core
   ext/cyCodeBase
   ext/eigen
   ext/happly
+  ext/HighFive/include
   ext/libigl/include
   ext/nanoflann/include
   ext/spdlog/include

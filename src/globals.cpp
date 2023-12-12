@@ -20,6 +20,7 @@ namespace globals {
     const std::set<std::shared_ptr<cyHairFile> (*)(std::shared_ptr<cyHairFile>)> cmd_wo_output = {
         cmd::exec::info,
         cmd::exec::autofix,
+        cmd::exec::getcurvature,
         cmd::exec::stats,
         cmd::exec::findpenet,
     };

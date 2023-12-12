@@ -20,6 +20,7 @@ $ hairutil --help
         decompose                         Decompose into individual curves
         filter                            Extract strands that pass given filter
         findpenet                         Find penetration against head mesh
+        getcurvature                      Get discrete curvature & torsion
         info                              Print information
         resample                          Resample strands s.t. every segment is
                                           shorter than twice the target segment

@@ -172,6 +172,17 @@ TEST(cmd_findpenet, Bangs) {
     EXPECT_EQ(test_main(args.size(), args.data()), 0);
 }
 
+TEST(cmd_getcurvature, Bangs_100) {
+    std::vector<const char*> args = {
+        "test_cmd",
+        "getcurvature",
+        "-i", TEST_DATA_DIR "/Bangs_100.bin",
+        "--overwrite",
+    };
+    globals::clear();
+    EXPECT_EQ(test_main(args.size(), args.data()), 0);
+}
+
 TEST(cmd_info, ply) {
     std::vector<const char*> args = {
         "test_cmd",
