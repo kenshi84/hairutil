@@ -25,6 +25,7 @@ $ hairutil --help
         resample                          Resample strands s.t. every segment is
                                           shorter than twice the target segment
                                           length
+        smooth                            Smooth strands
         stats                             Generate statistics
         subsample                         Subsample strands
         transform                         Transform strand points

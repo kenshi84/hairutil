@@ -205,6 +205,18 @@ TEST(cmd_resample, bin_to_ply) {
     EXPECT_EQ(test_main(args.size(), args.data()), 0);
 }
 
+TEST(cmd_smooth, Bangs_100_ply) {
+    std::vector<const char*> args = {
+        "test_cmd",
+        "smooth",
+        "-i", TEST_DATA_DIR "/Bangs_100.bin",
+        "-o", "ply",
+        "--overwrite",
+    };
+    globals::clear();
+    EXPECT_EQ(test_main(args.size(), args.data()), 0);
+}
+
 TEST(cmd_stats, export_raw) {
     std::vector<const char*> args = {
         "test_cmd",

@@ -28,6 +28,7 @@ int main(int argc, const char **argv)
     args::Command cmd_getcurvature(grp_commands, "getcurvature", "Get discrete curvature & torsion", cmd::parse::getcurvature);
     args::Command cmd_info(grp_commands, "info", "Print information", cmd::parse::info);
     args::Command cmd_resample(grp_commands, "resample", "Resample strands s.t. every segment is shorter than twice the target segment length", cmd::parse::resample);
+    args::Command cmd_smooth(grp_commands, "smooth", "Smooth strands", cmd::parse::smooth);
     args::Command cmd_stats(grp_commands, "stats", "Generate statistics", cmd::parse::stats);
     args::Command cmd_subsample(grp_commands, "subsample", "Subsample strands", cmd::parse::subsample);
     args::Command cmd_transform(grp_commands, "transform", "Transform strand points", cmd::parse::transform);

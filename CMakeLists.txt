@@ -55,6 +55,7 @@ add_library(hairutil_core
   src/cmd/getcurvature.cpp
   src/cmd/info.cpp
   src/cmd/resample.cpp
+  src/cmd/smooth.cpp
   src/cmd/stats.cpp
   src/cmd/subsample.cpp
   src/cmd/transform.cpp

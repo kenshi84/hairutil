@@ -39,6 +39,7 @@ test/data/Bangs_100_filtered_length_geq_174.96289.ply
 test/data/Bangs_100_indices_0_4_32_36_65.ply
 test/data/Bangs_100_indices_10.ply
 test/data/Bangs_100_resampled_tsl_2_mns_20.ply
+test/data/Bangs_100_smoothed_w0_1_w1_1_w2_1.ply
 test/data/Bangs_100_stats.xlsx
 test/data/Bangs_100_tfm_*.ply
 test/data/Bangs_20_decomposed_ply
