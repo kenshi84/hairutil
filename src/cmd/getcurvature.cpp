@@ -4,6 +4,28 @@
 
 using namespace Eigen;
 
+#ifndef NDEBUG
+#include <happly.h>
+std::vector<float> tovector_f(VectorXf v) {
+    std::vector<float> ret(v.size());
+    for (int i = 0; i < v.size(); ++i)
+        ret[i] = v[i];
+    return ret;
+}
+std::vector<unsigned char> tovector_uchar(VectorXf v) {
+    std::vector<unsigned char> ret(v.size());
+    for (int i = 0; i < v.size(); ++i)
+        ret[i] = (unsigned char)(255 * v[i]);
+    return ret;
+}
+std::vector<int> tovector_int(VectorXi v) {
+    std::vector<int> ret(v.size());
+    for (int i = 0; i < v.size(); ++i)
+        ret[i] = v[i];
+    return ret;
+}
+#endif
+
 namespace {
 struct {
     float angle_threshold;
@@ -144,6 +166,52 @@ std::shared_ptr<cyHairFile> cmd::exec::getcurvature(std::shared_ptr<cyHairFile> 
         H5Easy::dump(file, fmt::format("/{}/tau", i), tau);
 
         offset += nsegs[i] + 1;
+
+#ifndef NDEBUG
+        if (spdlog::get_level() <= spdlog::level::debug) {
+            happly::PLYData ply;
+
+            const int n = binormal.rows();
+
+            VectorXf vertex_x(2*n);
+            VectorXf vertex_y(2*n);
+            VectorXf vertex_z(2*n);
+            VectorXf vertex_red = ArrayXf::LinSpaced(n, 0.0, 1.0).replicate(2, 1);
+            VectorXf vertex_green = vertex_red;
+            VectorXf vertex_blue = vertex_red;
+            vertex_x.head(n) = point.col(0).segment(1, n);
+            vertex_y.head(n) = point.col(1).segment(1, n);
+            vertex_z.head(n) = point.col(2).segment(1, n);
+            vertex_x.tail(n) = vertex_x.head(n) + edge_length(0) * binormal.col(0);
+            vertex_y.tail(n) = vertex_y.head(n) + edge_length(0) * binormal.col(1);
+            vertex_z.tail(n) = vertex_z.head(n) + edge_length(0) * binormal.col(2);
+            // MatrixX3f binormal_raw = tangent_cross.array().colwise() / tangent_cross_norm.array();
+            // vertex_x.tail(n) = vertex_x.head(n) + edge_length(0) * binormal_raw.col(0);
+            // vertex_y.tail(n) = vertex_y.head(n) + edge_length(0) * binormal_raw.col(1);
+            // vertex_z.tail(n) = vertex_z.head(n) + edge_length(0) * binormal_raw.col(2);
+            vertex_red.head(n) = VectorXf::Constant(n, 1.0);
+            vertex_blue.tail(n) = VectorXf::Constant(n, 1.0);
+
+            VectorXi edge_vertex1 = VectorXi::LinSpaced(n, 0, n-1);
+            VectorXi edge_vertex2 = edge_vertex1.array() + n;
+
+            ply.addElement("vertex", 2*n);
+            ply.getElement("vertex").addProperty<float>("x", tovector_f(vertex_x));
+            ply.getElement("vertex").addProperty<float>("y", tovector_f(vertex_y));
+            ply.getElement("vertex").addProperty<float>("z", tovector_f(vertex_z));
+            ply.getElement("vertex").addProperty<unsigned char>("red", tovector_uchar(vertex_red));
+            ply.getElement("vertex").addProperty<unsigned char>("green", tovector_uchar(vertex_green));
+            ply.getElement("vertex").addProperty<unsigned char>("blue", tovector_uchar(vertex_blue));
+
+            ply.addElement("edge", n);
+            ply.getElement("edge").addProperty<int>("vertex1", tovector_int(edge_vertex1));
+            ply.getElement("edge").addProperty<int>("vertex2", tovector_int(edge_vertex2));
+
+            ply.write(globals::input_file_wo_ext + "_cvtr_debug.ply", globals::ply_save_ascii ? happly::DataFormat::ASCII : happly::DataFormat::Binary);
+            spdlog::debug("Wrote debug info to {}", globals::input_file_wo_ext + "_cvtr_debug.ply");
+            break;
+        }
+#endif
     }
 
     return {};
