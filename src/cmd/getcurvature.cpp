@@ -12,7 +12,7 @@ struct {
 
 void cmd::parse::getcurvature(args::Subparser &parser)
 {
-    args::ValueFlag<float> angle_threshold(parser, "R", "Angle threshold for determining straightness (in degrees) [1.0e-6]", {"angle-threshold"}, 1.0e-6);
+    args::ValueFlag<float> angle_threshold(parser, "R", "Angle threshold for determining straightness (in degrees) [0.01]", {"angle-threshold"}, 0.01);
     parser.Parse();
     globals::cmd_exec = &cmd::exec::getcurvature;
     globals::output_file = []() { return globals::input_file_wo_ext + "_cvtr.hdf5"; };
