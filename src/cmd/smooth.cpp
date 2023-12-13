@@ -35,8 +35,13 @@ void cmd::parse::smooth(args::Subparser &parser) {
 }
 
 std::shared_ptr<cyHairFile> cmd::exec::smooth(std::shared_ptr<cyHairFile> hairfile) {
+    const int hair_count = hairfile->GetHeader().hair_count;
+
     int offset = 0;
-    for (int i = 0; i < hairfile->GetHeader().hair_count; ++i) {
+    for (int i = 0; i < hair_count; ++i) {
+        if (i > 0 && i % 100 == 0)
+            spdlog::debug("Processing hair {}/{}", i, hair_count);
+
         const int nsegs = hairfile->GetSegmentsArray() ? hairfile->GetSegmentsArray()[i] : hairfile->GetHeader().d_segments;
 
         // Copy point data to Eigen matrix

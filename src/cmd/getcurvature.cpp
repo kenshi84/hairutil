@@ -56,6 +56,9 @@ std::shared_ptr<cyHairFile> cmd::exec::getcurvature(std::shared_ptr<cyHairFile> 
 
     int offset = 0;
     for (int i = 0; i < num_strands; ++i) {
+        if (i > 0 && i % 100 == 0)
+            spdlog::debug("Processing hair {}/{}", i, num_strands);
+
         // Copy point data to Eigen array
         MatrixX3f point(nsegs[i]+1, 3);
         for (int j = 0; j < nsegs[i]+1; ++j)
