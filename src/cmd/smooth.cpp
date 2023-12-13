@@ -46,7 +46,7 @@ std::shared_ptr<cyHairFile> cmd::exec::smooth(std::shared_ptr<cyHairFile> hairfi
         Energy to be minimized for coordinate function f:
             E(f) = 1/2 Σ_i w0 * (f_i - f_0_i)^2 + w1 * (f_i+1 - f_i)^2 + w2 * (f_i+1 - 2*f_i + f_i-1)^2
                  = 1/2{ w0 * |f - f_0|^2 + w1 * (D f)^2 + w2 * (L f)^2 }
-                 = 1/2 f^T (w0*I + w1*(D^T D) + w2*(L^T L)) f + f^T (-w1 * f_0) + const.
+                 = 1/2 f^T (w0*I + w1*(D^T D) + w2*(L^T L)) f + f^T (-w0 * f_0) + const.
                  = 1/2 f^T Q f + f^T B + const.
         */
 
