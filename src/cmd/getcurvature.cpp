@@ -216,6 +216,7 @@ std::shared_ptr<cyHairFile> cmd::exec::getcurvature(std::shared_ptr<cyHairFile> 
         }
 #endif
     }
+    spdlog::info("Written to {}", globals::output_file());
 
     return {};
 }
