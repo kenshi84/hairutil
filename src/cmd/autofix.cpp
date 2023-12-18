@@ -68,10 +68,22 @@ std::shared_ptr<cyHairFile> cmd::exec::autofix(std::shared_ptr<cyHairFile> hairf
             }
         }
 
-        out_segments.push_back(num_segments - num_err_segments);
+        if (num_segments > num_err_segments) {
+            out_segments.push_back(num_segments - num_err_segments);
+            ++out_hair_count;
+        } else {
+            spdlog::warn("All the segments in strand {} are degenerate, removed", i);
+
+            // Remove the first point, as the strand is skipped
+            for (int k = 0; k < 3; ++k) {
+                out_points.pop_back();
+                if (has_color) out_color.pop_back();
+                if (has_thickness) out_thickness.pop_back();
+                if (has_transparency) out_transparency.pop_back();
+            }
+        }
 
         total_num_err_segments += num_err_segments;
-        ++out_hair_count;
         offset += num_segments + 1;
     }
 
