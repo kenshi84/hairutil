@@ -44,6 +44,9 @@ std::shared_ptr<cyHairFile> cmd::exec::smooth(std::shared_ptr<cyHairFile> hairfi
 
         const int nsegs = hairfile->GetSegmentsArray() ? hairfile->GetSegmentsArray()[i] : hairfile->GetHeader().d_segments;
 
+        if (nsegs < 2)
+            continue;
+
         // Copy point data to Eigen matrix
         MatrixX3d f0 = Map<Matrix3Xf>(hairfile->GetPointsArray() + 3*offset, 3, nsegs+1).cast<double>().transpose();
 
