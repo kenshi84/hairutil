@@ -11,6 +11,7 @@ struct {
     float scale_factor;
     std::set<int> indices;
     bool exclude;
+    bool output_indices;
 } param;
 }
 
@@ -19,6 +20,7 @@ void cmd::parse::subsample(args::Subparser &parser) {
     args::ValueFlag<float> scale_factor(parser, "R", "Factor for scaling down the Poisson disk radius [0.9]", {"scale-factor"}, 0.9);
     args::ValueFlag<std::string> indices(parser, "N,...", "Comma-separated list of strand indices to extract, or a path to .txt file containing such a list", {"indices"});
     args::Flag exclude(parser, "", "Exclude the specified strands instead of including them", {"exclude"});
+    args::Flag output_indices(parser, "", "Output the indices of the selected strands to a .txt file", {"output-indices"});
     parser.Parse();
     globals::cmd_exec = cmd::exec::subsample;
     globals::output_file = []() -> std::string {
@@ -61,8 +63,11 @@ void cmd::parse::subsample(args::Subparser &parser) {
             const std::vector<int> indices_vec = util::parse_comma_separated_values<int>(*indices);
             ::param.indices.insert(indices_vec.begin(), indices_vec.end());
         }
+        if (output_indices)
+            spdlog::warn("--output-indices is ignored when --indices is specified");
     }
     ::param.exclude = exclude;
+    ::param.output_indices = output_indices;
 }
 
 std::shared_ptr<cyHairFile> cmd::exec::subsample(std::shared_ptr<cyHairFile> hairfile_in) {
@@ -151,5 +156,19 @@ std::shared_ptr<cyHairFile> cmd::exec::subsample(std::shared_ptr<cyHairFile> hai
         }
     }
 
-    return util::get_subset(hairfile_in, selected);
+    auto hairfile_out = util::get_subset(hairfile_in, selected);
+
+    if (param.indices.empty() && ::param.output_indices) {
+        std::string output_file_txt = fmt::format("{}_{}_indices.txt", globals::input_file_wo_ext, ::param.target_count);
+        spdlog::info("Writing indices to {}", output_file_txt);
+        std::stringstream ss;
+        for (int i = 0; i < header_in.hair_count; ++i)
+            if (selected[i])
+                ss << i << ",";
+        std::string s = ss.str().substr(0, ss.str().size() - 1);
+        std::ofstream ofs(output_file_txt);
+        ofs << s;
+    }
+
+    return hairfile_out;
 }
