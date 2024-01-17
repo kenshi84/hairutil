@@ -12,7 +12,7 @@ namespace globals {
     // Other global variables
     std::string input_file_wo_ext;
     std::string input_ext;
-    std::function<std::string(void)> output_file;        // For lazy evaluation
+    OutputFile output_file;        // For lazy evaluation
     std::function<void(void)> check_error;
     std::shared_ptr<cyHairFile> (*cmd_exec)(std::shared_ptr<cyHairFile>) = nullptr;
     std::mt19937 rng;
@@ -45,7 +45,7 @@ namespace globals {
         ply_save_ascii = {};
         input_file_wo_ext = {};
         input_ext = {};
-        output_file = {};
+        output_file = OutputFile{};
         check_error = {};
         cmd_exec = nullptr;
         rng = {};

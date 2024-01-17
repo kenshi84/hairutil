@@ -21,6 +21,7 @@
 #define CY_NO_INTRIN_H
 #include <cyHairFile.h>
 
+#include "output_file.h"
 #include "random.h"
 
 namespace globals {
@@ -33,7 +34,7 @@ namespace globals {
 
     extern std::string input_file_wo_ext;
     extern std::string input_ext;
-    extern std::function<std::string(void)> output_file;        // For lazy evaluation
+    extern OutputFile output_file;        // For lazy evaluation
     extern std::function<void(void)> check_error;
     extern std::shared_ptr<cyHairFile> (*cmd_exec)(std::shared_ptr<cyHairFile>);
     extern std::mt19937 rng;

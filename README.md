@@ -34,6 +34,8 @@ $ hairutil --help
         -i[PATH], --input-file=[PATH]     (REQUIRED) Input file
         -o[EXT], --output-ext=[EXT]       Output file extension
         --overwrite                       Overwrite when output file exists
+        -d[DIR], --output-dir=[DIR]       Output directory; if not specified,
+                                          same as the input file
         --ply-load-default-nsegs=[N]      Default number of segments per strand
                                           for PLY files [0]
         --ply-save-ascii                  Save PLY files in ASCII format

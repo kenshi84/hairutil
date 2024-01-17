@@ -37,6 +37,7 @@ int main(int argc, const char **argv)
     args::ValueFlag<std::string> globals_input_file(grp_globals, "PATH", "(REQUIRED) Input file", {'i', "input-file"}, args::Options::Required);
     args::ValueFlag<std::string> globals_output_ext(grp_globals, "EXT", "Output file extension", {'o', "output-ext"}, "");
     args::Flag globals_overwrite(grp_globals, "overwrite", "Overwrite when output file exists", {"overwrite"});
+    args::ValueFlag<std::string> globals_output_dir(grp_globals, "DIR", "Output directory; if not specified, same as the input file", {'d', "output-dir"}, "");
     args::ValueFlag<unsigned int> globals_ply_load_default_nsegs(grp_globals, "N", "Default number of segments per strand for PLY files [0]", {"ply-load-default-nsegs"}, 0);
     args::Flag globals_ply_save_ascii(grp_globals, "ply-save-ascii", "Save PLY files in ASCII format", {"ply-save-ascii"});
     args::ValueFlag<std::string> globals_verbosity(grp_globals, "NAME", "Verbosity level name {trace,debug,info,warn,error,critical,off} [info]", {'v', "verbosity"}, "info");
@@ -98,6 +99,22 @@ int main(int argc, const char **argv)
     } else if (globals::output_ext == "") {
         spdlog::error("You must specify output file extension by --output-ext");
         return 1;
+    }
+
+    if (*globals_output_dir != "") {
+        std::filesystem::path output_dir = *globals_output_dir;
+        if (std::filesystem::exists(output_dir)) {
+            if (!std::filesystem::is_directory(output_dir)) {
+                spdlog::error("{} is not a directory", output_dir.string());
+                return 1;
+            }
+        } else {
+            if (!std::filesystem::create_directories(output_dir)) {
+                spdlog::error("Failed to create directory: {}", output_dir.string());
+                return 1;
+            }
+        }
+        globals::output_file.dir = output_dir.string();
     }
 
     // Get file extension from globals::input_file, in lowercase
