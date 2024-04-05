@@ -28,7 +28,9 @@ $ hairutil --help
         smooth                            Smooth strands
         stats                             Generate statistics
         subsample                         Subsample strands
-        transform                         Transform strand points
+        transform                         Transform strand points, either by one
+                                          of scale/translate/rotate, or by full
+                                          4x4 matrix
 
       Common options:
         -i[PATH], --input-file=[PATH]     (REQUIRED) Input file
@@ -204,16 +206,23 @@ hairutil subsample -i test/data/Bangs_100.bin -o ply --indices 65,32,4,36,0
 $ hairutil transform --help
   hairutil transform {OPTIONS}
 
-    Transform strand points
+    Transform strand points, either by one of scale/translate/rotate, or by full
+    4x4 matrix
 
   OPTIONS:
 
-      -s[R], --scale=[R]                Uniform scaling factor [1.0]
-      -t[R,R,R], --translate=[R,R,R]    Comma-separated 3D vector for
-                                        translation [0,0,0]
-      -R[R,R,R,R,R,R,R,R,R],
+      -s[R or R,R,R], --scale=[R or
+      R,R,R]                            Scaling factor; either a single number
+                                        of comma-separated 3-tuple for
+                                        non-uniform scaling
+      -t[R,R,R], --translate=[R,R,R]    Comma-separated 3-vector for translation
+      -r[R,R,R,R,R,R,R,R,R],
       --rotate=[R,R,R,R,R,R,R,R,R]      Comma-separated row-major 3x3 matrix for
-                                        rotation [1,0,0,0,1,0,0,0,1]
+                                        rotation
+      -f[R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R],
+      --full=[R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R]
+                                        Comma-separated row-major 4x4 matrix for
+                                        full transform
 ```
 Example:
 ```

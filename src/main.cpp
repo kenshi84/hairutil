@@ -31,7 +31,7 @@ int main(int argc, const char **argv)
     args::Command cmd_smooth(grp_commands, "smooth", "Smooth strands", cmd::parse::smooth);
     args::Command cmd_stats(grp_commands, "stats", "Generate statistics", cmd::parse::stats);
     args::Command cmd_subsample(grp_commands, "subsample", "Subsample strands", cmd::parse::subsample);
-    args::Command cmd_transform(grp_commands, "transform", "Transform strand points", cmd::parse::transform);
+    args::Command cmd_transform(grp_commands, "transform", "Transform strand points, either by one of scale/translate/rotate, or by full 4x4 matrix", cmd::parse::transform);
 
     args::Group grp_globals("Common options:");
     args::ValueFlag<std::string> globals_input_file(grp_globals, "PATH", "(REQUIRED) Input file", {'i', "input-file"}, args::Options::Required);
@@ -146,11 +146,22 @@ int main(int argc, const char **argv)
     // Get input file name without extension
     globals::input_file_wo_ext = globals::input_file.substr(0, globals::input_file.find_last_of("."));
 
-    // Check if the output file already exists
-    if (!globals::overwrite && globals::output_file && std::filesystem::exists(globals::output_file())) {
-        spdlog::error("Output file already exists: {}", globals::output_file());
-        spdlog::error("Use --overwrite to overwrite the file");
-        return 1;
+    // Check output filename validity and existence
+    std::string output_file;
+    if (globals::output_file) {
+        output_file = globals::output_file();
+
+        // Truncate if too long
+        if (output_file.length() > 230) {
+            spdlog::warn("Output file path is too long ({}), truncating", output_file.length());
+            output_file = output_file.substr(0, 230) + "." + globals::output_ext;
+        }
+
+        if (!globals::overwrite && std::filesystem::exists(output_file)) {
+            spdlog::error("Output file already exists: {}", output_file);
+            spdlog::error("Use --overwrite to overwrite the file");
+            return 1;
+        }
     }
 
     try
@@ -175,8 +186,8 @@ int main(int argc, const char **argv)
         auto hairfile_out = globals::cmd_exec(hairfile_in);
 
         if (hairfile_out) {
-            spdlog::info("Saving to {} ...", globals::output_file());
-            globals::save_func(globals::output_file(), hairfile_out);
+            spdlog::info("Saving to {} ...", output_file);
+            globals::save_func(output_file, hairfile_out);
         }
     }
     catch (const std::exception &e)

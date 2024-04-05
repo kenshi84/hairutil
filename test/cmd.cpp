@@ -270,7 +270,7 @@ TEST(cmd_subsample, indices_single) {
     EXPECT_EQ(test_main(args.size(), args.data()), 0);
 }
 
-TEST(cmd_transform, bin_to_ply) {
+TEST(cmd_transform, invalid_args) {
     std::vector<const char*> args = {
         "test_cmd",
         "transform",
@@ -279,10 +279,65 @@ TEST(cmd_transform, bin_to_ply) {
         "--overwrite",
         "--scale", "1.2",
         "--translate", "12.3,45.6,78.9",
+    };
+    globals::clear();
+    EXPECT_EQ(test_main(args.size(), args.data()), 1);
+}
+
+TEST(cmd_transform, scale) {
+    std::vector<const char*> args = {
+        "test_cmd",
+        "transform",
+        "-i", TEST_DATA_DIR "/Bangs_100.bin",
+        "-o", "ply",
+        "--overwrite",
+        "--scale", "1.2",
+    };
+    globals::clear();
+    EXPECT_EQ(test_main(args.size(), args.data()), 0);
+}
+
+TEST(cmd_transform, translate) {
+    std::vector<const char*> args = {
+        "test_cmd",
+        "transform",
+        "-i", TEST_DATA_DIR "/Bangs_100.bin",
+        "-o", "ply",
+        "--overwrite",
+        "--translate", "12.3,45.6,78.9",
+    };
+    globals::clear();
+    EXPECT_EQ(test_main(args.size(), args.data()), 0);
+}
+
+TEST(cmd_transform, rotate) {
+    std::vector<const char*> args = {
+        "test_cmd",
+        "transform",
+        "-i", TEST_DATA_DIR "/Bangs_100.bin",
+        "-o", "ply",
+        "--overwrite",
         "--rotate",
         "0.407903582,-0.656201959,0.634833455,"
         "0.838385462,0.54454118,0.0241773129,"
         "-0.361558199,0.52237314,0.77227056"
+    };
+    globals::clear();
+    EXPECT_EQ(test_main(args.size(), args.data()), 0);
+}
+
+TEST(cmd_transform, full) {
+    std::vector<const char*> args = {
+        "test_cmd",
+        "transform",
+        "-i", TEST_DATA_DIR "/Bangs_100.bin",
+        "-o", "ply",
+        "--overwrite",
+        "--full",
+        "0.407903582,-0.656201959,0.634833455,12.3,"
+        "0.838385462,0.54454118,0.0241773129,45.6,"
+        "-0.361558199,0.52237314,0.77227056,78.9,"
+        "0,0,0,1"
     };
     globals::clear();
     EXPECT_EQ(test_main(args.size(), args.data()), 0);
