@@ -6,13 +6,6 @@ set(CMAKE_CXX_STANDARD 20)
 
 
 
-##############################################################
-# External libraries that should be installed prior to build #
-##############################################################
-find_package(HDF5 REQUIRED)
-
-
-
 #########################################
 # External libraries that require build #
 #########################################
@@ -21,6 +14,9 @@ find_package(HDF5 REQUIRED)
 set(USE_BINARIES OFF CACHE BOOL "Include Alembic binaries")
 set(USE_TESTS OFF CACHE BOOL "Include Alembic tests")
 add_subdirectory(ext/alembic)
+
+# HDF5
+add_subdirectory(ext/hdf5)
 
 # xlnt
 add_subdirectory(ext/xlnt)
@@ -71,7 +67,7 @@ add_library(hairutil_core
 )
 target_link_libraries(hairutil_core
   Alembic::Alembic
-  HDF5::HDF5
+  hdf5-static
   xlnt
 )
 target_include_directories(hairutil_core
@@ -81,10 +77,12 @@ target_include_directories(hairutil_core
   ext/cyCodeBase
   ext/eigen
   ext/happly
+  ext/hdf5/src
   ext/HighFive/include
   ext/libigl/include
   ext/nanoflann/include
   ext/spdlog/include
+  ${CMAKE_CURRENT_BINARY_DIR}/ext/hdf5/src
 )
 
 ###################
