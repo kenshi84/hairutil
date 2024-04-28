@@ -120,7 +120,7 @@ std::shared_ptr<cyHairFile> cmd::exec::filter(std::shared_ptr<cyHairFile> hairfi
                 const float s = (la + lb + lc) / 2.0f;
                 const float A = std::sqrt(s * (s - la) * (s - lb) * (s - lc));
                 const float circumradius_reciprocal = A > 0.0f ? 1.0f / (la * lb * lc / (4.0f * A)) : 0.0f;
-                const float turning_angle = 180.0f - std::acos(std::clamp((la * la + lb * lb - lc * lc) / (2.0f * la * lb), -1.0f, 1.0f)) * 180.0f / std::numbers::pi_v<float>;
+                const float turning_angle = 180.0f - std::acos(std::clamp((la * la + lb * lb - lc * lc) / (2.0f * la * lb), -1.0f, 1.0f)) * 180.0f / globals::pi;
 
                 max_point_circumradius_reciprocal = std::max(max_point_circumradius_reciprocal, circumradius_reciprocal);
                 min_point_circumradius_reciprocal = std::min(min_point_circumradius_reciprocal, circumradius_reciprocal);

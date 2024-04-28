@@ -79,7 +79,7 @@ std::shared_ptr<cyHairFile> cmd::exec::getcurvature(std::shared_ptr<cyHairFile> 
         const VectorXf tangent_cross_norm = tangent_cross.rowwise().norm();
         const VectorXf turning_angle = tangent_cross_norm.array().asin();
 
-        const VectorXi is_straight = (turning_angle.array() < ::param.angle_threshold * std::numbers::pi / 180.0).cast<int>();
+        const VectorXi is_straight = (turning_angle.array() < ::param.angle_threshold * globals::pi / 180.0).cast<int>();
 
         // If the strand is completely straight, simply set binormal to a random vector
         if (is_straight.sum() == nsegs[i]-1) {

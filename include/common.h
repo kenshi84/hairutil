@@ -3,7 +3,7 @@
 #include <filesystem>
 #include <functional>
 #include <memory>
-#include <numbers>
+#include <cmath>
 #include <numeric>
 #include <fstream>
 #include <sstream>
@@ -25,6 +25,8 @@
 #include "random.h"
 
 namespace globals {
+    extern const float pi;
+
     // Given as command line arguments
     extern std::string input_file;
     extern std::string output_ext;

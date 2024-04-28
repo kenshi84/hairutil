@@ -2,6 +2,8 @@
 #include "io.h"
 
 namespace globals {
+    const float pi = std::acos(-1.0f);
+
     // Given as command line arguments
     std::string input_file;
     std::string output_ext;
