@@ -16,6 +16,8 @@ set(USE_TESTS OFF CACHE BOOL "Include Alembic tests")
 add_subdirectory(ext/alembic)
 
 # HDF5
+set(HDF5_EXTERNALLY_CONFIGURED 1)
+set(BUILD_TESTING OFF CACHE BOOL "Build HDF5 tests")
 add_subdirectory(ext/hdf5)
 
 # xlnt
