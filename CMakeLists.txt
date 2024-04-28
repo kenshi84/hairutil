@@ -11,6 +11,7 @@ set(CMAKE_CXX_STANDARD 20)
 #########################################
 
 # Alembic
+set(ALEMBIC_SHARED_LIBS OFF CACHE BOOL "Build Alembic as a shared library")
 set(USE_BINARIES OFF CACHE BOOL "Include Alembic binaries")
 set(USE_TESTS OFF CACHE BOOL "Include Alembic tests")
 add_subdirectory(ext/alembic)
@@ -18,9 +19,12 @@ add_subdirectory(ext/alembic)
 # HDF5
 set(HDF5_EXTERNALLY_CONFIGURED 1)
 set(BUILD_TESTING OFF CACHE BOOL "Build HDF5 tests")
+set(BUILD_STATIC_LIBS ON CACHE BOOL "Build HDF5 as a static library")
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build HDF5 as a shared library")
 add_subdirectory(ext/hdf5)
 
 # xlnt
+set(STATIC TRUE CACHE BOOL "Build xlnt as a static library")
 add_subdirectory(ext/xlnt)
 
 
@@ -44,7 +48,7 @@ configure_file("src/version.cpp.in" "version.cpp")
 ######################
 # Core functionality #
 ######################
-add_library(hairutil_core
+add_library(hairutil_core STATIC
   src/cmd/autofix.cpp
   src/cmd/convert.cpp
   src/cmd/decompose.cpp
@@ -86,12 +90,14 @@ target_include_directories(hairutil_core
   ext/spdlog/include
   ${CMAKE_CURRENT_BINARY_DIR}/ext/hdf5/src
 )
+install(TARGETS hairutil_core DESTINATION lib)
 
 ###################
 # Main executable #
 ###################
 add_executable(hairutil src/main.cpp)
 target_link_libraries(hairutil hairutil_core)
+install(TARGETS hairutil DESTINATION bin)
 
 
 
