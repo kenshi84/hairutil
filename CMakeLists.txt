@@ -83,12 +83,10 @@ target_include_directories(hairutil_core
   ext/cyCodeBase
   ext/eigen
   ext/happly
-  ext/hdf5/src
   ext/HighFive/include
   ext/libigl/include
   ext/nanoflann/include
   ext/spdlog/include
-  ${CMAKE_CURRENT_BINARY_DIR}/ext/hdf5/src
 )
 install(TARGETS hairutil_core DESTINATION lib)
 
