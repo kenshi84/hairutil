@@ -67,7 +67,6 @@ int main(int argc, const char **argv)
         return 1;
     }
 
-    spdlog::info("verbosity: {}", *globals_verbosity);
     spdlog::set_level(
         *globals_verbosity == "trace" ? spdlog::level::trace :
         *globals_verbosity == "debug" ? spdlog::level::debug :
