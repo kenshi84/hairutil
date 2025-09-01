@@ -4,9 +4,9 @@
 
 namespace {
 
-std::shared_ptr<cyHairFile> generate_test_data() {
+std::shared_ptr<cyHairFile> generate_test_data(bool uniform_segments = false) {
     // Prepare data
-    const std::vector<unsigned short> segments_array = { 3, 4, 5, 6, 7 };
+    const auto segments_array = uniform_segments ? std::vector<unsigned short>{ 5, 5, 5, 5, 5 } : std::vector<unsigned short>{ 3, 4, 5, 6, 7 };
     const unsigned int hair_count = segments_array.size();
 
     const unsigned int point_count = std::accumulate(segments_array.begin(), segments_array.end(), hair_count);
@@ -71,6 +71,7 @@ TEST(io_hair, read) { auto hairfile = io::load_hair(TEST_DATA_DIR "/Bangs_100.ha
 TEST(io_ma, read) { auto hairfile = io::load_ma(TEST_DATA_DIR "/Bangs_100.ma"); }
 TEST(io_ply, read_ascii) { auto hairfile = io::load_ply(TEST_DATA_DIR "/Bangs_100_ascii.ply"); }
 TEST(io_ply, read_binary) { auto hairfile = io::load_ply(TEST_DATA_DIR "/Bangs_100_binary.ply"); }
+TEST(io_npy, read) { auto hairfile = io::load_npy(TEST_DATA_DIR "/base_0_idx_17453.npy"); }
 
 TEST(io_abc, write) { auto hairfile = generate_test_data(); io::save_abc("test_io_out.abc", hairfile); }
 TEST(io_bin, write) { auto hairfile = generate_test_data(); io::save_bin("test_io_out.bin", hairfile); }
@@ -79,6 +80,8 @@ TEST(io_hair, write) { auto hairfile = generate_test_data(); io::save_hair("test
 TEST(io_ma, write) { auto hairfile = generate_test_data(); io::save_ma("test_io_out.ma", hairfile); }
 TEST(io_ply, write_ascii) { auto hairfile = generate_test_data(); globals::ply_save_ascii = true; io::save_ply("test_io_out_ascii.ply", hairfile); }
 TEST(io_ply, write_binary) { auto hairfile = generate_test_data(); globals::ply_save_ascii = false; io::save_ply("test_io_out_binary.ply", hairfile); }
+TEST(io_npy, write) { auto hairfile = generate_test_data(true); io::save_npy("test_io_out_binary.npy", hairfile); }
+TEST(io_npy, write_fail) { auto hairfile = generate_test_data(false); EXPECT_THROW({ io::save_npy("test_io_out_binary.npy", hairfile); }, std::runtime_error); }
 
 int main(int argc, char **argv) {
     testing::InitGoogleTest(&argc, argv);

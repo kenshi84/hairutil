@@ -33,7 +33,8 @@ namespace globals {
         {"data", {::io::load_data, ::io::save_data}},
         {"ply", {::io::load_ply, ::io::save_ply}},
         {"ma", {::io::load_ma, ::io::save_ma}},
-        {"abc", {::io::load_abc, ::io::save_abc}}
+        {"abc", {::io::load_abc, ::io::save_abc}},
+        {"npy", {::io::load_npy, ::io::save_npy}}
     };
 
     ::io::load_func_t load_func;

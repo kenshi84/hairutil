@@ -34,3 +34,6 @@
 [submodule "ext/hdf5"]
 	path = ext/hdf5
 	url = https://github.com/HDFGroup/hdf5.git
+[submodule "ext/libnpy"]
+	path = ext/libnpy
+	url = https://github.com/llohse/libnpy

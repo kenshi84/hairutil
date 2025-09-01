@@ -8,6 +8,7 @@ Supported file formats:
 - .ply
 - .ma
 - .abc
+- .npy (write supports uniform number of per-strand segments only)
 
 ```
 $ hairutil --help

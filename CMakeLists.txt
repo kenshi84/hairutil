@@ -67,6 +67,7 @@ add_library(hairutil_core STATIC
   src/io/data.cpp
   src/io/hair.cpp
   src/io/ma.cpp
+  src/io/npy.cpp
   src/io/ply.cpp
   src/util.cpp
   version.cpp
@@ -85,6 +86,7 @@ target_include_directories(hairutil_core
   ext/happly
   ext/HighFive/include
   ext/libigl/include
+  ext/libnpy/include
   ext/nanoflann/include
   ext/spdlog/include
 )
