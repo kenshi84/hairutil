@@ -17,7 +17,8 @@ int main(int argc, const char **argv)
         "  .data\n"
         "  .ply\n"
         "  .ma\n"
-        "  .abc", globals::VERSIONTAG));
+        "  .abc\n"
+        "  .npy", globals::VERSIONTAG));
 
     args::Group grp_commands(parser, "Commands:");
     args::Command cmd_autofix(grp_commands, "autofix", "Auto-fix issues", cmd::parse::autofix);
