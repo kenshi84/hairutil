@@ -69,11 +69,11 @@ std::shared_ptr<cyHairFile> generate_test_data() {
 }
 
 TEST(cmd_autofix, empty_strand) {
-    io::save_ply("autofix_test.ply", generate_test_data());
+    io::save_ply(TEST_DATA_DIR "/autofix_test.ply", generate_test_data());
     std::vector<const char*> args = {
         "test_cmd",
         "autofix",
-        "-i", "autofix_test.ply",
+        "-i", TEST_DATA_DIR "/autofix_test.ply",
         "--overwrite"
     };
     globals::clear();
