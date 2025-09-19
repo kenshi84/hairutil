@@ -1,6 +1,3 @@
-[submodule "ext/cyCodeBase"]
-	path = ext/cyCodeBase
-	url = https://github.com/cemyuksel/cyCodeBase/
 [submodule "ext/args"]
 	path = ext/args
 	url = https://github.com/Taywee/args
