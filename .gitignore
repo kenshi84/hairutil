@@ -31,8 +31,11 @@
 *.out
 *.app
 
+*/.DS_Store
+
 build/
 temp*
+test/data/autofix_test.ply
 test/data/Bangs_100_20.ply
 test/data/Bangs_100_cvtr.hdf5
 test/data/Bangs_100_filtered_length_geq_174.96289.ply
