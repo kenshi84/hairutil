@@ -15,6 +15,7 @@ void smooth(args::Subparser &parser);
 void stats(args::Subparser &parser);
 void subsample(args::Subparser &parser);
 void transform(args::Subparser &parser);
+void tubify(args::Subparser &parser);
 }
 
 namespace exec {
@@ -30,6 +31,7 @@ std::shared_ptr<cyHairFile> smooth(std::shared_ptr<cyHairFile> hairfile_in);
 std::shared_ptr<cyHairFile> stats(std::shared_ptr<cyHairFile> hairfile_in);
 std::shared_ptr<cyHairFile> subsample(std::shared_ptr<cyHairFile> hairfile_in);
 std::shared_ptr<cyHairFile> transform(std::shared_ptr<cyHairFile> hairfile_in);
+std::shared_ptr<cyHairFile> tubify(std::shared_ptr<cyHairFile> hairfile_in);
 }
 
 }

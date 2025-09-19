@@ -61,6 +61,7 @@ add_library(hairutil_core STATIC
   src/cmd/stats.cpp
   src/cmd/subsample.cpp
   src/cmd/transform.cpp
+  src/cmd/tubify.cpp
   src/globals.cpp
   src/io/abc.cpp
   src/io/bin.cpp

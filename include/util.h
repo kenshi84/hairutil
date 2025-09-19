@@ -105,4 +105,9 @@ inline std::string join_vector_to_string(const Container& c, const char delimite
     return res;
 }
 
+template <typename VecSrc, typename VecDst>
+inline void copy_vec3(const VecSrc& vec_src, VecDst& vec_dst) {
+    vec_dst = VecDst{vec_src[0], vec_src[1], vec_src[2]};
+}
+
 }

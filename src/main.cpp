@@ -33,6 +33,7 @@ int main(int argc, const char **argv)
     args::Command cmd_stats(grp_commands, "stats", "Generate statistics", cmd::parse::stats);
     args::Command cmd_subsample(grp_commands, "subsample", "Subsample strands", cmd::parse::subsample);
     args::Command cmd_transform(grp_commands, "transform", "Transform strand points, either by one of scale/translate/rotate, or by full 4x4 matrix", cmd::parse::transform);
+    args::Command cmd_tubify(grp_commands, "tubify", "Turn curves into tubes as triangle mesh", cmd::parse::tubify);
 
     args::Group grp_globals("Common options:");
     args::ValueFlag<std::string> globals_input_file(grp_globals, "PATH", "(REQUIRED) Input file", {'i', "input-file"}, args::Options::Required);

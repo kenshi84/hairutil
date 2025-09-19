@@ -32,7 +32,8 @@ $ hairutil --help
         transform                         Transform strand points, either by one
                                           of scale/translate/rotate, or by full
                                           4x4 matrix
-
+        tubify                            Turn curves into tubes as triangle
+                                          mesh
       Common options:
         -i[PATH], --input-file=[PATH]     (REQUIRED) Input file
         -o[EXT], --output-ext=[EXT]       Output file extension
@@ -230,4 +231,19 @@ Example:
 hairutil transform -i test/data/Bangs_100.bin -o ply --overwrite --scale 1.2 --translate 12.3,45.6,78.9 --rotate 0.407903582,-0.656201959,0.634833455,0.838385462,0.54454118,0.0241773129,-0.361558199,0
 .52237314,0.77227056
 # Output saved to test/data/Bangs_100_tfm_s_1.2_t_12.3_45.6_78.9_R_0.407904_-0.656202_0.634833_0.838385_0.544541_0.0241773_-0.361558_0.522373_0.772271.ply
+```
+
+### `tubify` command
+```
+$ hairutil tubify --help
+  hairutil tubify {OPTIONS}
+
+    Turn curves into tubes as triangle mesh
+
+  OPTIONS:
+
+      -r[R], --radius=[R]               (REQUIRED) Tube radius
+      -n[N], --num-sides=[N]            Number of sides of tubes [6]
+      --capped                          Cap tube ends
+      --colored                         Output colored vertices
 ```

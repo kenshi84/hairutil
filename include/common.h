@@ -4,9 +4,11 @@
 #include <functional>
 #include <memory>
 #include <cmath>
+#include <algorithm>
 #include <numeric>
 #include <fstream>
 #include <sstream>
+#include <array>
 #include <vector>
 #include <set>
 #include <map>

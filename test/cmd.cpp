@@ -343,6 +343,20 @@ TEST(cmd_transform, full) {
     EXPECT_EQ(test_main(args.size(), args.data()), 0);
 }
 
+TEST(cmd_tubify, Bangs_100) {
+    std::vector<const char*> args = {
+        "test_cmd",
+        "tubify",
+        "-i", TEST_DATA_DIR "/Bangs_100.bin",
+        "--radius", "1.0",
+        "--colored",
+        "--capped",
+        "--overwrite",
+    };
+    globals::clear();
+    EXPECT_EQ(test_main(args.size(), args.data()), 0);
+}
+
 int main(int argc, char **argv) {
     spdlog::set_level(spdlog::level::trace);
     testing::InitGoogleTest(&argc, argv);

@@ -25,6 +25,7 @@ namespace globals {
         cmd::exec::getcurvature,
         cmd::exec::stats,
         cmd::exec::findpenet,
+        cmd::exec::tubify,
     };
 
     const std::unordered_map<std::string, std::pair<::io::load_func_t, ::io::save_func_t>> supported_ext = {
