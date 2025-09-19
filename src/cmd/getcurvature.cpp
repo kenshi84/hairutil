@@ -86,7 +86,7 @@ std::shared_ptr<cyHairFile> cmd::exec::getcurvature(std::shared_ptr<cyHairFile> 
             spdlog::warn("Strand {} is completely straight", i);
             RowVector3f binormal = RowVector3f::Random();
             binormal = (binormal - binormal.dot(tangent.row(0)) * tangent.row(0)).normalized();
-            H5Easy::dump(file, fmt::format("/{}/binormal", i),  binormal.replicate(nsegs[i]-1, 1));
+            H5Easy::dump(file, fmt::format("/{}/binormal", i),  binormal.replicate(nsegs[i]-1, 1).eval());
             H5Easy::dump(file, fmt::format("/{}/kappa", i), std::vector<float>(nsegs[i]-1, 0.0));
             H5Easy::dump(file, fmt::format("/{}/tau", i), std::vector<float>(nsegs[i]-2, 0.0));
             continue;

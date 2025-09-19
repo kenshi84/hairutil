@@ -27,7 +27,7 @@
 	url = https://github.com/libigl/libigl
 [submodule "ext/xlnt"]
 	path = ext/xlnt
-	url = https://github.com/tfussell/xlnt
+	url = https://github.com/xlnt-community/xlnt
 [submodule "ext/HighFive"]
 	path = ext/HighFive
 	url = https://github.com/BlueBrain/HighFive
