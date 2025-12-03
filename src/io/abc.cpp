@@ -107,15 +107,20 @@ void io::save_abc(const std::string &filename, const std::shared_ptr<cyHairFile>
     }
 
     // Fill nVertices data
-    std::vector<int> nVertices(header.hair_count);
+    std::vector<std::int32_t> nVertices(header.hair_count);
     for (unsigned int i = 0; i < header.hair_count; ++i) {
-        const unsigned short nsegs = header.arrays & _CY_HAIR_FILE_SEGMENTS_BIT ? hairfile->GetSegmentsArray()[i] : header.d_segments;
-        nVertices[i] = nsegs + 1;
+        const unsigned short nsegs = (header.arrays & _CY_HAIR_FILE_SEGMENTS_BIT) ? hairfile->GetSegmentsArray()[i] : header.d_segments;
+        nVertices[i] = static_cast<std::int32_t>(nsegs) + 1;
     }
 
     // Write to file
     Abc::OArchive archive(AbcCoreOgawa::WriteArchive(), filename);
     AbcGeom::OCurves curves(archive.getTop(), "curves");
-    AbcGeom::OCurvesSchema::Sample sample(positions, nVertices);
+    AbcGeom::OCurvesSchema::Sample sample;
+    sample.setPositions(positions);
+    sample.setCurvesNumVertices(nVertices);
+    sample.setType(AbcGeom::kLinear);
+    sample.setWrap(AbcGeom::kNonPeriodic);
+    sample.setBasis(AbcGeom::kNoBasis);
     curves.getSchema().set(sample);
 }
