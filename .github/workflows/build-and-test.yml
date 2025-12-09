@@ -24,3 +24,20 @@ jobs:
 
     - name: Test the project
       run: ctest --test-dir build
+
+    - name: Package hairutil binary
+      run: |
+        mkdir -p dist
+        cp build/hairutil dist/
+        cd dist
+        zip "hairutil-linux-amd64-${GITHUB_SHA}.zip" hairutil
+
+    - name: Upload to continuous release
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}   # provided by Actions
+        file: dist/hairutil-linux-amd64-${{ github.sha }}.zip
+        asset_name: hairutil-linux-amd64-${{ github.sha }}.zip
+        tag: continuous                          # reused on every push
+        release_name: Continuous build
+        overwrite: true
