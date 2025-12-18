@@ -24,7 +24,9 @@ const std::set<std::string> keys_set = {
     "maxptcrr",
     "minptcrr",
     "maxptta",
-    "minptta"
+    "minptta",
+    "maxptcurv",
+    "minptcurv"
 };
 
 }
@@ -43,6 +45,8 @@ void cmd::parse::filter(args::Subparser &parser) {
         "minptcrr (Minimum of point circumradius reciprocal)\n"
         "maxptta (Maximum of point turning angle)\n"
         "minptta (Minimum of point turning angle)\n"
+        "maxptcurv (Maximum of point curvature)\n"
+        "minptcurv (Minimum of point curvature)\n"
         , {"key", 'k'}, args::Options::Required);
     args::ValueFlag<float> lt(parser, "R", "Less-than threshold", {"lt"});
     args::ValueFlag<float> gt(parser, "R", "Greater-than threshold", {"gt"});
@@ -101,6 +105,8 @@ std::shared_ptr<cyHairFile> cmd::exec::filter(std::shared_ptr<cyHairFile> hairfi
         float min_point_circumradius_reciprocal = std::numeric_limits<float>::max();
         float max_point_turning_angle = 0.0f;
         float min_point_turning_angle = std::numeric_limits<float>::max();
+        float max_point_curvature = 0.0f;
+        float min_point_curvature = std::numeric_limits<float>::max();
 
         Vector3f prev_point = Map<const Vector3f>(hairfile_in->GetPointsArray() + 3 * offset);
         float prev_turning_angle;
@@ -120,12 +126,16 @@ std::shared_ptr<cyHairFile> cmd::exec::filter(std::shared_ptr<cyHairFile> hairfi
                 const float s = (la + lb + lc) / 2.0f;
                 const float A = std::sqrt(s * (s - la) * (s - lb) * (s - lc));
                 const float circumradius_reciprocal = A > 0.0f ? 1.0f / (la * lb * lc / (4.0f * A)) : 0.0f;
-                const float turning_angle = 180.0f - std::acos(std::clamp((la * la + lb * lb - lc * lc) / (2.0f * la * lb), -1.0f, 1.0f)) * 180.0f / globals::pi;
+                const float turning_angle_rad = globals::pi - std::acos(std::clamp((la * la + lb * lb - lc * lc) / (2.0f * la * lb), -1.0f, 1.0f));
+                const float turning_angle = turning_angle_rad * 180.0f / globals::pi;
+                const float curvature = turning_angle_rad / ((la + lb) / 2.0f);
 
                 max_point_circumradius_reciprocal = std::max(max_point_circumradius_reciprocal, circumradius_reciprocal);
                 min_point_circumradius_reciprocal = std::min(min_point_circumradius_reciprocal, circumradius_reciprocal);
                 max_point_turning_angle = std::max(max_point_turning_angle, turning_angle);
                 min_point_turning_angle = std::min(min_point_turning_angle, turning_angle);
+                max_point_curvature = std::max(max_point_curvature, curvature);
+                min_point_curvature = std::min(min_point_curvature, curvature);
 
                 turning_angle_sum += turning_angle;
 
@@ -155,6 +165,8 @@ std::shared_ptr<cyHairFile> cmd::exec::filter(std::shared_ptr<cyHairFile> hairfi
         if (::param.key == "minptcrr") value = min_point_circumradius_reciprocal;
         if (::param.key == "maxptta") value = max_point_turning_angle;
         if (::param.key == "minptta") value = min_point_turning_angle;
+        if (::param.key == "maxptcurv") value = max_point_curvature;
+        if (::param.key == "minptcurv") value = min_point_curvature;
 
         if (::param.lt && value >= *::param.lt) continue;
         if (::param.gt && value <= *::param.gt) continue;

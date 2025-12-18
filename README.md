@@ -92,6 +92,8 @@ $ hairutil filter --help
                                         reciprocal)
                                         maxptta (Maximum of point turning angle)
                                         minptta (Minimum of point turning angle)
+                                        maxptcurv (Maximum of point curvature)
+                                        minptcurv (Minimum of point curvature)
       --lt=[R]                          Less-than threshold
       --gt=[R]                          Greater-than threshold
       --leq=[R]                         Less-than or equal-to threshold
