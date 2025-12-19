@@ -11,6 +11,7 @@ struct {
     std::optional<float> gt;
     std::optional<float> leq;
     std::optional<float> geq;
+    bool output_indices;
 } param;
 
 const std::set<std::string> keys_set = {
@@ -34,24 +35,25 @@ const std::set<std::string> keys_set = {
 void cmd::parse::filter(args::Subparser &parser) {
     args::ValueFlag<std::string> key(parser, "KEY",
         "Filtering key chosen from:\n"
-        "length (Total length)\n"
-        "nsegs (Number of segments)\n"
-        "tasum (Turning angle sum)\n"
-        "maxseglength (Maximum of segment length)\n"
-        "minseglength (Minimum of segment length)\n"
-        "maxsegtadiff (Maximum of segment turning angle difference)\n"
-        "minsegtadiff (Minimum of segment turning angle difference)\n"
-        "maxptcrr (Maximum of point circumradius reciprocal)\n"
-        "minptcrr (Minimum of point circumradius reciprocal)\n"
-        "maxptta (Maximum of point turning angle)\n"
-        "minptta (Minimum of point turning angle)\n"
-        "maxptcurv (Maximum of point curvature)\n"
-        "minptcurv (Minimum of point curvature)\n"
+        "  length (Total length)\n"
+        "  nsegs (Number of segments)\n"
+        "  tasum (Turning angle sum)\n"
+        "  maxseglength (Maximum of segment length)\n"
+        "  minseglength (Minimum of segment length)\n"
+        "  maxsegtadiff (Maximum of segment turning angle difference)\n"
+        "  minsegtadiff (Minimum of segment turning angle difference)\n"
+        "  maxptcrr (Maximum of point circumradius reciprocal)\n"
+        "  minptcrr (Minimum of point circumradius reciprocal)\n"
+        "  maxptta (Maximum of point turning angle)\n"
+        "  minptta (Minimum of point turning angle)\n"
+        "  maxptcurv (Maximum of point curvature)\n"
+        "  minptcurv (Minimum of point curvature)\n"
         , {"key", 'k'}, args::Options::Required);
     args::ValueFlag<float> lt(parser, "R", "Less-than threshold", {"lt"});
     args::ValueFlag<float> gt(parser, "R", "Greater-than threshold", {"gt"});
     args::ValueFlag<float> leq(parser, "R", "Less-than or equal-to threshold", {"leq"});
     args::ValueFlag<float> geq(parser, "R", "Greater-than or equal-to threshold", {"geq"});
+    args::Flag output_indices(parser, "output-indices", "Output selected strand indices as txt", {"output-indices"});
     parser.Parse();
     globals::cmd_exec = cmd::exec::filter;
     globals::check_error = [](){
@@ -83,6 +85,7 @@ void cmd::parse::filter(args::Subparser &parser) {
     if (gt) ::param.gt = *gt;
     if (leq) ::param.leq = *leq;
     if (geq) ::param.geq = *geq;
+    ::param.output_indices = output_indices;
 }
 
 std::shared_ptr<cyHairFile> cmd::exec::filter(std::shared_ptr<cyHairFile> hairfile_in) {
@@ -174,6 +177,25 @@ std::shared_ptr<cyHairFile> cmd::exec::filter(std::shared_ptr<cyHairFile> hairfi
         if (::param.geq && value < *::param.geq) continue;
 
         selected[i] = 1;
+    }
+    spdlog::info("{} strands selected", std::count(selected.begin(), selected.end(), 1));
+    if (::param.output_indices) {
+        std::string suffix;
+        if (::param.gt) suffix += fmt::format("_gt_{}", *::param.gt);
+        if (::param.geq) suffix += fmt::format("_geq_{}", *::param.geq);
+        if (::param.lt) suffix += fmt::format("_lt_{}", *::param.lt);
+        if (::param.leq) suffix += fmt::format("_leq_{}", *::param.leq);
+        std::string indices_file = fmt::format("{}_filtered_{}{}_indices.txt", globals::input_file_wo_ext, ::param.key, suffix);
+        std::ofstream ofs(indices_file);
+        if (!ofs) {
+            throw std::runtime_error(fmt::format("Failed to open file: {}", indices_file));
+        }
+        for (unsigned int i = 0; i < selected.size(); ++i) {
+            if (selected[i]) {
+                ofs << i << "\n";
+            }
+        }
+        spdlog::info("Selected strand indices written to {}", indices_file);
     }
 
     return util::get_subset(hairfile_in, selected);
