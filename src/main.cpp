@@ -19,6 +19,8 @@ int main(int argc, const char **argv)
         "  .ma\n"
         "  .abc\n"
         "  .npy", globals::VERSIONTAG));
+    parser.helpParams.width = 120;
+    parser.helpParams.helpindent = 32;
 
     args::Group grp_commands(parser, "Commands:");
     args::Command cmd_autofix(grp_commands, "autofix", "Auto-fix issues", cmd::parse::autofix);
