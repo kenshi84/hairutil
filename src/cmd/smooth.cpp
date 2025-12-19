@@ -10,6 +10,7 @@ struct {
     float w0;
     float w1;
     float w2;
+    unsigned int num_iter;
 } param;
 }
 
@@ -17,9 +18,10 @@ void cmd::parse::smooth(args::Subparser &parser) {
     args::ValueFlag<float> w0(parser, "R", "Weight for the data term [1.0]", {"w0"}, 1.0f);
     args::ValueFlag<float> w1(parser, "R", "Weight for the first-order term [1.0]", {"w1"}, 1.0f);
     args::ValueFlag<float> w2(parser, "R", "Weight for the second-order term [1.0]", {"w2"}, 1.0f);
+    args::ValueFlag<unsigned int> num_iter(parser, "N", "Number of smoothing iterations [1]", {"num-iter", 'n'}, 1);
     parser.Parse();
     globals::cmd_exec = cmd::exec::smooth;
-    globals::output_file = [](){ return fmt::format("{}_smoothed_w0_{}_w1_{}_w2_{}.{}", globals::input_file_wo_ext, ::param.w0, ::param.w1, ::param.w2, globals::output_ext); };
+    globals::output_file = [](){ return fmt::format("{}_smoothed_w0_{}_w1_{}_w2_{}_n_{}.{}", globals::input_file_wo_ext, ::param.w0, ::param.w1, ::param.w2, ::param.num_iter, globals::output_ext); };
     globals::check_error = []() {
         if (::param.w0 < 0 || ::param.w1 < 0 || ::param.w2 < 0) {
             throw std::runtime_error("Weights must be non-negative");
@@ -27,11 +29,15 @@ void cmd::parse::smooth(args::Subparser &parser) {
         if (::param.w0 == 0 && ::param.w1 == 0 && ::param.w2 == 0) {
             throw std::runtime_error("At least one weight must be positive");
         }
+        if (::param.num_iter == 0) {
+            throw std::runtime_error("Number of iterations must be positive");
+        }
     };
     param = {};
     ::param.w0 = *w0;
     ::param.w1 = *w1;
     ::param.w2 = *w2;
+    ::param.num_iter = *num_iter;
 }
 
 std::shared_ptr<cyHairFile> cmd::exec::smooth(std::shared_ptr<cyHairFile> hairfile) {
@@ -48,7 +54,7 @@ std::shared_ptr<cyHairFile> cmd::exec::smooth(std::shared_ptr<cyHairFile> hairfi
             continue;
 
         // Copy point data to Eigen matrix
-        MatrixX3d f0 = Map<Matrix3Xf>(hairfile->GetPointsArray() + 3*offset, 3, nsegs+1).cast<double>().transpose();
+        MatrixX3d f = Map<Matrix3Xf>(hairfile->GetPointsArray() + 3*offset, 3, nsegs+1).cast<double>().transpose();
 
         /*
         Energy to be minimized for coordinate function f:
@@ -80,19 +86,19 @@ std::shared_ptr<cyHairFile> cmd::exec::smooth(std::shared_ptr<cyHairFile> hairfi
 
         SparseMatrix<double> Q = ::param.w0*I + ::param.w1*(D.transpose()*D) + ::param.w2*(L.transpose()*L);
 
-        VectorXi b(2);
-        MatrixX3d bc(2, 3);
-        b << 0, nsegs;
-        bc << f0.row(0), f0.row(nsegs);
+        for (unsigned int iter = 0; iter < ::param.num_iter; ++iter) {
+            VectorXi b(2);
+            MatrixX3d bc(2, 3);
+            b << 0, nsegs;
+            bc << f.row(0), f.row(nsegs);
 
-        igl::min_quad_with_fixed_data<double> mqwf;
-        SparseMatrix<double> Aeq;
-        VectorXd Beq;
-        MatrixX3d B = -::param.w0*f0;
-        MatrixX3d f;
-        igl::min_quad_with_fixed_precompute(Q, b, Aeq, true, mqwf);
-        igl::min_quad_with_fixed_solve(mqwf,B,bc,Beq,f);
-
+            igl::min_quad_with_fixed_data<double> mqwf;
+            SparseMatrix<double> Aeq;
+            VectorXd Beq;
+            MatrixX3d B = -::param.w0*f;
+            igl::min_quad_with_fixed_precompute(Q, b, Aeq, true, mqwf);
+            igl::min_quad_with_fixed_solve(mqwf,B,bc,Beq,f);
+        }
         // Copy resulting point data back to hairfile
         Matrix3Xf f_T = f.transpose().cast<float>();
         std::memcpy(hairfile->GetPointsArray() + 3*offset, f_T.data(), 3*(nsegs+1)*sizeof(float));

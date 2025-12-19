@@ -157,6 +157,21 @@ $ hairutil resample --help
       --min-num-segments=[N]            Minimum number of segments per hair [20]
 ```
 
+### `smooth` command
+```
+$ hairutil smooth --help
+  hairutil smooth {OPTIONS}
+
+    Smooth strands
+
+  OPTIONS:
+
+      --w0=[R]                          Weight for the data term [1.0]
+      --w1=[R]                          Weight for the first-order term [1.0]
+      --w2=[R]                          Weight for the second-order term [1.0]
+      -n[N], --num-iter=[N]             Number of smoothing iterations [1]
+```
+
 ### `stats` command
 ```
 $ hairutil stats --help
