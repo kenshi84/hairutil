@@ -7,10 +7,10 @@ using namespace Eigen;
 
 namespace {
 struct {
-    float radius;
-    unsigned int num_sides;
-    bool capped;
-    bool colored;
+    float& radius = cmd::param::f("tubify", "radius");
+    unsigned int& num_sides = cmd::param::ui("tubify", "num_sides");
+    bool& capped = cmd::param::b("tubify", "capped");
+    bool& colored = cmd::param::b("tubify", "colored");
 } param;
 }
 
@@ -23,7 +23,6 @@ void cmd::parse::tubify(args::Subparser &parser)
     parser.Parse();
     globals::cmd_exec = &cmd::exec::tubify;
     globals::output_file = []() { return globals::input_file_wo_ext + "_tube.ply"; };
-    ::param = {};
     ::param.radius = *radius;
     ::param.num_sides = *num_sides;
     ::param.capped = capped;

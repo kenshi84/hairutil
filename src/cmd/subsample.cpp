@@ -7,11 +7,11 @@ using namespace Eigen;
 
 namespace {
 struct {
-    unsigned int target_count;
-    float scale_factor;
-    std::set<int> indices;
-    bool exclude;
-    bool output_indices;
+    unsigned int& target_count = cmd::param::ui("subsample", "target_count");
+    float& scale_factor = cmd::param::f("subsample", "scale_factor");
+    std::set<int>& indices = cmd::param::set_i("subsample", "indices");
+    bool& exclude = cmd::param::b("subsample", "exclude");
+    bool& output_indices = cmd::param::b("subsample", "output_indices");
 } param;
 }
 
@@ -43,7 +43,6 @@ void cmd::parse::subsample(args::Subparser &parser) {
     if (!target_count && !indices || target_count && indices) {
         throw std::runtime_error("Either --target-count or --indices (not both) must be specified");
     }
-    ::param = {};
     ::param.target_count = *target_count;
     ::param.scale_factor = *scale_factor;
 
@@ -158,7 +157,7 @@ std::shared_ptr<cyHairFile> cmd::exec::subsample(std::shared_ptr<cyHairFile> hai
 
     auto hairfile_out = util::get_subset(hairfile_in, selected);
 
-    if (param.indices.empty() && ::param.output_indices) {
+    if (::param.indices.empty() && ::param.output_indices) {
         std::string output_file_txt = fmt::format("{}_{}_indices.txt", globals::input_file_wo_ext, ::param.target_count);
         spdlog::info("Writing indices to {}", output_file_txt);
         std::stringstream ss;

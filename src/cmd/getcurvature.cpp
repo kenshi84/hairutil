@@ -28,7 +28,7 @@ std::vector<int> tovector_int(VectorXi v) {
 
 namespace {
 struct {
-    float angle_threshold;
+    float& angle_threshold = cmd::param::f("getcurvature", "angle_threshold");
 } param;
 }
 
@@ -38,7 +38,6 @@ void cmd::parse::getcurvature(args::Subparser &parser)
     parser.Parse();
     globals::cmd_exec = &cmd::exec::getcurvature;
     globals::output_file = []() { return globals::input_file_wo_ext + "_cvtr.hdf5"; };
-    ::param = {};
     ::param.angle_threshold = *angle_threshold;
 }
 

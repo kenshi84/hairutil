@@ -6,12 +6,13 @@ using namespace Eigen;
 namespace {
 
 struct {
-    std::string key;
-    std::optional<float> lt;
-    std::optional<float> gt;
-    std::optional<float> leq;
-    std::optional<float> geq;
-    bool output_indices;
+    std::string& key = cmd::param::s("filter", "key");
+    std::optional<float>& lt = cmd::param::opt_f("filter", "lt");
+    std::optional<float>& gt = cmd::param::opt_f("filter", "gt");
+    std::optional<float>& leq = cmd::param::opt_f("filter", "leq");
+    std::optional<float>& geq = cmd::param::opt_f("filter", "geq");
+    bool& output_indices = cmd::param::b("filter", "output_indices");
+    bool& no_output = cmd::param::b("filter", "no_output");
 } param;
 
 const std::set<std::string> keys_set = {
@@ -54,6 +55,7 @@ void cmd::parse::filter(args::Subparser &parser) {
     args::ValueFlag<float> leq(parser, "R", "Less-than or equal-to threshold", {"leq"});
     args::ValueFlag<float> geq(parser, "R", "Greater-than or equal-to threshold", {"geq"});
     args::Flag output_indices(parser, "output-indices", "Output selected strand indices as txt", {"output-indices"});
+    args::Flag no_output(parser, "no-output", "Do not output filtered hair file, only show number of filtered strands", {"no-output"});
     parser.Parse();
     globals::cmd_exec = cmd::exec::filter;
     globals::check_error = [](){
@@ -70,7 +72,6 @@ void cmd::parse::filter(args::Subparser &parser) {
             throw std::runtime_error("Must specify one of --lt, --gt, --leq, or --geq");
         }
     };
-    ::param = {};
     globals::output_file = [](){
         std::string suffix;
         if (::param.gt) suffix += fmt::format("_gt_{}", *::param.gt);
@@ -86,6 +87,7 @@ void cmd::parse::filter(args::Subparser &parser) {
     if (leq) ::param.leq = *leq;
     if (geq) ::param.geq = *geq;
     ::param.output_indices = output_indices;
+    ::param.no_output = no_output;
 }
 
 std::shared_ptr<cyHairFile> cmd::exec::filter(std::shared_ptr<cyHairFile> hairfile_in) {
@@ -198,5 +200,7 @@ std::shared_ptr<cyHairFile> cmd::exec::filter(std::shared_ptr<cyHairFile> hairfi
         spdlog::info("Selected strand indices written to {}", indices_file);
     }
 
+    if (::param.no_output)
+        return {};
     return util::get_subset(hairfile_in, selected);
 }

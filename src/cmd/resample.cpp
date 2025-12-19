@@ -4,8 +4,8 @@ using namespace Eigen;
 
 namespace {
 struct {
-    float target_segment_length;
-    unsigned int min_num_segments;
+    float& target_segment_length = cmd::param::f("resample", "target_segment_length");
+    unsigned int& min_num_segments = cmd::param::ui("resample", "min_num_segments");
 } param;
 }
 
@@ -20,7 +20,6 @@ void cmd::parse::resample(args::Subparser &parser) {
             throw std::runtime_error(fmt::format("Invalid target segment length: {}", ::param.target_segment_length));
         }
     };
-    param = {};
     ::param.target_segment_length = *target_segment_length;
     ::param.min_num_segments = *min_num_segments;
 }

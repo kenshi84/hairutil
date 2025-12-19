@@ -7,10 +7,10 @@ using namespace Eigen;
 
 namespace {
 struct {
-    float w0;
-    float w1;
-    float w2;
-    unsigned int num_iter;
+    float& w0 = cmd::param::f("smooth", "w0");
+    float& w1 = cmd::param::f("smooth", "w1");
+    float& w2 = cmd::param::f("smooth", "w2");
+    unsigned int& num_iter = cmd::param::ui("smooth", "num_iter");
 } param;
 }
 
@@ -33,7 +33,6 @@ void cmd::parse::smooth(args::Subparser &parser) {
             throw std::runtime_error("Number of iterations must be positive");
         }
     };
-    param = {};
     ::param.w0 = *w0;
     ::param.w1 = *w1;
     ::param.w2 = *w2;

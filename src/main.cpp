@@ -94,7 +94,7 @@ int main(int argc, const char **argv)
     }
     globals::rng.seed(seed);
 
-    if (globals::cmd_wo_output.count(globals::cmd_exec)) {
+    if (globals::cmd_wo_output.count(globals::cmd_exec) ||  (globals::cmd_exec == cmd::exec::filter && cmd::param::b("filter", "no_output"))) {
         if (globals::output_ext != "") {
             spdlog::warn("Ignoring --output-ext");
             globals::output_ext = "";

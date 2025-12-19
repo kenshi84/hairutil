@@ -8,12 +8,12 @@ using namespace Eigen;
 namespace {
 
 struct {
-    unsigned int sort_size;
-    bool no_export;
-    bool export_raw_strand;
-    bool export_raw_segment;
-    bool export_raw_point;
-    bool no_print;
+    unsigned int& sort_size = cmd::param::ui("stats", "sort_size");
+    bool& no_export = cmd::param::b("stats", "no_export");
+    bool& export_raw_strand = cmd::param::b("stats", "export_raw_strand");
+    bool& export_raw_segment = cmd::param::b("stats", "export_raw_segment");
+    bool& export_raw_point = cmd::param::b("stats", "export_raw_point");
+    bool& no_print = cmd::param::b("stats", "no_print");
 } param;
 
 struct StrandInfo {
@@ -67,7 +67,6 @@ void cmd::parse::stats(args::Subparser &parser) {
             throw std::runtime_error("Both --no-export and --export-raw-* are specified");
         }
     };
-    ::param = {};
     ::param.sort_size = *sort_size;
     ::param.no_export = no_export;
     ::param.export_raw_strand = export_raw_strand;

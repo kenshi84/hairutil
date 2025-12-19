@@ -4,8 +4,8 @@
 
 namespace {
 struct {
-    bool confirm = false;
-    std::set<int> indices;
+    bool& confirm = cmd::param::b("decompose", "confirm");
+    std::set<int>& indices = cmd::param::set_i("decompose", "indices");
 } param;
 }
 
@@ -14,7 +14,6 @@ void cmd::parse::decompose(args::Subparser &parser) {
     args::ValueFlag<std::string> indices(parser, "N,...", "Comma-separated list of strand indices to extract", {"indices"});
     parser.Parse();
     globals::cmd_exec = cmd::exec::decompose;
-    ::param = {};
     ::param.confirm = confirm;
 
     if (indices) {

@@ -5,11 +5,11 @@ using namespace Eigen;
 
 namespace {
 struct {
-std::string s;
-std::string t;
-std::string r;
-std::string f;
-Matrix4f M = Matrix4f::Identity();
+std::string& s = cmd::param::s("transform", "s");
+std::string& t = cmd::param::s("transform", "t");
+std::string& r = cmd::param::s("transform", "r");
+std::string& f = cmd::param::s("transform", "f");
+Matrix4f& M = cmd::param::mat4f("transform", "M");
 } param;
 }
 
@@ -21,25 +21,25 @@ void cmd::parse::transform(args::Subparser &parser) {
     parser.Parse();
     globals::cmd_exec = cmd::exec::transform;
     globals::output_file = [](){
-        if (!param.s.empty())
-            return fmt::format("{}_tfm_s_{}.{}", globals::input_file_wo_ext, param.s, globals::output_ext);
-        if (!param.t.empty())
-            return fmt::format("{}_tfm_t_{}.{}", globals::input_file_wo_ext, param.t, globals::output_ext);
-        if (!param.r.empty())
-            return fmt::format("{}_tfm_r_{}.{}", globals::input_file_wo_ext, param.r, globals::output_ext);
-        return fmt::format("{}_tfm_f_{}.{}", globals::input_file_wo_ext, param.f, globals::output_ext);
+        if (!::param.s.empty())
+            return fmt::format("{}_tfm_s_{}.{}", globals::input_file_wo_ext, ::param.s, globals::output_ext);
+        if (!::param.t.empty())
+            return fmt::format("{}_tfm_t_{}.{}", globals::input_file_wo_ext, ::param.t, globals::output_ext);
+        if (!::param.r.empty())
+            return fmt::format("{}_tfm_r_{}.{}", globals::input_file_wo_ext, ::param.r, globals::output_ext);
+        return fmt::format("{}_tfm_f_{}.{}", globals::input_file_wo_ext, ::param.f, globals::output_ext);
     };
     globals::check_error = [](){
-        if (param.s.empty() + param.t.empty() + param.r.empty() + param.f.empty() != 3) {
+        if (::param.s.empty() + ::param.t.empty() + ::param.r.empty() + ::param.f.empty() != 3) {
             throw std::runtime_error("Exactly one of --scale, --translate, --rotate, or --full must be specified");
         }
     };
 
-    ::param = {};
     ::param.s = *scale;
     ::param.t = *translate;
     ::param.r = *rotate;
     ::param.f = *full;
+    ::param.M = Matrix4f::Identity();
 
     if (!::param.s.empty()) {
         const std::vector<float> scale_vec = util::parse_comma_separated_values<float>(*scale);

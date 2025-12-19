@@ -8,11 +8,11 @@ using namespace Eigen;
 
 namespace {
 struct {
-std::string mesh_path;
-float decimate_ratio;
-float threshold_ratio;
-bool no_export;
-bool no_print;
+std::string& mesh_path = cmd::param::s("findpenet", "mesh_path");
+float& decimate_ratio = cmd::param::f("findpenet", "decimate_ratio");
+float& threshold_ratio = cmd::param::f("findpenet", "threshold_ratio");
+bool& no_export = cmd::param::b("findpenet", "no_export");
+bool& no_print = cmd::param::b("findpenet", "no_print");
 } param;
 }
 
@@ -32,7 +32,6 @@ void cmd::parse::findpenet(args::Subparser &parser) {
             throw std::runtime_error("--threshold-ratio must be in [0.0, 1.0]");
         }
     };
-    ::param = {};
     ::param.mesh_path = *mesh_path;
     ::param.decimate_ratio = *decimate_ratio;
     ::param.threshold_ratio = *threshold_ratio;
