@@ -80,24 +80,26 @@ $ hairutil filter --help
 
   OPTIONS:
 
-      -k[KEY], --key=[KEY]              Filtering key chosen from:
-                                        length (Total length)
-                                        nsegs (Number of segments)
-                                        tasum (Turning angle sum)
-                                        maxseglength (Maximum of segment length)
-                                        minseglength (Minimum of segment length)
-                                        maxptcrr (Maximum of point circumradius
-                                        reciprocal)
-                                        minptcrr (Minimum of point circumradius
-                                        reciprocal)
-                                        maxptta (Maximum of point turning angle)
-                                        minptta (Minimum of point turning angle)
-                                        maxptcurv (Maximum of point curvature)
-                                        minptcurv (Minimum of point curvature)
-      --lt=[R]                          Less-than threshold
-      --gt=[R]                          Greater-than threshold
-      --leq=[R]                         Less-than or equal-to threshold
-      --geq=[R]                         Greater-than or equal-to threshold
+      -k[KEY], --key=[KEY]      Filtering key chosen from:
+                                  length (Total length)
+                                  nsegs (Number of segments)
+                                  tasum (Turning angle sum)
+                                  maxseglength (Maximum of segment length)
+                                  minseglength (Minimum of segment length)
+                                  maxsegtadiff (Maximum of segment turning angle difference)
+                                  minsegtadiff (Minimum of segment turning angle difference)
+                                  maxptcrr (Maximum of point circumradius reciprocal)
+                                  minptcrr (Minimum of point circumradius reciprocal)
+                                  maxptta (Maximum of point turning angle)
+                                  minptta (Minimum of point turning angle)
+                                  maxptcurv (Maximum of point curvature)
+                                  minptcurv (Minimum of point curvature)
+      --lt=[R]                  Less-than threshold
+      --gt=[R]                  Greater-than threshold
+      --leq=[R]                 Less-than or equal-to threshold
+      --geq=[R]                 Greater-than or equal-to threshold
+      --output-indices          Output selected strand indices as txt
+      --no-output               Do not output filtered hair file, only show number of filtered strands
 ```
 
 Example:
