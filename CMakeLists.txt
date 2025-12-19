@@ -19,6 +19,7 @@ add_subdirectory(ext/alembic)
 # HDF5
 set(HDF5_EXTERNALLY_CONFIGURED 1)
 set(BUILD_TESTING OFF CACHE BOOL "Build HDF5 tests")
+set(HDF5_BUILD_EXAMPLES OFF CACHE BOOL "Build HDF5 Library Examples")
 set(BUILD_STATIC_LIBS ON CACHE BOOL "Build HDF5 as a static library")
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build HDF5 as a shared library")
 add_subdirectory(ext/hdf5)
