@@ -20,6 +20,8 @@ add_subdirectory(ext/alembic)
 set(HDF5_EXTERNALLY_CONFIGURED 1)
 set(BUILD_TESTING OFF CACHE BOOL "Build HDF5 tests")
 set(HDF5_BUILD_EXAMPLES OFF CACHE BOOL "Build HDF5 Library Examples")
+set(HDF5_BUILD_TOOLS OFF CACHE BOOL "Build HDF5 Tools")
+set(HDF5_BUILD_PARALLEL_TOOLS OFF CACHE BOOL "Build Parallel HDF5 Tools")
 set(BUILD_STATIC_LIBS ON CACHE BOOL "Build HDF5 as a static library")
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build HDF5 as a shared library")
 add_subdirectory(ext/hdf5)
@@ -92,6 +94,9 @@ target_include_directories(hairutil_core
   ext/nanoflann/include
   ext/spdlog/include
 )
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  target_compile_options(hairutil_core PUBLIC -Wno-psabi)
+endif()
 install(TARGETS hairutil_core DESTINATION lib)
 
 ###################
