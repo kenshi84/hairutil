@@ -43,10 +43,16 @@ $ hairutil --help
         --ply-load-default-nsegs=[N]      Default number of segments per strand
                                           for PLY files [0]
         --ply-save-ascii                  Save PLY files in ASCII format
-        -v[NAME], --verbosity=[NAME]      Verbosity level name
-                                          {trace,debug,info,warn,error,critical,off}
-                                          [info]
+        -v[NAME], --verbosity=[NAME]      Verbosity level name {trace,debug,info,warn,error,critical,off} [info]
+        --seed=[N]                        Seed for random number generator (-1 for time-based seed) [0]
+        --no-autofix                      Do not auto-fix issues in input
         -h, --help                        Show this help message
+```
+
+## Shell completion
+Enable bash subcommand completion:
+```
+source completions/hairutil-completion.bash
 ```
 
 ## Compiling
