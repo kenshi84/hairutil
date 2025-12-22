@@ -5,23 +5,20 @@ using namespace Eigen;
 namespace {
 struct {
     float& target_segment_length = cmd::param::f("resample", "target_segment_length");
-    unsigned int& min_num_segments = cmd::param::ui("resample", "min_num_segments");
 } param;
 }
 
 void cmd::parse::resample(args::Subparser &parser) {
     args::ValueFlag<float> target_segment_length(parser, "R", "Target segment length [2.0]", {"target-segment-length"}, 2.0f);
-    args::ValueFlag<unsigned int> min_num_segments(parser, "N", "Minimum number of segments per hair [20]", {"min-num-segments"}, 20);
     parser.Parse();
     globals::cmd_exec = cmd::exec::resample;
-    globals::output_file = [](){ return fmt::format("{}_resampled_tsl_{}_mns_{}.{}", globals::input_file_wo_ext, ::param.target_segment_length, ::param.min_num_segments, globals::output_ext); };
+    globals::output_file = [](){ return fmt::format("{}_resampled_tsl_{}.{}", globals::input_file_wo_ext, ::param.target_segment_length, globals::output_ext); };
     globals::check_error = [](){
         if (::param.target_segment_length <= 0) {
             throw std::runtime_error(fmt::format("Invalid target segment length: {}", ::param.target_segment_length));
         }
     };
     ::param.target_segment_length = *target_segment_length;
-    ::param.min_num_segments = *min_num_segments;
 }
 
 std::shared_ptr<cyHairFile> cmd::exec::resample(std::shared_ptr<cyHairFile> hairfile_in) {
@@ -59,17 +56,7 @@ std::shared_ptr<cyHairFile> cmd::exec::resample(std::shared_ptr<cyHairFile> hair
 
             segment_length[j] = (p1 - p0).norm();
 
-            num_subsegments_per_segment[j] = std::max(1u, (unsigned int)std::floor(segment_length[j] / ::param.target_segment_length));
-        }
-
-        // Enforce min_num_segments constraint
-        while (std::accumulate(num_subsegments_per_segment.begin(), num_subsegments_per_segment.end(), 0) < ::param.min_num_segments) {
-            const auto it = std::max_element(j_range.begin(), j_range.end(), [&](unsigned int j1, unsigned int j2){
-                const float subsegment_length1 = segment_length[j1] / num_subsegments_per_segment[j1];
-                const float subsegment_length2 = segment_length[j2] / num_subsegments_per_segment[j2];
-                return subsegment_length1 < subsegment_length2;
-            });
-            num_subsegments_per_segment[*it] += 1;
+            num_subsegments_per_segment[j] = (unsigned int)std::ceil(segment_length[j] / ::param.target_segment_length);
         }
 
         const unsigned int num_subsegments_total = std::accumulate(num_subsegments_per_segment.begin(), num_subsegments_per_segment.end(), 0);

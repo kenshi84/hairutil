@@ -150,13 +150,12 @@ hairutil info --input-file ~/cemyuksel/wCurly.hair
 $ hairutil resample --help
   hairutil resample {OPTIONS}
 
-    Resample strands s.t. every segment is shorter than twice the target segment
-    length
+    Resample strands s.t. every segment is shorter than twice the target segment length
 
   OPTIONS:
 
-      --target-segment-length=[R]       Target segment length [2.0]
-      --min-num-segments=[N]            Minimum number of segments per hair [20]
+      --target-segment-length=[R]
+                                Target segment length [2.0]
 ```
 
 ### `smooth` command
