@@ -199,6 +199,7 @@ TEST(cmd_resample, bin_to_ply) {
         "resample",
         "-i", TEST_DATA_DIR "/Bangs_100.bin",
         "-o", "ply",
+        "--target-segment-length", "2.0",
         "--overwrite",
     };
     globals::clear();
