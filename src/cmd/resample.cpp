@@ -5,20 +5,23 @@ using namespace Eigen;
 namespace {
 struct {
     float& target_segment_length = cmd::param::f("resample", "target_segment_length");
+    bool& linear_subdiv = cmd::param::b("resample", "linear_subdiv");
 } param;
 }
 
 void cmd::parse::resample(args::Subparser &parser) {
-    args::ValueFlag<float> target_segment_length(parser, "R", "Target segment length [2.0]", {"target-segment-length"}, 2.0f);
+    args::ValueFlag<float> target_segment_length(parser, "R", "(REQUIRED) Target segment length", {"target-segment-length", 'l'}, args::Options::Required);
+    args::Flag linear_subdiv(parser, "linear-subdiv", "Use linear subdivision mode", {"linear-subdiv"});
     parser.Parse();
     globals::cmd_exec = cmd::exec::resample;
-    globals::output_file = [](){ return fmt::format("{}_resampled_tsl_{}.{}", globals::input_file_wo_ext, ::param.target_segment_length, globals::output_ext); };
+    globals::output_file = [](){ return fmt::format("{}_resampled_tsl_{}{}.{}", globals::input_file_wo_ext, ::param.target_segment_length, ::param.linear_subdiv ? "_ls" : "", globals::output_ext); };
     globals::check_error = [](){
         if (::param.target_segment_length <= 0) {
             throw std::runtime_error(fmt::format("Invalid target segment length: {}", ::param.target_segment_length));
         }
     };
     ::param.target_segment_length = *target_segment_length;
+    ::param.linear_subdiv = linear_subdiv;
 }
 
 std::shared_ptr<cyHairFile> cmd::exec::resample(std::shared_ptr<cyHairFile> hairfile_in) {
@@ -48,66 +51,144 @@ std::shared_ptr<cyHairFile> cmd::exec::resample(std::shared_ptr<cyHairFile> hair
 
         // Determine number of subsegments for each segment
         std::vector<float> segment_length(num_segments);
-        std::vector<unsigned int> num_subsegments_per_segment(num_segments);
-
         for (unsigned int j : j_range) {
             const Vector3f p0 = Map<Vector3f>(hairfile_in->GetPointsArray() + 3*(offset + j));
             const Vector3f p1 = Map<Vector3f>(hairfile_in->GetPointsArray() + 3*(offset + j + 1));
-
             segment_length[j] = (p1 - p0).norm();
-
-            num_subsegments_per_segment[j] = (unsigned int)std::ceil(segment_length[j] / ::param.target_segment_length);
         }
 
-        const unsigned int num_subsegments_total = std::accumulate(num_subsegments_per_segment.begin(), num_subsegments_per_segment.end(), 0);
-
-        // Allocate memory
-        points_per_strand[i].reserve(3 * (num_subsegments_total + 1));
-        if (has_thickness) thickness_per_strand[i].reserve(num_subsegments_total + 1);
-        if (has_transparency) transparency_per_strand[i].reserve(num_subsegments_total + 1);
-        if (has_color) color_per_strand[i].reserve(3 * (num_subsegments_total + 1));
-
-        for (unsigned int j : j_range) {
-            const Vector3f point0 = Map<Vector3f>(hairfile_in->GetPointsArray() + 3*(offset + j));
-            const Vector3f point1 = Map<Vector3f>(hairfile_in->GetPointsArray() + 3*(offset + j + 1));
-
-            const std::optional<float> thickness0 = has_thickness ? std::optional<float>(hairfile_in->GetThicknessArray()[offset + j]) : std::nullopt;
-            const std::optional<float> thickness1 = has_thickness ? std::optional<float>(hairfile_in->GetThicknessArray()[offset + j + 1]) : std::nullopt;
-            const std::optional<float> transparency0 = has_transparency ? std::optional<float>(hairfile_in->GetTransparencyArray()[offset + j]) : std::nullopt;
-            const std::optional<float> transparency1 = has_transparency ? std::optional<float>(hairfile_in->GetTransparencyArray()[offset + j + 1]) : std::nullopt;
-            const std::optional<Vector3f> color0 = has_color ? std::optional<Vector3f>(Map<Vector3f>(hairfile_in->GetColorsArray() + 3*(offset + j))) : std::nullopt;
-            const std::optional<Vector3f> color1 = has_color ? std::optional<Vector3f>(Map<Vector3f>(hairfile_in->GetColorsArray() + 3*(offset + j + 1))) : std::nullopt;
-
-            // Add first point
-            if (j == 0) {
-                points_per_strand[i].insert(points_per_strand[i].end(), point0.data(), point0.data() + 3);
-                if (has_thickness) thickness_per_strand[i].push_back(*thickness0);
-                if (has_transparency) transparency_per_strand[i].push_back(*transparency0);
-                if (has_color) color_per_strand[i].insert(color_per_strand[i].end(), color0->data(), color0->data() + 3);
+        if (::param.linear_subdiv) {
+            std::vector<unsigned int> num_subsegments_per_segment(num_segments);
+            for (unsigned int j : j_range) {
+                num_subsegments_per_segment[j] = (unsigned int)std::ceil(segment_length[j] / ::param.target_segment_length);
             }
 
-            const Vector3f delta_point = (point1 - point0) / num_subsegments_per_segment[j];
+            const unsigned int num_subsegments_total = std::accumulate(num_subsegments_per_segment.begin(), num_subsegments_per_segment.end(), 0);
 
-            const std::optional<float> delta_thickness = has_thickness ? std::optional<float>((*thickness1 - *thickness0) / num_subsegments_per_segment[j]) : std::nullopt;
-            const std::optional<float> delta_transparency = has_transparency ? std::optional<float>((*transparency1 - *transparency0) / num_subsegments_per_segment[j]) : std::nullopt;
-            const std::optional<Vector3f> delta_color = has_color ? std::optional<Vector3f>((*color1 - *color0) / num_subsegments_per_segment[j]) : std::nullopt;
+            // Allocate memory
+            points_per_strand[i].reserve(3 * (num_subsegments_total + 1));
+            if (has_thickness) thickness_per_strand[i].reserve(num_subsegments_total + 1);
+            if (has_transparency) transparency_per_strand[i].reserve(num_subsegments_total + 1);
+            if (has_color) color_per_strand[i].reserve(3 * (num_subsegments_total + 1));
 
-            Vector3f curr_point = point0;
-            std::optional<float> curr_thickness = thickness0;
-            std::optional<float> curr_transparency = transparency0;
-            std::optional<Vector3f> curr_color = color0;
+            for (unsigned int j : j_range) {
+                const Vector3f point0 = Map<Vector3f>(hairfile_in->GetPointsArray() + 3*(offset + j));
+                const Vector3f point1 = Map<Vector3f>(hairfile_in->GetPointsArray() + 3*(offset + j + 1));
 
-            for (unsigned int k = 0; k < num_subsegments_per_segment[j]; ++k) {
-                curr_point += delta_point;
-                if (has_thickness) *curr_thickness += *delta_thickness;
-                if (has_transparency) *curr_transparency += *delta_transparency;
-                if (has_color) *curr_color += *delta_color;
+                const std::optional<float> thickness0 = has_thickness ? std::optional<float>(hairfile_in->GetThicknessArray()[offset + j]) : std::nullopt;
+                const std::optional<float> thickness1 = has_thickness ? std::optional<float>(hairfile_in->GetThicknessArray()[offset + j + 1]) : std::nullopt;
+                const std::optional<float> transparency0 = has_transparency ? std::optional<float>(hairfile_in->GetTransparencyArray()[offset + j]) : std::nullopt;
+                const std::optional<float> transparency1 = has_transparency ? std::optional<float>(hairfile_in->GetTransparencyArray()[offset + j + 1]) : std::nullopt;
+                const std::optional<Vector3f> color0 = has_color ? std::optional<Vector3f>(Map<Vector3f>(hairfile_in->GetColorsArray() + 3*(offset + j))) : std::nullopt;
+                const std::optional<Vector3f> color1 = has_color ? std::optional<Vector3f>(Map<Vector3f>(hairfile_in->GetColorsArray() + 3*(offset + j + 1))) : std::nullopt;
 
-                points_per_strand[i].insert(points_per_strand[i].end(), curr_point.data(), curr_point.data() + 3);
-                if (has_thickness) thickness_per_strand[i].push_back(*curr_thickness);
-                if (has_transparency) transparency_per_strand[i].push_back(*curr_transparency);
-                if (has_color) color_per_strand[i].insert(color_per_strand[i].end(), curr_color->data(), curr_color->data() + 3);
+                // Add first point
+                if (j == 0) {
+                    points_per_strand[i].insert(points_per_strand[i].end(), point0.data(), point0.data() + 3);
+                    if (has_thickness) thickness_per_strand[i].push_back(*thickness0);
+                    if (has_transparency) transparency_per_strand[i].push_back(*transparency0);
+                    if (has_color) color_per_strand[i].insert(color_per_strand[i].end(), color0->data(), color0->data() + 3);
+                }
+
+                const Vector3f delta_point = (point1 - point0) / num_subsegments_per_segment[j];
+
+                const std::optional<float> delta_thickness = has_thickness ? std::optional<float>((*thickness1 - *thickness0) / num_subsegments_per_segment[j]) : std::nullopt;
+                const std::optional<float> delta_transparency = has_transparency ? std::optional<float>((*transparency1 - *transparency0) / num_subsegments_per_segment[j]) : std::nullopt;
+                const std::optional<Vector3f> delta_color = has_color ? std::optional<Vector3f>((*color1 - *color0) / num_subsegments_per_segment[j]) : std::nullopt;
+
+                Vector3f curr_point = point0;
+                std::optional<float> curr_thickness = thickness0;
+                std::optional<float> curr_transparency = transparency0;
+                std::optional<Vector3f> curr_color = color0;
+
+                for (unsigned int k = 0; k < num_subsegments_per_segment[j]; ++k) {
+                    curr_point += delta_point;
+                    if (has_thickness) *curr_thickness += *delta_thickness;
+                    if (has_transparency) *curr_transparency += *delta_transparency;
+                    if (has_color) *curr_color += *delta_color;
+
+                    points_per_strand[i].insert(points_per_strand[i].end(), curr_point.data(), curr_point.data() + 3);
+                    if (has_thickness) thickness_per_strand[i].push_back(*curr_thickness);
+                    if (has_transparency) transparency_per_strand[i].push_back(*curr_transparency);
+                    if (has_color) color_per_strand[i].insert(color_per_strand[i].end(), curr_color->data(), curr_color->data() + 3);
+                }
             }
+        } else {
+            const unsigned int num_points = num_segments + 1;
+            const double total_length = std::accumulate(segment_length.begin(), segment_length.end(), 0.0);
+            const unsigned int target_num_points = static_cast<unsigned int>(std::ceil(total_length / ::param.target_segment_length)) + 1;
+
+            auto append_point = [&](const Vector3f& point,
+                                    const std::optional<float>& thickness,
+                                    const std::optional<float>& transparency,
+                                    const std::optional<Vector3f>& color) {
+                points_per_strand[i].insert(points_per_strand[i].end(), point.data(), point.data() + 3);
+                if (has_thickness) thickness_per_strand[i].push_back(*thickness);
+                if (has_transparency) transparency_per_strand[i].push_back(*transparency);
+                if (has_color) color_per_strand[i].insert(color_per_strand[i].end(), color->data(), color->data() + 3);
+            };
+
+            auto append_point_at = [&](unsigned int point_index) {
+                const Vector3f point = Map<const Vector3f>(hairfile_in->GetPointsArray() + 3 * (offset + point_index));
+                const std::optional<float> thickness = has_thickness ? std::optional<float>(hairfile_in->GetThicknessArray()[offset + point_index]) : std::nullopt;
+                const std::optional<float> transparency = has_transparency ? std::optional<float>(hairfile_in->GetTransparencyArray()[offset + point_index]) : std::nullopt;
+                const std::optional<Vector3f> color = has_color ? std::optional<Vector3f>(Map<const Vector3f>(hairfile_in->GetColorsArray() + 3 * (offset + point_index))) : std::nullopt;
+                append_point(point, thickness, transparency, color);
+            };
+
+            points_per_strand[i].reserve(3 * target_num_points);
+            if (has_thickness) thickness_per_strand[i].reserve(target_num_points);
+            if (has_transparency) transparency_per_strand[i].reserve(target_num_points);
+            if (has_color) color_per_strand[i].reserve(3 * target_num_points);
+
+            std::vector<double> src_len_acc(num_points, 0.0);
+            for (unsigned int j = 1; j < num_points; ++j)
+                src_len_acc[j] = src_len_acc[j - 1] + segment_length[j - 1];
+
+            const double tgt_len_segment = src_len_acc.back() / (target_num_points - 1.0);
+            unsigned int src_i = 0;
+            double tgt_len_acc = 0.0;
+            unsigned int index = 0;
+
+            append_point_at(0);
+            ++index;
+
+            while (true) {
+                while (tgt_len_acc + tgt_len_segment <= src_len_acc[src_i]) {
+                    tgt_len_acc += tgt_len_segment;
+                    const double w1 = (tgt_len_acc - src_len_acc[src_i - 1]) / (src_len_acc[src_i] - src_len_acc[src_i - 1]);
+                    const double w0 = 1.0 - w1;
+                    const float w0f = static_cast<float>(w0);
+                    const float w1f = static_cast<float>(w1);
+
+                    const Vector3f point0 = Map<const Vector3f>(hairfile_in->GetPointsArray() + 3 * (offset + src_i - 1));
+                    const Vector3f point1 = Map<const Vector3f>(hairfile_in->GetPointsArray() + 3 * (offset + src_i));
+                    const Vector3f point = point0 * w0f + point1 * w1f;
+
+                    const std::optional<float> thickness = has_thickness
+                        ? std::optional<float>(hairfile_in->GetThicknessArray()[offset + src_i - 1] * w0f + hairfile_in->GetThicknessArray()[offset + src_i] * w1f)
+                        : std::nullopt;
+                    const std::optional<float> transparency = has_transparency
+                        ? std::optional<float>(hairfile_in->GetTransparencyArray()[offset + src_i - 1] * w0f + hairfile_in->GetTransparencyArray()[offset + src_i] * w1f)
+                        : std::nullopt;
+                    const std::optional<Vector3f> color = has_color
+                        ? std::optional<Vector3f>(
+                            Map<const Vector3f>(hairfile_in->GetColorsArray() + 3 * (offset + src_i - 1)) * w0f +
+                            Map<const Vector3f>(hairfile_in->GetColorsArray() + 3 * (offset + src_i)) * w1f)
+                        : std::nullopt;
+
+                    append_point(point, thickness, transparency, color);
+                    ++index;
+                    if (index == target_num_points - 1) break;
+                }
+
+                if (index == target_num_points - 1) break;
+
+                while (src_len_acc[src_i] <= tgt_len_acc + tgt_len_segment) {
+                    ++src_i;
+                }
+            }
+            append_point_at(num_points - 1);
         }
 
         offset += num_segments + 1;

@@ -154,8 +154,9 @@ $ hairutil resample --help
 
   OPTIONS:
 
-      --target-segment-length=[R]
-                                Target segment length [2.0]
+      -l[R], --target-segment-length=[R]
+                                (REQUIRED) Target segment length
+      --linear-subdiv           Use linear subdivision mode
 ```
 
 ### `smooth` command
