@@ -4,6 +4,10 @@ project(hairutil)
 
 set(CMAKE_CXX_STANDARD 20)
 
+# Suppress some compiler warnings
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  add_compile_options(-Wno-deprecated-declarations -Wno-free-nonheap-object -Wno-stringop-overflow)
+endif()
 
 
 #########################################
