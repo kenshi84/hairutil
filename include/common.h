@@ -33,7 +33,7 @@ namespace globals {
 
     // Given as command line arguments
     extern std::string input_file;
-    extern std::string output_ext;
+    extern std::set<std::string> output_exts;
     extern bool overwrite;
     extern unsigned int ply_load_default_nsegs;
     extern bool ply_save_ascii;

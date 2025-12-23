@@ -2,6 +2,7 @@
 
 #include "cmd.h"
 #include "io.h"
+#include "util.h"
 
 #ifdef TEST_MODE
 int test_main(int argc, const char **argv)
@@ -39,7 +40,7 @@ int main(int argc, const char **argv)
 
     args::Group grp_globals("Common options:");
     args::ValueFlag<std::string> globals_input_file(grp_globals, "PATH", "(REQUIRED) Input file", {'i', "input-file"}, args::Options::Required);
-    args::ValueFlag<std::string> globals_output_ext(grp_globals, "EXT", "Output file extension", {'o', "output-ext"}, "");
+    args::ValueFlag<std::string> globals_output_ext(grp_globals, "EXT", "Output file extension (or extensions by comma-delimited list); when omitted, use input file extension", {'o', "output-ext"}, "");
     args::Flag globals_overwrite(grp_globals, "overwrite", "Overwrite when output file exists", {"overwrite"});
     args::ValueFlag<std::string> globals_output_dir(grp_globals, "DIR", "Output directory; if not specified, same as the input file", {'d', "output-dir"}, "");
     args::ValueFlag<unsigned int> globals_ply_load_default_nsegs(grp_globals, "N", "Default number of segments per strand for PLY files [0]", {"ply-load-default-nsegs"}, 0);
@@ -81,7 +82,7 @@ int main(int argc, const char **argv)
     );
 
     globals::input_file = *globals_input_file;
-    globals::output_ext = *globals_output_ext;
+    globals::output_exts = util::container_cast<std::set<std::string>>(util::parse_comma_separated_values<std::string>(*globals_output_ext));
     globals::output_dir = *globals_output_dir;
     globals::overwrite = globals_overwrite;
     globals::ply_load_default_nsegs = *globals_ply_load_default_nsegs;
@@ -95,14 +96,18 @@ int main(int argc, const char **argv)
     }
     globals::rng.seed(seed);
 
+    // Get file extension from globals::input_file, in lowercase
+    globals::input_ext = globals::input_file.substr(globals::input_file.find_last_of(".") + 1);
+    std::transform(globals::input_ext.begin(), globals::input_ext.end(), globals::input_ext.begin(), [](unsigned char c){ return std::tolower(c); });
+
     if (!globals::output_file_wo_ext) {
-        if (globals::output_ext != "") {
+        if (!globals::output_exts.empty()) {
             spdlog::warn("Ignoring --output-ext");
-            globals::output_ext = "";
+            globals::output_exts = {};
         }
-    } else if (globals::output_ext == "") {
-        spdlog::error("You must specify output file extension by --output-ext");
-        return 1;
+    } else if (globals::output_exts.empty()) {
+        spdlog::warn("--output-ext not specified, using input file extension: {}", globals::input_ext);
+        globals::output_exts.insert(globals::input_ext);
     }
 
     if (globals::output_dir != "") {
@@ -122,17 +127,13 @@ int main(int argc, const char **argv)
             globals::output_file_wo_ext.dir = output_dir.string();
         }
     }
-    
-    // Get file extension from globals::input_file, in lowercase
-    globals::input_ext = globals::input_file.substr(globals::input_file.find_last_of(".") + 1);
-    std::transform(globals::input_ext.begin(), globals::input_ext.end(), globals::input_ext.begin(), [](unsigned char c){ return std::tolower(c); });
 
     // Check if input file extension is supported
     if (globals::supported_ext.count(globals::input_ext) == 0) {
         spdlog::error("Unsupported input file extension: {}", globals::input_ext);
         return 1;
     }
-    globals::load_func = globals::supported_ext.at(globals::input_ext).first;
+    const io::load_func_t load_func = globals::supported_ext.at(globals::input_ext).first;
 
     if (globals::cmd_exec == cmd::exec::autofix) {
         if (globals_no_autofix)
@@ -140,32 +141,33 @@ int main(int argc, const char **argv)
     }
 
     // Check if output file extension is supported
-    if (globals::output_ext != "") {
-        if (globals::supported_ext.count(globals::output_ext) == 0) {
-            spdlog::error("Unsupported output file extension: {}", globals::output_ext);
+    for (const std::string& output_ext : globals::output_exts) {
+        if (globals::supported_ext.count(output_ext) == 0) {
+            spdlog::error("Unsupported output file extension: {}", output_ext);
             return 1;
         }
-        globals::save_func = globals::supported_ext.at(globals::output_ext).second;
     }
 
     // Get input file name without extension
     globals::input_file_wo_ext = globals::input_file.substr(0, globals::input_file.find_last_of("."));
 
     // Check output filename validity and existence
-    std::string output_file;
+    std::unordered_map<std::string, std::string> output_files;
     if (globals::output_file_wo_ext) {
-        output_file = globals::output_file_wo_ext() + "." + globals::output_ext;
+        for (const std::string& output_ext : globals::output_exts) {
+            output_files[output_ext] = globals::output_file_wo_ext() + "." + output_ext;
 
-        // Truncate if too long
-        if (output_file.length() > 230) {
-            spdlog::warn("Output file path is too long ({}), truncating", output_file.length());
-            output_file = output_file.substr(0, 230) + "." + globals::output_ext;
-        }
+            // Truncate if too long
+            if (output_files[output_ext].length() > 230) {
+                spdlog::warn("Output file path is too long ({}), truncating", output_files[output_ext].length());
+                output_files[output_ext] = output_files[output_ext].substr(0, 230) + "." + output_ext;
+            }
 
-        if (!globals::overwrite && std::filesystem::exists(output_file)) {
-            spdlog::error("Output file already exists: {}", output_file);
-            spdlog::error("Use --overwrite to overwrite the file");
-            return 1;
+            if (!globals::overwrite && std::filesystem::exists(output_files[output_ext])) {
+                spdlog::error("Output file already exists: {}", output_files[output_ext]);
+                spdlog::error("Use --overwrite to overwrite the file");
+                return 1;
+            }
         }
     }
 
@@ -176,7 +178,7 @@ int main(int argc, const char **argv)
             globals::check_error();
 
         spdlog::info("Loading from {} ...", globals::input_file);
-        auto hairfile_in = globals::load_func(globals::input_file);
+        auto hairfile_in = load_func(globals::input_file);
 
         // Auto-fix issues in input
         if (!globals_no_autofix && globals::cmd_exec != cmd::exec::autofix) {
@@ -191,8 +193,11 @@ int main(int argc, const char **argv)
         auto hairfile_out = globals::cmd_exec(hairfile_in);
 
         if (hairfile_out) {
-            spdlog::info("Saving to {} ...", output_file);
-            globals::save_func(output_file, hairfile_out);
+            for (const auto& [output_ext, output_file] : output_files) {
+                const auto save_func = globals::supported_ext.at(output_ext).second;
+                spdlog::info("Saving to {} ...", output_file);
+                save_func(output_file, hairfile_out);
+            }
         }
     }
     catch (const std::exception &e)

@@ -32,15 +32,18 @@ std::shared_ptr<cyHairFile> cmd::exec::decompose(std::shared_ptr<cyHairFile> hai
         throw std::runtime_error(fmt::format("Generating {} files. Use --confirm to proceed", header.hair_count));
     }
 
-    const std::string output_dir = globals::output_file_wo_ext() + "_" + globals::output_ext;
+    std::unordered_map<std::string, std::string> output_dirs;
+    for (const std::string& output_ext : globals::output_exts) {
+        output_dirs[output_ext] = globals::output_file_wo_ext() + "_" + output_ext;
 
-    // Overwrite check
-    if (!globals::overwrite && std::filesystem::exists(output_dir)) {
-        throw std::runtime_error(fmt::format("Output directory already exists: {}\nUse --overwrite to overwrite", output_dir));
+        // Overwrite check
+        if (!globals::overwrite && std::filesystem::exists(output_dirs[output_ext])) {
+            throw std::runtime_error(fmt::format("Output directory already exists: {}\nUse --overwrite to overwrite", output_dirs[output_ext]));
+        }
+
+        // Create output directory
+        std::filesystem::create_directory(output_dirs[output_ext]);
     }
-
-    // Create output directory
-    std::filesystem::create_directory(output_dir);
 
     unsigned int offset = 0;
     for (unsigned int i = 0; i < header.hair_count; ++i) {
@@ -80,11 +83,13 @@ std::shared_ptr<cyHairFile> cmd::exec::decompose(std::shared_ptr<cyHairFile> hai
         if (!(header.arrays & _CY_HAIR_FILE_COLORS_BIT)) hairfile_out->SetDefaultColor(header.d_color[0], header.d_color[1], header.d_color[2]);
 
         // Save
-        const std::string output_file = fmt::format("{}/{}.{}", output_dir, i, globals::output_ext);
-        if (header.hair_count < 1000 || (i > 0 && i % 1000 == 0) || !::param.indices.empty()) {
-            spdlog::info("Saving to {} ...", output_file);
+        for (const auto& [output_ext, output_dir] : output_dirs) {
+            const std::string output_file = fmt::format("{}/{}.{}", output_dir, i, output_ext);
+            if (header.hair_count < 1000 || (i > 0 && i % 1000 == 0) || !::param.indices.empty()) {
+                spdlog::info("Saving to {} ...", output_file);
+            }
+            globals::supported_ext.at(output_ext).second(output_file, hairfile_out);
         }
-        globals::save_func(output_file, hairfile_out);
 
         offset += segment_count + 1;
     }

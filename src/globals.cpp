@@ -6,7 +6,7 @@ namespace globals {
 
     // Given as command line arguments
     std::string input_file;
-    std::string output_ext;
+    std::set<std::string> output_exts;
     bool overwrite;
     unsigned int ply_load_default_nsegs;
     bool ply_save_ascii;
@@ -31,12 +31,9 @@ namespace globals {
         {"npy", {::io::load_npy, ::io::save_npy}}
     };
 
-    ::io::load_func_t load_func;
-    ::io::save_func_t save_func;
-
     void clear() {
         input_file = {};
-        output_ext = {};
+        output_exts = {};
         overwrite = {};
         ply_load_default_nsegs = {};
         ply_save_ascii = {};
@@ -46,7 +43,5 @@ namespace globals {
         check_error = {};
         cmd_exec = nullptr;
         rng = {};
-        load_func = {};
-        save_func = {};
     }
 }

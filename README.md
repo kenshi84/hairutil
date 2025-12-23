@@ -17,36 +17,37 @@ $ hairutil --help
   OPTIONS:
 
       Commands:
-        convert                           Convert file type
-        decompose                         Decompose into individual curves
-        filter                            Extract strands that pass given filter
-        findpenet                         Find penetration against head mesh
-        getcurvature                      Get discrete curvature & torsion
-        info                              Print information
-        resample                          Resample strands s.t. every segment is
-                                          shorter than twice the target segment
-                                          length
-        smooth                            Smooth strands
-        stats                             Generate statistics
-        subsample                         Subsample strands
-        transform                         Transform strand points, either by one
-                                          of scale/translate/rotate, or by full
-                                          4x4 matrix
-        tubify                            Turn curves into tubes as triangle
-                                          mesh
+        autofix                   Auto-fix issues
+        convert                   Convert file type
+        decompose                 Decompose into individual curves
+        filter                    Extract strands that pass given filter
+        findpenet                 Find penetration against head mesh
+        getcurvature              Get discrete curvature & torsion
+        info                      Print information
+        resample                  Resample strands s.t. every segment is shorter than twice the target segment length
+        smooth                    Smooth strands
+        stats                     Generate statistics
+        subsample                 Subsample strands
+        transform                 Transform strand points, either by one of scale/translate/rotate, or by full 4x4
+                                  matrix
+        tubify                    Turn curves into tubes as triangle mesh
       Common options:
-        -i[PATH], --input-file=[PATH]     (REQUIRED) Input file
-        -o[EXT], --output-ext=[EXT]       Output file extension
-        --overwrite                       Overwrite when output file exists
-        -d[DIR], --output-dir=[DIR]       Output directory; if not specified,
-                                          same as the input file
-        --ply-load-default-nsegs=[N]      Default number of segments per strand
-                                          for PLY files [0]
-        --ply-save-ascii                  Save PLY files in ASCII format
-        -v[NAME], --verbosity=[NAME]      Verbosity level name {trace,debug,info,warn,error,critical,off} [info]
-        --seed=[N]                        Seed for random number generator (-1 for time-based seed) [0]
-        --no-autofix                      Do not auto-fix issues in input
-        -h, --help                        Show this help message
+        -i[PATH], --input-file=[PATH]
+                                  (REQUIRED) Input file
+        -o[EXT], --output-ext=[EXT]
+                                  Output file extension (or extensions by comma-delimited list); when omitted, use input
+                                  file extension
+        --overwrite               Overwrite when output file exists
+        -d[DIR], --output-dir=[DIR]
+                                  Output directory; if not specified, same as the input file
+        --ply-load-default-nsegs=[N]
+                                  Default number of segments per strand for PLY files [0]
+        --ply-save-ascii          Save PLY files in ASCII format
+        -v[NAME], --verbosity=[NAME]
+                                  Verbosity level name {trace,debug,info,warn,error,critical,off} [info]
+        --seed=[N]                Seed for random number generator (-1 for time-based seed) [0]
+        --no-autofix              Do not auto-fix issues in input
+        -h, --help                Show this help message
 ```
 
 ## Shell completion

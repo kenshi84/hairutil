@@ -27,6 +27,4 @@ void save_npy(const std::string &filename, const std::shared_ptr<cyHairFile> &ha
 
 namespace globals {
     extern const std::unordered_map<std::string, std::pair<::io::load_func_t, ::io::save_func_t>> supported_ext;
-    extern ::io::load_func_t load_func;
-    extern ::io::save_func_t save_func;
 }

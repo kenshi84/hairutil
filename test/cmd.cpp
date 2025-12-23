@@ -93,12 +93,38 @@ TEST(cmd_convert, bin_to_abc) {
     EXPECT_EQ(test_main(args.size(), args.data()), 0);
 }
 
-TEST(cmd_decompose, bin_to_ply) {
+TEST(cmd_convert, bin_to_data_ply) {
+    std::vector<const char*> args = {
+        "test_cmd",
+        "convert",
+        "-i", TEST_DATA_DIR "/Bangs_100.bin",
+        "-o", "data,ply",
+        "-d", TEST_DATA_DIR "/out",
+        "--overwrite"
+    };
+    globals::clear();
+    EXPECT_EQ(test_main(args.size(), args.data()), 0);
+}
+
+TEST(cmd_convert, bin_to_data_ply_bin) {
+    std::vector<const char*> args = {
+        "test_cmd",
+        "convert",
+        "-i", TEST_DATA_DIR "/Bangs_100.bin",
+        "-o", "data,ply,bin",
+        "-d", TEST_DATA_DIR "/out",
+        "--overwrite"
+    };
+    globals::clear();
+    EXPECT_EQ(test_main(args.size(), args.data()), 1);
+}
+
+TEST(cmd_decompose, bin_to_ply_data) {
     std::vector<const char*> args = {
         "test_cmd",
         "decompose",
         "-i", TEST_DATA_DIR "/Bangs_20.bin",
-        "-o", "ply",
+        "-o", "ply,data",
         "--overwrite"
     };
     globals::clear();
@@ -257,6 +283,17 @@ TEST(cmd_smooth, Bangs_100_ply) {
         "smooth",
         "-i", TEST_DATA_DIR "/Bangs_100.bin",
         "-o", "ply",
+        "--overwrite",
+    };
+    globals::clear();
+    EXPECT_EQ(test_main(args.size(), args.data()), 0);
+}
+
+TEST(cmd_smooth, omit_output_ext) {
+    std::vector<const char*> args = {
+        "test_cmd",
+        "smooth",
+        "-i", TEST_DATA_DIR "/Bangs_100.bin",
         "--overwrite",
     };
     globals::clear();

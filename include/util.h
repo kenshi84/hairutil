@@ -78,6 +78,11 @@ inline T lexical_cast(const std::string& str) {
     return value;
 }
 
+template <typename T_out, typename T_in>
+inline T_out container_cast(const T_in& c) {
+    return T_out(c.begin(), c.end());
+}
+
 template <typename T>
 inline std::vector<T> parse_comma_separated_values(const std::string& str) {
     std::vector<T> values;
