@@ -72,20 +72,22 @@ void cmd::parse::filter(args::Subparser &parser) {
             throw std::runtime_error("Must specify one of --lt, --gt, --leq, or --geq");
         }
     };
-    globals::output_file = [](){
-        std::string suffix;
-        if (::param.gt) suffix += fmt::format("_gt_{}", *::param.gt);
-        if (::param.geq) suffix += fmt::format("_geq_{}", *::param.geq);
-        if (::param.lt) suffix += fmt::format("_lt_{}", *::param.lt);
-        if (::param.leq) suffix += fmt::format("_leq_{}", *::param.leq);
-        return fmt::format("{}_filtered_{}{}.{}", globals::input_file_wo_ext, ::param.key, suffix, globals::output_ext);
-    };
+    if (!no_output) {
+        globals::output_file_wo_ext = [](){
+            std::string suffix;
+            if (::param.gt) suffix += fmt::format("_gt_{}", *::param.gt);
+            if (::param.geq) suffix += fmt::format("_geq_{}", *::param.geq);
+            if (::param.lt) suffix += fmt::format("_lt_{}", *::param.lt);
+            if (::param.leq) suffix += fmt::format("_leq_{}", *::param.leq);
+            return fmt::format("{}_filtered_{}{}", globals::input_file_wo_ext, ::param.key, suffix);
+        };
+    }
 
     ::param.key = *key;
-    if (lt) ::param.lt = *lt;
-    if (gt) ::param.gt = *gt;
-    if (leq) ::param.leq = *leq;
-    if (geq) ::param.geq = *geq;
+    ::param.lt = lt ? std::optional<float>(*lt) : std::nullopt;
+    ::param.gt = gt ? std::optional<float>(*gt) : std::nullopt;
+    ::param.leq = leq ? std::optional<float>(*leq) : std::nullopt;
+    ::param.geq = geq ? std::optional<float>(*geq) : std::nullopt;
     ::param.output_indices = output_indices;
     ::param.no_output = no_output;
 }
@@ -187,7 +189,10 @@ std::shared_ptr<cyHairFile> cmd::exec::filter(std::shared_ptr<cyHairFile> hairfi
         if (::param.geq) suffix += fmt::format("_geq_{}", *::param.geq);
         if (::param.lt) suffix += fmt::format("_lt_{}", *::param.lt);
         if (::param.leq) suffix += fmt::format("_leq_{}", *::param.leq);
-        std::string indices_file = fmt::format("{}_filtered_{}{}_indices.txt", globals::input_file_wo_ext, ::param.key, suffix);
+        std::string indices_file = util::path_under_optional_dir(fmt::format("{}_filtered_{}{}_indices.txt", globals::input_file_wo_ext, ::param.key, suffix), globals::output_dir);
+        if (!globals::overwrite && std::filesystem::exists(indices_file)) {
+            throw std::runtime_error("File already exists: " + indices_file + ". Use --overwrite to overwrite.");
+        }
         std::ofstream ofs(indices_file);
         if (!ofs) {
             throw std::runtime_error(fmt::format("Failed to open file: {}", indices_file));

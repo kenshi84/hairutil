@@ -20,14 +20,14 @@ void cmd::parse::transform(args::Subparser &parser) {
     args::ValueFlag<std::string> full(parser, "R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R", "Comma-separated row-major 4x4 matrix for full transform", {"full", 'f'}, "");
     parser.Parse();
     globals::cmd_exec = cmd::exec::transform;
-    globals::output_file = [](){
+    globals::output_file_wo_ext = [](){
         if (!::param.s.empty())
-            return fmt::format("{}_tfm_s_{}.{}", globals::input_file_wo_ext, ::param.s, globals::output_ext);
+            return fmt::format("{}_tfm_s_{}", globals::input_file_wo_ext, ::param.s);
         if (!::param.t.empty())
-            return fmt::format("{}_tfm_t_{}.{}", globals::input_file_wo_ext, ::param.t, globals::output_ext);
+            return fmt::format("{}_tfm_t_{}", globals::input_file_wo_ext, ::param.t);
         if (!::param.r.empty())
-            return fmt::format("{}_tfm_r_{}.{}", globals::input_file_wo_ext, ::param.r, globals::output_ext);
-        return fmt::format("{}_tfm_f_{}.{}", globals::input_file_wo_ext, ::param.f, globals::output_ext);
+            return fmt::format("{}_tfm_r_{}", globals::input_file_wo_ext, ::param.r);
+        return fmt::format("{}_tfm_f_{}", globals::input_file_wo_ext, ::param.f);
     };
     globals::check_error = [](){
         if (::param.s.empty() + ::param.t.empty() + ::param.r.empty() + ::param.f.empty() != 3) {

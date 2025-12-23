@@ -14,7 +14,7 @@ void cmd::parse::resample(args::Subparser &parser) {
     args::Flag linear_subdiv(parser, "linear-subdiv", "Use linear subdivision mode", {"linear-subdiv"});
     parser.Parse();
     globals::cmd_exec = cmd::exec::resample;
-    globals::output_file = [](){ return fmt::format("{}_resampled_tsl_{}{}.{}", globals::input_file_wo_ext, ::param.target_segment_length, ::param.linear_subdiv ? "_ls" : "", globals::output_ext); };
+    globals::output_file_wo_ext = [](){ return fmt::format("{}_resampled_tsl_{}{}", globals::input_file_wo_ext, ::param.target_segment_length, ::param.linear_subdiv ? "_ls" : ""); };
     globals::check_error = [](){
         if (::param.target_segment_length <= 0) {
             throw std::runtime_error(fmt::format("Invalid target segment length: {}", ::param.target_segment_length));

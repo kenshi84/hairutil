@@ -40,7 +40,8 @@ namespace globals {
 
     extern std::string input_file_wo_ext;
     extern std::string input_ext;
-    extern OutputFile output_file;        // For lazy evaluation
+    extern OutputFile output_file_wo_ext;        // For lazy evaluation
+    extern std::string output_dir;
     extern std::function<void(void)> check_error;
     extern std::shared_ptr<cyHairFile> (*cmd_exec)(std::shared_ptr<cyHairFile>);
     extern std::mt19937 rng;

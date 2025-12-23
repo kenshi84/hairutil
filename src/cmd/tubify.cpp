@@ -22,7 +22,12 @@ void cmd::parse::tubify(args::Subparser &parser)
     args::Flag colored(parser, "", "Output colored vertices", {"colored"});
     parser.Parse();
     globals::cmd_exec = &cmd::exec::tubify;
-    globals::output_file = []() { return globals::input_file_wo_ext + "_tube.ply"; };
+    globals::check_error = []() {
+        const std::string output_file = util::path_under_optional_dir(globals::input_file_wo_ext + "_tube.ply", globals::output_dir);
+        if (!globals::overwrite && std::filesystem::exists(output_file)) {
+            throw std::runtime_error("File already exists: " + output_file + ". Use --overwrite to overwrite.");
+        }
+    };
     ::param.radius = *radius;
     ::param.num_sides = *num_sides;
     ::param.capped = capped;
@@ -99,7 +104,8 @@ std::shared_ptr<cyHairFile> cmd::exec::tubify(std::shared_ptr<cyHairFile> hairfi
     if (::param.colored)
         ply.addVertexColors(vertex_rgb);
     ply.addFaceIndices(faces);
-    ply.write(globals::output_file(), globals::ply_save_ascii ? happly::DataFormat::ASCII : happly::DataFormat::Binary);
-    spdlog::info("Written to {}", globals::output_file());
+    const std::string output_file = util::path_under_optional_dir(globals::input_file_wo_ext + "_tube.ply", globals::output_dir);
+    ply.write(output_file, globals::ply_save_ascii ? happly::DataFormat::ASCII : happly::DataFormat::Binary);
+    spdlog::info("Written to {}", output_file);
     return {};
 }

@@ -21,12 +21,5 @@ struct OutputFile {
         return *this;
     }
     operator bool() const { return static_cast<bool>(func); }
-    std::string operator()() const {
-        std::string path = func();
-        if (dir != "") {
-            path = std::filesystem::path(path).filename().string();
-            path = std::filesystem::path(dir) / path;
-        }
-        return path;
-    }
+    std::string operator()() const;
 };

@@ -66,6 +66,10 @@ void cmd::parse::stats(args::Subparser &parser) {
         if (::param.no_export && (::param.export_raw_strand || ::param.export_raw_segment || ::param.export_raw_point)) {
             throw std::runtime_error("Both --no-export and --export-raw-* are specified");
         }
+        const std::string output_file = util::path_under_optional_dir(globals::input_file_wo_ext + "_stats.xlsx", globals::output_dir);
+        if (!::param.no_export && !globals::overwrite && std::filesystem::exists(output_file)) {
+            throw std::runtime_error("File already exists: " + output_file + ". Use --overwrite to overwrite.");
+        }
     };
     ::param.sort_size = *sort_size;
     ::param.no_export = no_export;
@@ -73,9 +77,6 @@ void cmd::parse::stats(args::Subparser &parser) {
     ::param.export_raw_segment = export_raw_segment;
     ::param.export_raw_point = export_raw_point;
     ::param.no_print = no_print;
-
-    if (!::param.no_export)
-        globals::output_file = []() { return globals::input_file_wo_ext + "_stats.xlsx"; };
 }
 
 std::shared_ptr<cyHairFile> cmd::exec::stats(std::shared_ptr<cyHairFile> hairfile_in) {
@@ -445,8 +446,9 @@ std::shared_ptr<cyHairFile> cmd::exec::stats(std::shared_ptr<cyHairFile> hairfil
     }
 
     if (!::param.no_export) {
-        spdlog::info("Saving to {}", globals::output_file());
-        wb.save(globals::output_file());
+        const std::string output_file = util::path_under_optional_dir(globals::input_file_wo_ext + "_stats.xlsx", globals::output_dir);
+        spdlog::info("Saving to {}", output_file);
+        wb.save(output_file);
     }
 
     return {};

@@ -14,8 +14,10 @@ void cmd::parse::decompose(args::Subparser &parser) {
     args::ValueFlag<std::string> indices(parser, "N,...", "Comma-separated list of strand indices to extract", {"indices"});
     parser.Parse();
     globals::cmd_exec = cmd::exec::decompose;
+    globals::output_file_wo_ext = [](){ return globals::input_file_wo_ext + "_decomposed"; };
     ::param.confirm = confirm;
 
+    ::param.indices = {};
     if (indices) {
         const std::vector<int> indices_vec = util::parse_comma_separated_values<int>(*indices);
         ::param.indices.insert(indices_vec.begin(), indices_vec.end());
@@ -30,7 +32,7 @@ std::shared_ptr<cyHairFile> cmd::exec::decompose(std::shared_ptr<cyHairFile> hai
         throw std::runtime_error(fmt::format("Generating {} files. Use --confirm to proceed", header.hair_count));
     }
 
-    const std::string output_dir = fmt::format("{}_decomposed_{}", globals::input_file_wo_ext, globals::output_ext);
+    const std::string output_dir = globals::output_file_wo_ext() + "_" + globals::output_ext;
 
     // Overwrite check
     if (!globals::overwrite && std::filesystem::exists(output_dir)) {

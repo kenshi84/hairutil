@@ -23,16 +23,16 @@ void cmd::parse::subsample(args::Subparser &parser) {
     args::Flag output_indices(parser, "", "Output the indices of the selected strands to a .txt file", {"output-indices"});
     parser.Parse();
     globals::cmd_exec = cmd::exec::subsample;
-    globals::output_file = []() -> std::string {
+    globals::output_file_wo_ext = []() -> std::string {
         if (::param.indices.empty()) {
-            return fmt::format("{}_{}.{}", globals::input_file_wo_ext, ::param.target_count, globals::output_ext);
+            return fmt::format("{}_{}", globals::input_file_wo_ext, ::param.target_count);
         } else {
             std::string indices_str = util::join_vector_to_string(::param.indices, '_');
             if (indices_str.size() > 100)
                 indices_str.resize(100);
             if (::param.exclude)
                 indices_str = "exclude_" + indices_str;
-            return fmt::format("{}_indices_{}.{}", globals::input_file_wo_ext, indices_str, globals::output_ext);
+            return fmt::format("{}_indices_{}", globals::input_file_wo_ext, indices_str);
         }
     };
     globals::check_error = [](){
@@ -46,6 +46,7 @@ void cmd::parse::subsample(args::Subparser &parser) {
     ::param.target_count = *target_count;
     ::param.scale_factor = *scale_factor;
 
+    ::param.indices = {};
     if (indices) {
         if (indices->size() > 4 && indices->substr(indices->size() - 4) == ".txt") {
             // Read indices from file
@@ -158,7 +159,10 @@ std::shared_ptr<cyHairFile> cmd::exec::subsample(std::shared_ptr<cyHairFile> hai
     auto hairfile_out = util::get_subset(hairfile_in, selected);
 
     if (::param.indices.empty() && ::param.output_indices) {
-        std::string output_file_txt = fmt::format("{}_{}_indices.txt", globals::input_file_wo_ext, ::param.target_count);
+        const std::string output_file_txt = util::path_under_optional_dir(fmt::format("{}_{}_indices.txt", globals::input_file_wo_ext, ::param.target_count), globals::output_dir);
+        if (!globals::overwrite && std::filesystem::exists(output_file_txt)) {
+            throw std::runtime_error("File already exists: " + output_file_txt + ". Use --overwrite to overwrite.");
+        }
         spdlog::info("Writing indices to {}", output_file_txt);
         std::stringstream ss;
         for (int i = 0; i < header_in.hair_count; ++i)

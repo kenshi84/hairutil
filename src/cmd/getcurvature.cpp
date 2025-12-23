@@ -1,4 +1,5 @@
 #include "cmd.h"
+#include "util.h"
 
 #include <highfive/H5Easy.hpp>
 
@@ -37,12 +38,18 @@ void cmd::parse::getcurvature(args::Subparser &parser)
     args::ValueFlag<float> angle_threshold(parser, "R", "Angle threshold for determining straightness (in degrees) [0.01]", {"angle-threshold"}, 0.01);
     parser.Parse();
     globals::cmd_exec = &cmd::exec::getcurvature;
-    globals::output_file = []() { return globals::input_file_wo_ext + "_cvtr.hdf5"; };
+    globals::check_error = []() {
+        const std::string output_file = util::path_under_optional_dir(globals::input_file_wo_ext + "_cvtr.hdf5", globals::output_dir);
+        if (!globals::overwrite && std::filesystem::exists(output_file)) {
+            throw std::runtime_error("File already exists: " + output_file + ". Use --overwrite to overwrite.");
+        }
+    };
     ::param.angle_threshold = *angle_threshold;
 }
 
 std::shared_ptr<cyHairFile> cmd::exec::getcurvature(std::shared_ptr<cyHairFile> hairfile) {
-    H5Easy::File file(globals::output_file(), H5Easy::File::Overwrite);
+    const std::string output_file = util::path_under_optional_dir(globals::input_file_wo_ext + "_cvtr.hdf5", globals::output_dir);
+    H5Easy::File file(output_file, H5Easy::File::Overwrite);
 
     const int num_strands = hairfile->GetHeader().hair_count;
     H5Easy::dump(file, "/num_strands", num_strands);
@@ -215,7 +222,7 @@ std::shared_ptr<cyHairFile> cmd::exec::getcurvature(std::shared_ptr<cyHairFile> 
         }
 #endif
     }
-    spdlog::info("Written to {}", globals::output_file());
+    spdlog::info("Written to {}", output_file);
 
     return {};
 }

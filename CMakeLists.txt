@@ -77,6 +77,7 @@ add_library(hairutil_core STATIC
   src/io/ma.cpp
   src/io/npy.cpp
   src/io/ply.cpp
+  src/output_file.cpp
   src/util.cpp
   version.cpp
 )

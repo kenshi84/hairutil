@@ -110,4 +110,12 @@ inline void copy_vec3(const VecSrc& vec_src, VecDst& vec_dst) {
     vec_dst = VecDst{vec_src[0], vec_src[1], vec_src[2]};
 }
 
+inline std::string path_under_optional_dir(std::string path, const std::string& dir) {
+    if (dir != "") {
+        path = std::filesystem::path(path).filename().string();
+        path = std::filesystem::path(dir) / path;
+    }
+    return path;
+}
+
 }

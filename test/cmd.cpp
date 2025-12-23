@@ -74,6 +74,7 @@ TEST(cmd_autofix, empty_strand) {
         "test_cmd",
         "autofix",
         "-i", TEST_DATA_DIR "/autofix_test.ply",
+        "-o", "ply",
         "--overwrite"
     };
     globals::clear();
@@ -99,6 +100,36 @@ TEST(cmd_decompose, bin_to_ply) {
         "-i", TEST_DATA_DIR "/Bangs_20.bin",
         "-o", "ply",
         "--overwrite"
+    };
+    globals::clear();
+    EXPECT_EQ(test_main(args.size(), args.data()), 0);
+}
+
+TEST(cmd_filter, geq_output_indices) {
+    std::vector<const char*> args = {
+        "test_cmd",
+        "filter",
+        "-i", TEST_DATA_DIR "/Bangs_100.bin",
+        "-o", "ply",
+        "--overwrite",
+        "-k", "length",
+        "--geq", "174.96289",
+        "--output-indices"
+    };
+    globals::clear();
+    EXPECT_EQ(test_main(args.size(), args.data()), 0);
+}
+
+TEST(cmd_filter, geq_no_output) {
+    std::vector<const char*> args = {
+        "test_cmd",
+        "filter",
+        "-i", TEST_DATA_DIR "/Bangs_100.bin",
+        "-o", "ply",
+        "--overwrite",
+        "-k", "length",
+        "--geq", "174.96289",
+        "--no-output"
     };
     globals::clear();
     EXPECT_EQ(test_main(args.size(), args.data()), 0);
@@ -201,6 +232,20 @@ TEST(cmd_resample, bin_to_ply) {
         "-o", "ply",
         "--target-segment-length", "2.0",
         "--overwrite",
+    };
+    globals::clear();
+    EXPECT_EQ(test_main(args.size(), args.data()), 0);
+}
+
+TEST(cmd_resample, linear_subdiv) {
+    std::vector<const char*> args = {
+        "test_cmd",
+        "resample",
+        "-i", TEST_DATA_DIR "/Bangs_100.bin",
+        "-o", "ply",
+        "--target-segment-length", "2.0",
+        "--overwrite",
+        "--linear-subdiv",
     };
     globals::clear();
     EXPECT_EQ(test_main(args.size(), args.data()), 0);

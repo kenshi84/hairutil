@@ -2,6 +2,9 @@
 
 namespace cmd {
 
+using parse_func_t = std::function<void(args::Subparser &parser)>;
+using exec_func_t = std::shared_ptr<cyHairFile>(*)(std::shared_ptr<cyHairFile> hairfile_in);
+
 namespace parse {
 void autofix(args::Subparser &parser);
 void convert(args::Subparser &parser);
@@ -44,8 +47,4 @@ std::shared_ptr<cyHairFile> transform(std::shared_ptr<cyHairFile> hairfile_in);
 std::shared_ptr<cyHairFile> tubify(std::shared_ptr<cyHairFile> hairfile_in);
 }
 
-}
-
-namespace globals {
-    extern const std::set<std::shared_ptr<cyHairFile> (*)(std::shared_ptr<cyHairFile>)> cmd_wo_output;
 }

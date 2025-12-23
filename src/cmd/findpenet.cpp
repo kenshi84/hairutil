@@ -1,4 +1,5 @@
 #include "cmd.h"
+#include "util.h"
 
 #include <igl/read_triangle_mesh.h>
 #include <igl/fast_winding_number.h>
@@ -31,15 +32,18 @@ void cmd::parse::findpenet(args::Subparser &parser) {
         if (::param.threshold_ratio < 0.0f || ::param.threshold_ratio > 1.0f) {
             throw std::runtime_error("--threshold-ratio must be in [0.0, 1.0]");
         }
+        if (!::param.no_export) {
+            const std::string output_file = util::path_under_optional_dir(globals::input_file_wo_ext + "_penet.txt", globals::output_dir);
+            if (!globals::overwrite && std::filesystem::exists(output_file)) {
+                throw std::runtime_error("File already exists: " + output_file + ". Use --overwrite to overwrite.");
+            }
+        }
     };
     ::param.mesh_path = *mesh_path;
     ::param.decimate_ratio = *decimate_ratio;
     ::param.threshold_ratio = *threshold_ratio;
     ::param.no_export = no_export;
     ::param.no_print = no_print;
-    if (!::param.no_export) {
-        globals::output_file = [](){ return fmt::format("{}_penet.txt", globals::input_file_wo_ext); };
-    }
 }
 
 std::shared_ptr<cyHairFile> cmd::exec::findpenet(std::shared_ptr<cyHairFile> hairfile) {
@@ -101,10 +105,11 @@ std::shared_ptr<cyHairFile> cmd::exec::findpenet(std::shared_ptr<cyHairFile> hai
         std::copy(penetrating.begin(), penetrating.end(), std::ostream_iterator<unsigned int>(ss, ","));
         spdlog::warn("Found {} strands penetrating the mesh:\n{}", penetrating.size(), ::param.no_print ? std::string() : ss.str());
         if (!::param.no_export) {
-            std::ofstream ofs(globals::output_file());
+            const std::string output_file = util::path_under_optional_dir(globals::input_file_wo_ext + "_penet.txt", globals::output_dir);
+            std::ofstream ofs(output_file);
             ofs << ss.str();
+            spdlog::info("Exported penetrating strands to {}", output_file);
         }
-        spdlog::info("Exported penetrating strands to {}", globals::output_file());
     } else {
         spdlog::info("No penetrating strands found");
     }

@@ -82,6 +82,7 @@ int main(int argc, const char **argv)
 
     globals::input_file = *globals_input_file;
     globals::output_ext = *globals_output_ext;
+    globals::output_dir = *globals_output_dir;
     globals::overwrite = globals_overwrite;
     globals::ply_load_default_nsegs = *globals_ply_load_default_nsegs;
     globals::ply_save_ascii = globals_ply_save_ascii;
@@ -94,7 +95,7 @@ int main(int argc, const char **argv)
     }
     globals::rng.seed(seed);
 
-    if (globals::cmd_wo_output.count(globals::cmd_exec) ||  (globals::cmd_exec == cmd::exec::filter && cmd::param::b("filter", "no_output"))) {
+    if (!globals::output_file_wo_ext) {
         if (globals::output_ext != "") {
             spdlog::warn("Ignoring --output-ext");
             globals::output_ext = "";
@@ -104,8 +105,8 @@ int main(int argc, const char **argv)
         return 1;
     }
 
-    if (*globals_output_dir != "") {
-        std::filesystem::path output_dir = *globals_output_dir;
+    if (globals::output_dir != "") {
+        std::filesystem::path output_dir = globals::output_dir;
         if (std::filesystem::exists(output_dir)) {
             if (!std::filesystem::is_directory(output_dir)) {
                 spdlog::error("{} is not a directory", output_dir.string());
@@ -117,9 +118,11 @@ int main(int argc, const char **argv)
                 return 1;
             }
         }
-        globals::output_file.dir = output_dir.string();
+        if (globals::output_file_wo_ext) {
+            globals::output_file_wo_ext.dir = output_dir.string();
+        }
     }
-
+    
     // Get file extension from globals::input_file, in lowercase
     globals::input_ext = globals::input_file.substr(globals::input_file.find_last_of(".") + 1);
     std::transform(globals::input_ext.begin(), globals::input_ext.end(), globals::input_ext.begin(), [](unsigned char c){ return std::tolower(c); });
@@ -134,7 +137,6 @@ int main(int argc, const char **argv)
     if (globals::cmd_exec == cmd::exec::autofix) {
         if (globals_no_autofix)
             spdlog::warn("Ignoring --no-autofix");
-        globals::output_ext = globals::input_ext;
     }
 
     // Check if output file extension is supported
@@ -151,8 +153,8 @@ int main(int argc, const char **argv)
 
     // Check output filename validity and existence
     std::string output_file;
-    if (globals::output_file) {
-        output_file = globals::output_file();
+    if (globals::output_file_wo_ext) {
+        output_file = globals::output_file_wo_ext() + "." + globals::output_ext;
 
         // Truncate if too long
         if (output_file.length() > 230) {

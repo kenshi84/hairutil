@@ -5,7 +5,7 @@ using namespace Eigen;
 void cmd::parse::autofix(args::Subparser &parser) {
     parser.Parse();
     globals::cmd_exec = cmd::exec::autofix;
-    globals::output_file = [](){ return globals::input_file; };
+    globals::output_file_wo_ext = [](){ return globals::input_file_wo_ext + "_fixed"; };
 }
 
 std::shared_ptr<cyHairFile> cmd::exec::autofix(std::shared_ptr<cyHairFile> hairfile_in) {

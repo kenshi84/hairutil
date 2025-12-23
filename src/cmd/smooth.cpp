@@ -21,7 +21,7 @@ void cmd::parse::smooth(args::Subparser &parser) {
     args::ValueFlag<unsigned int> num_iter(parser, "N", "Number of smoothing iterations [1]", {"num-iter", 'n'}, 1);
     parser.Parse();
     globals::cmd_exec = cmd::exec::smooth;
-    globals::output_file = [](){ return fmt::format("{}_smoothed_w0_{}_w1_{}_w2_{}_n_{}.{}", globals::input_file_wo_ext, ::param.w0, ::param.w1, ::param.w2, ::param.num_iter, globals::output_ext); };
+    globals::output_file_wo_ext = [](){ return fmt::format("{}_smoothed_w0_{}_w1_{}_w2_{}_n_{}", globals::input_file_wo_ext, ::param.w0, ::param.w1, ::param.w2, ::param.num_iter); };
     globals::check_error = []() {
         if (::param.w0 < 0 || ::param.w1 < 0 || ::param.w2 < 0) {
             throw std::runtime_error("Weights must be non-negative");

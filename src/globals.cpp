@@ -14,19 +14,12 @@ namespace globals {
     // Other global variables
     std::string input_file_wo_ext;
     std::string input_ext;
-    OutputFile output_file;        // For lazy evaluation
+    OutputFile output_file_wo_ext;        // For lazy evaluation
+    std::string output_dir;
     std::function<void(void)> check_error;
-    std::shared_ptr<cyHairFile> (*cmd_exec)(std::shared_ptr<cyHairFile>) = nullptr;
+    ::cmd::exec_func_t cmd_exec;
     std::mt19937 rng;
 
-    const std::set<std::shared_ptr<cyHairFile> (*)(std::shared_ptr<cyHairFile>)> cmd_wo_output = {
-        cmd::exec::info,
-        cmd::exec::autofix,
-        cmd::exec::getcurvature,
-        cmd::exec::stats,
-        cmd::exec::findpenet,
-        cmd::exec::tubify,
-    };
 
     const std::unordered_map<std::string, std::pair<::io::load_func_t, ::io::save_func_t>> supported_ext = {
         {"bin", {::io::load_bin, ::io::save_bin}},
@@ -49,7 +42,7 @@ namespace globals {
         ply_save_ascii = {};
         input_file_wo_ext = {};
         input_ext = {};
-        output_file = OutputFile{};
+        output_file_wo_ext = OutputFile{};
         check_error = {};
         cmd_exec = nullptr;
         rng = {};
