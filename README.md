@@ -175,9 +175,7 @@ $ hairutil smooth --help
 
   OPTIONS:
 
-      --w0=[R]                          Weight for the data term [1.0]
-      --w1=[R]                          Weight for the first-order term [1.0]
-      --w2=[R]                          Weight for the second-order term [1.0]
+      --lambda=[R]                      Smoothness weight [1.0]
       -n[N], --num-iter=[N]             Number of smoothing iterations [1]
 ```
 
