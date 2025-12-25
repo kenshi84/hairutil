@@ -34,3 +34,6 @@
 [submodule "ext/libnpy"]
 	path = ext/libnpy
 	url = https://github.com/llohse/libnpy
+[submodule "ext/json"]
+	path = ext/json
+	url = https://github.com/nlohmann/json

@@ -21,6 +21,7 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/ostr.h>
 #include <Eigen/Geometry>
+#include <nlohmann/json.hpp>
 
 #define CY_NO_INTRIN_H
 #include <cyHairFile.h>
@@ -46,9 +47,40 @@ namespace globals {
     extern std::shared_ptr<cyHairFile> (*cmd_exec)(std::shared_ptr<cyHairFile>);
     extern std::mt19937 rng;
     extern const char* const VERSIONTAG;
+    extern nlohmann::json json;
 
     void clear();
 }
 
 using std::cout;
 using std::endl;
+
+template <typename... Args>
+inline void log_debug(spdlog::format_string_t<Args...> fmt, Args &&...args) {
+    spdlog::debug(fmt, std::forward<Args>(args)...);
+    globals::json["log"]["debug"].push_back(fmt::format(fmt, std::forward<Args>(args)...));
+}
+
+template <typename... Args>
+inline void log_info(spdlog::format_string_t<Args...> fmt, Args &&...args) {
+    spdlog::info(fmt, std::forward<Args>(args)...);
+    globals::json["log"]["info"].push_back(fmt::format(fmt, std::forward<Args>(args)...));
+}
+
+template <typename... Args>
+inline void log_warn(spdlog::format_string_t<Args...> fmt, Args &&...args) {
+    spdlog::warn(fmt, std::forward<Args>(args)...);
+    globals::json["log"]["warn"].push_back(fmt::format(fmt, std::forward<Args>(args)...));
+}
+
+template <typename... Args>
+inline void log_error(spdlog::format_string_t<Args...> fmt, Args &&...args) {
+    spdlog::error(fmt, std::forward<Args>(args)...);
+    globals::json["log"]["error"].push_back(fmt::format(fmt, std::forward<Args>(args)...));
+}
+
+template <typename... Args>
+inline void log_critical(spdlog::format_string_t<Args...> fmt, Args &&...args) {
+    spdlog::critical(fmt, std::forward<Args>(args)...);
+    globals::json["log"]["critical"].push_back(fmt::format(fmt, std::forward<Args>(args)...));
+}

@@ -64,7 +64,7 @@ void cmd::parse::subsample(args::Subparser &parser) {
             ::param.indices.insert(indices_vec.begin(), indices_vec.end());
         }
         if (output_indices)
-            spdlog::warn("--output-indices is ignored when --indices is specified");
+            log_warn("--output-indices is ignored when --indices is specified");
     }
     ::param.exclude = exclude;
     ::param.output_indices = output_indices;
@@ -123,7 +123,7 @@ std::shared_ptr<cyHairFile> cmd::exec::subsample(std::shared_ptr<cyHairFile> hai
     for ( ; (num_selected = std::accumulate(selected.begin(), selected.end(), 0)) < ::param.target_count; )
     {
         if (num_selected && num_selected % 100 == 0)
-            spdlog::info("Selected {} strands", num_selected);
+            log_info("Selected {} strands", num_selected);
 
         // Flag root points that are covered by the current Poisson disk of selected strands
         std::vector<unsigned char> covered(header_in.hair_count, 0);
@@ -163,7 +163,7 @@ std::shared_ptr<cyHairFile> cmd::exec::subsample(std::shared_ptr<cyHairFile> hai
         if (!globals::overwrite && std::filesystem::exists(output_file_txt)) {
             throw std::runtime_error("File already exists: " + output_file_txt + ". Use --overwrite to overwrite.");
         }
-        spdlog::info("Writing indices to {}", output_file_txt);
+        log_info("Writing indices to {}", output_file_txt);
         std::stringstream ss;
         for (int i = 0; i < header_in.hair_count; ++i)
             if (selected[i])

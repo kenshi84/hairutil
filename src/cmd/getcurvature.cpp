@@ -63,7 +63,7 @@ std::shared_ptr<cyHairFile> cmd::exec::getcurvature(std::shared_ptr<cyHairFile> 
     int offset = 0;
     for (int i = 0; i < num_strands; ++i) {
         if (i > 0 && i % 100 == 0)
-            spdlog::debug("Processing hair {}/{}", i, num_strands);
+            log_debug("Processing hair {}/{}", i, num_strands);
 
         // Copy point data to Eigen array
         MatrixX3f point(nsegs[i]+1, 3);
@@ -89,7 +89,7 @@ std::shared_ptr<cyHairFile> cmd::exec::getcurvature(std::shared_ptr<cyHairFile> 
 
         // If the strand is completely straight, simply set binormal to a random vector
         if (is_straight.sum() == nsegs[i]-1) {
-            spdlog::warn("Strand {} is completely straight", i);
+            log_warn("Strand {} is completely straight", i);
             RowVector3f binormal = RowVector3f::Random();
             binormal = (binormal - binormal.dot(tangent.row(0)) * tangent.row(0)).normalized();
             H5Easy::dump(file, fmt::format("/{}/binormal", i),  binormal.replicate(nsegs[i]-1, 1).eval());
@@ -217,12 +217,12 @@ std::shared_ptr<cyHairFile> cmd::exec::getcurvature(std::shared_ptr<cyHairFile> 
             ply.getElement("edge").addProperty<int>("vertex2", tovector_int(edge_vertex2));
 
             ply.write(globals::input_file_wo_ext + "_cvtr_debug.ply", globals::ply_save_ascii ? happly::DataFormat::ASCII : happly::DataFormat::Binary);
-            spdlog::debug("Wrote debug info to {}", globals::input_file_wo_ext + "_cvtr_debug.ply");
+            log_debug("Wrote debug info to {}", globals::input_file_wo_ext + "_cvtr_debug.ply");
             break;
         }
 #endif
     }
-    spdlog::info("Written to {}", output_file);
+    log_info("Written to {}", output_file);
 
     return {};
 }

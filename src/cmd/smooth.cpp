@@ -30,7 +30,7 @@ std::shared_ptr<cyHairFile> cmd::exec::smooth(std::shared_ptr<cyHairFile> hairfi
     int offset = 0;
     for (int i = 0; i < hair_count; ++i) {
         if (i > 0 && i % 100 == 0)
-            spdlog::debug("Processing hair {}/{}", i, hair_count);
+            log_debug("Processing hair {}/{}", i, hair_count);
 
         const int nsegs = hairfile->GetSegmentsArray() ? hairfile->GetSegmentsArray()[i] : hairfile->GetHeader().d_segments;
         const int n = nsegs + 1;

@@ -182,7 +182,8 @@ std::shared_ptr<cyHairFile> cmd::exec::filter(std::shared_ptr<cyHairFile> hairfi
 
         selected[i] = 1;
     }
-    spdlog::info("{} strands selected", std::count(selected.begin(), selected.end(), 1));
+    log_info("{} strands selected", std::count(selected.begin(), selected.end(), 1));
+    globals::json["filter"]["num_selected_strands"] = std::count(selected.begin(), selected.end(), 1);
     if (::param.output_indices) {
         std::string suffix;
         if (::param.gt) suffix += fmt::format("_gt_{}", *::param.gt);
@@ -202,7 +203,8 @@ std::shared_ptr<cyHairFile> cmd::exec::filter(std::shared_ptr<cyHairFile> hairfi
                 ofs << i << "\n";
             }
         }
-        spdlog::info("Selected strand indices written to {}", indices_file);
+        log_info("Selected strand indices written to {}", indices_file);
+        globals::json["filter"]["indices_file"] = indices_file;
     }
 
     if (::param.no_output)

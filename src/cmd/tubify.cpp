@@ -106,6 +106,6 @@ std::shared_ptr<cyHairFile> cmd::exec::tubify(std::shared_ptr<cyHairFile> hairfi
     ply.addFaceIndices(faces);
     const std::string output_file = util::path_under_optional_dir(globals::input_file_wo_ext + "_tube.ply", globals::output_dir);
     ply.write(output_file, globals::ply_save_ascii ? happly::DataFormat::ASCII : happly::DataFormat::Binary);
-    spdlog::info("Written to {}", output_file);
+    log_info("Written to {}", output_file);
     return {};
 }

@@ -87,7 +87,7 @@ std::shared_ptr<cyHairFile> cmd::exec::stats(std::shared_ptr<cyHairFile> hairfil
     std::vector<PointInfo> point_info_vec;      point_info_vec.reserve(header.point_count);
 
     // Collect raw data
-    spdlog::info("Collecting raw data");
+    log_info("Collecting raw data");
     unsigned int offset = 0;
     for (unsigned int i = 0; i < header.hair_count; ++i) {
         const unsigned int nsegs = header.arrays & _CY_HAIR_FILE_SEGMENTS_BIT ? hairfile_in->GetSegmentsArray()[i] : header.d_segments;
@@ -174,7 +174,7 @@ std::shared_ptr<cyHairFile> cmd::exec::stats(std::shared_ptr<cyHairFile> hairfil
 
     if (::param.export_raw_strand) {
         // Strand raw data
-        spdlog::info("Writing strand raw data");
+        log_info("Writing strand raw data");
         std::vector<xlnt::worksheet> ws_strand_raw(header.hair_count / max_num_rows + 1);
         for (size_t i = 0; i < ws_strand_raw.size(); ++i) {
             ws_strand_raw[i] = wb.create_sheet();
@@ -218,7 +218,7 @@ std::shared_ptr<cyHairFile> cmd::exec::stats(std::shared_ptr<cyHairFile> hairfil
 
     if (::param.export_raw_segment) {
         // Segment raw data
-        spdlog::info("Writing segment raw data");
+        log_info("Writing segment raw data");
         std::vector<xlnt::worksheet> ws_segment_raw(segment_info_vec.size() / max_num_rows + 1);
         for (size_t i = 0; i < ws_segment_raw.size(); ++i) {
             ws_segment_raw[i] = wb.create_sheet();
@@ -244,7 +244,7 @@ std::shared_ptr<cyHairFile> cmd::exec::stats(std::shared_ptr<cyHairFile> hairfil
 
     if (::param.export_raw_point) {
         // Point raw data
-        spdlog::info("Writing point raw data");
+        log_info("Writing point raw data");
         std::vector<xlnt::worksheet> ws_point_raw(point_info_vec.size() / max_num_rows + 1);
         for (size_t i = 0; i < ws_point_raw.size(); ++i) {
             ws_point_raw[i] = wb.create_sheet();
@@ -271,7 +271,7 @@ std::shared_ptr<cyHairFile> cmd::exec::stats(std::shared_ptr<cyHairFile> hairfil
     }
 
     // Compute stats
-    spdlog::info("Computing stats");
+    log_info("Computing stats");
 
     std::map<std::string, util::StatsInfo<StrandInfo>> strand_stats;
     strand_stats["length"] = util::get_stats(strand_info_vec, [](const auto& a) { return a.length; }, ::param.sort_size);
@@ -298,7 +298,7 @@ std::shared_ptr<cyHairFile> cmd::exec::stats(std::shared_ptr<cyHairFile> hairfil
     point_stats["curvature"] = util::get_stats(point_info_vec, [](const auto& a) { return a.curvature; }, ::param.sort_size);
 
     if (!::param.no_export) {
-        spdlog::info("Writing stats");
+        log_info("Writing stats");
 
         const auto cellstr = [](const std::string& col, size_t row){ return col + std::to_string(row); };
         size_t row;
@@ -385,40 +385,40 @@ std::shared_ptr<cyHairFile> cmd::exec::stats(std::shared_ptr<cyHairFile> hairfil
 
     if (!::param.no_print) {
         auto print_strand_stats = [&](const std::string& name, auto getvalue) {
-            spdlog::info("----------------------------------------------------------------");
-            spdlog::info("*** {} ***", name);
-            spdlog::info("  min: [{}] {}", strand_stats[name].min.idx, getvalue(strand_stats[name].min));
-            spdlog::info("  max: [{}] {}", strand_stats[name].max.idx, getvalue(strand_stats[name].max));
-            spdlog::info("  median: [{}] {}", strand_stats[name].median.idx, getvalue(strand_stats[name].median));
-            spdlog::info("  average (stddev): {} ({})", strand_stats[name].average, strand_stats[name].stddev);
+            log_info("----------------------------------------------------------------");
+            log_info("*** {} ***", name);
+            log_info("  min: [{}] {}", strand_stats[name].min.idx, getvalue(strand_stats[name].min));
+            log_info("  max: [{}] {}", strand_stats[name].max.idx, getvalue(strand_stats[name].max));
+            log_info("  median: [{}] {}", strand_stats[name].median.idx, getvalue(strand_stats[name].median));
+            log_info("  average (stddev): {} ({})", strand_stats[name].average, strand_stats[name].stddev);
             if (::param.sort_size > 0) {
                 const size_t n = strand_stats[name].largest.size();
-                spdlog::info("  top {} largest:", n);
-                for (const auto& i : strand_stats[name].largest) spdlog::info("    [{}] {}", i.idx, getvalue(i));
-                spdlog::info("  top {} smallest:", n);
-                for (const auto& i : strand_stats[name].smallest) spdlog::info("    [{}] {}", i.idx, getvalue(i));
+                log_info("  top {} largest:", n);
+                for (const auto& i : strand_stats[name].largest) log_info("    [{}] {}", i.idx, getvalue(i));
+                log_info("  top {} smallest:", n);
+                for (const auto& i : strand_stats[name].smallest) log_info("    [{}] {}", i.idx, getvalue(i));
             }
         };
 
         auto print_other_stats = [&](auto& stats, const std::string& name, auto getvalue) {
-            spdlog::info("----------------------------------------------------------------");
-            spdlog::info("*** {} ***", name);
-            spdlog::info("       [idx/strand_idx/local_idx]");
-            spdlog::info("  min: [{}/{}/{}] {}", stats[name].min.idx, stats[name].min.strand_idx, stats[name].min.local_idx, getvalue(stats[name].min));
-            spdlog::info("  max: [{}/{}/{}] {}", stats[name].max.idx, stats[name].max.strand_idx, stats[name].max.local_idx, getvalue(stats[name].max));
-            spdlog::info("  median: [{}/{}/{}] {}", stats[name].median.idx, stats[name].median.strand_idx, stats[name].median.local_idx, getvalue(stats[name].median));
-            spdlog::info("  average (stddev): {} ({})", stats[name].average, stats[name].stddev);
+            log_info("----------------------------------------------------------------");
+            log_info("*** {} ***", name);
+            log_info("       [idx/strand_idx/local_idx]");
+            log_info("  min: [{}/{}/{}] {}", stats[name].min.idx, stats[name].min.strand_idx, stats[name].min.local_idx, getvalue(stats[name].min));
+            log_info("  max: [{}/{}/{}] {}", stats[name].max.idx, stats[name].max.strand_idx, stats[name].max.local_idx, getvalue(stats[name].max));
+            log_info("  median: [{}/{}/{}] {}", stats[name].median.idx, stats[name].median.strand_idx, stats[name].median.local_idx, getvalue(stats[name].median));
+            log_info("  average (stddev): {} ({})", stats[name].average, stats[name].stddev);
             if (::param.sort_size > 0) {
                 const size_t n = stats[name].largest.size();
-                spdlog::info("  top {} largest:", n);
-                for (const auto& i : stats[name].largest) spdlog::info("    [{}/{}/{}] {}", i.idx, i.strand_idx, i.local_idx, getvalue(i));
-                spdlog::info("  top {} smallest:", n);
-                for (const auto& i : stats[name].smallest) spdlog::info("    [{}/{}/{}] {}", i.idx, i.strand_idx, i.local_idx, getvalue(i));
+                log_info("  top {} largest:", n);
+                for (const auto& i : stats[name].largest) log_info("    [{}/{}/{}] {}", i.idx, i.strand_idx, i.local_idx, getvalue(i));
+                log_info("  top {} smallest:", n);
+                for (const auto& i : stats[name].smallest) log_info("    [{}/{}/{}] {}", i.idx, i.strand_idx, i.local_idx, getvalue(i));
             }
         };
 
-        spdlog::info("================================================================");
-        spdlog::info("Strand stats:");
+        log_info("================================================================");
+        log_info("Strand stats:");
         print_strand_stats("length", [](const auto& a){ return a.length; });
         print_strand_stats("nsegs", [](const auto& a){ return a.nsegs; });
         print_strand_stats("turning_angle_sum", [](const auto& a){ return a.turning_angle_sum; });
@@ -433,13 +433,13 @@ std::shared_ptr<cyHairFile> cmd::exec::stats(std::shared_ptr<cyHairFile> hairfil
         print_strand_stats("max_point_curvature", [](const auto& a){ return a.max_point_curvature; });
         print_strand_stats("min_point_curvature", [](const auto& a){ return a.min_point_curvature; });
 
-        spdlog::info("================================================================");
-        spdlog::info("Segment stats:");
+        log_info("================================================================");
+        log_info("Segment stats:");
         print_other_stats(segment_stats, "length", [](const auto& a){ return a.length; });
         print_other_stats(segment_stats, "turning_angle_diff", [](const auto& a){ return a.turning_angle_diff; });
 
-        spdlog::info("================================================================");
-        spdlog::info("Point stats:");
+        log_info("================================================================");
+        log_info("Point stats:");
         print_other_stats(point_stats, "circumradius_reciprocal", [](const auto& a){ return a.circumradius_reciprocal; });
         print_other_stats(point_stats, "turning_angle", [](const auto& a){ return a.turning_angle; });
         print_other_stats(point_stats, "curvature", [](const auto& a){ return a.curvature; });
@@ -447,7 +447,7 @@ std::shared_ptr<cyHairFile> cmd::exec::stats(std::shared_ptr<cyHairFile> hairfil
 
     if (!::param.no_export) {
         const std::string output_file = util::path_under_optional_dir(globals::input_file_wo_ext + "_stats.xlsx", globals::output_dir);
-        spdlog::info("Saving to {}", output_file);
+        log_info("Saving to {}", output_file);
         wb.save(output_file);
     }
 

@@ -94,6 +94,7 @@ target_include_directories(hairutil_core
   ext/eigen
   ext/happly
   ext/HighFive/include
+  ext/json/include
   ext/libigl/include
   ext/libnpy/include
   ext/nanoflann/include

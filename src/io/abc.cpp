@@ -22,7 +22,7 @@ void load_abc_sub(int depth, const Abc::IObject& obj, std::vector<float>& points
     if (AbcGeom::ILightSchema::matches(obj.getMetaData())) type = "light";
     if (AbcGeom::IFaceSetSchema::matches(obj.getMetaData())) type = "faceset";
 
-    spdlog::info("{}{} ({})", spaces, obj.getName(), type);
+    log_info("{}{} ({})", spaces, obj.getName(), type);
 
     if (type == "transform") {
         AbcGeom::IXformSchema xform(obj, Abc::kWrapExisting);
@@ -42,8 +42,8 @@ void load_abc_sub(int depth, const Abc::IObject& obj, std::vector<float>& points
         const size_t num_curves = sample.getNumCurves();
         const size_t num_points = sample.getPositions()->size();
 
-        spdlog::info("{}  num curves: {}", spaces, num_curves);
-        spdlog::info("{}  num points: {}", spaces, num_points);
+        log_info("{}  num curves: {}", spaces, num_curves);
+        log_info("{}  num points: {}", spaces, num_points);
 
         // Copy segments data
         segments.reserve(segments.size() + num_curves);

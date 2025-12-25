@@ -19,6 +19,7 @@ namespace globals {
     std::function<void(void)> check_error;
     ::cmd::exec_func_t cmd_exec;
     std::mt19937 rng;
+    nlohmann::json json;
 
 
     const std::unordered_map<std::string, std::pair<::io::load_func_t, ::io::save_func_t>> supported_ext = {
@@ -43,5 +44,6 @@ namespace globals {
         check_error = {};
         cmd_exec = nullptr;
         rng = {};
+        json = {};
     }
 }

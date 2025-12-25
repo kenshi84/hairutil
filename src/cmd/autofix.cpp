@@ -34,7 +34,7 @@ std::shared_ptr<cyHairFile> cmd::exec::autofix(std::shared_ptr<cyHairFile> hairf
         const unsigned int num_segments = has_segments ? hairfile_in->GetSegmentsArray()[i] : header_in.d_segments;
 
         if (num_segments == 0) {
-            spdlog::warn("Strand {} has no segments, removed", i);
+            log_warn("Strand {} has no segments, removed", i);
             fixed = true;
             offset += 1;
             continue;
@@ -47,7 +47,7 @@ std::shared_ptr<cyHairFile> cmd::exec::autofix(std::shared_ptr<cyHairFile> hairf
             const Vector3f point = Map<Vector3f>(hairfile_in->GetPointsArray() + 3*(offset + j));
 
             if (j > 0 && prev_point == point) {
-                spdlog::warn("Strand {} has duplicated point at segment {}, removed", i, j);
+                log_warn("Strand {} has duplicated point at segment {}, removed", i, j);
                 fixed = true;
                 ++num_err_segments;
                 continue;
@@ -72,7 +72,7 @@ std::shared_ptr<cyHairFile> cmd::exec::autofix(std::shared_ptr<cyHairFile> hairf
             out_segments.push_back(num_segments - num_err_segments);
             ++out_hair_count;
         } else {
-            spdlog::warn("All the segments in strand {} are degenerate, removed", i);
+            log_warn("All the segments in strand {} are degenerate, removed", i);
 
             // Remove the first point, as the strand is skipped
             for (int k = 0; k < 3; ++k) {

@@ -24,7 +24,7 @@ std::shared_ptr<cyHairFile> io::load_ply(const std::string &filename) {
     std::vector<unsigned char> vertex_green;
     std::vector<unsigned char> vertex_blue;
     if (vertex.hasProperty("red") && vertex.hasProperty("green") && vertex.hasProperty("blue")) {
-        spdlog::debug("PLY file has \"red\", \"green\", \"blue\" properties");
+        log_debug("PLY file has \"red\", \"green\", \"blue\" properties");
         vertex_red = vertex.getProperty<unsigned char>("red");
         vertex_green = vertex.getProperty<unsigned char>("green");
         vertex_blue = vertex.getProperty<unsigned char>("blue");
@@ -33,14 +33,14 @@ std::shared_ptr<cyHairFile> io::load_ply(const std::string &filename) {
     // Read transparency if available
     std::vector<unsigned char> vertex_alpha;
     if (vertex.hasProperty("alpha")) {
-        spdlog::debug("PLY file has \"alpha\" property");
+        log_debug("PLY file has \"alpha\" property");
         vertex_alpha = vertex.getProperty<unsigned char>("alpha");
     }
 
     // Read thickness if available
     std::vector<float> vertex_thickness;
     if (vertex.hasProperty("thickness")) {
-        spdlog::debug("PLY file has \"thickness\" property");
+        log_debug("PLY file has \"thickness\" property");
         vertex_thickness = vertex.getProperty<float>("thickness");
     }
 
@@ -49,7 +49,7 @@ std::shared_ptr<cyHairFile> io::load_ply(const std::string &filename) {
     if (ply.hasElement("strand")) {
         auto& strand = ply.getElement("strand");
         if (strand.hasProperty("nsegs")) {
-            spdlog::debug("PLY file has \"strand\" element with \"nsegs\" property");
+            log_debug("PLY file has \"strand\" element with \"nsegs\" property");
             segments_array = strand.getProperty<unsigned short>("nsegs");
         }
     }

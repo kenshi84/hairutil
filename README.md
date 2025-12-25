@@ -45,6 +45,7 @@ $ hairutil --help
         --ply-save-ascii          Save PLY files in ASCII format
         -v[NAME], --verbosity=[NAME]
                                   Verbosity level name {trace,debug,info,warn,error,critical,off} [info]
+        -j, --print-json          Print log messages in JSON format, disabling standard logging
         --seed=[N]                Seed for random number generator (-1 for time-based seed) [0]
         --no-autofix              Do not auto-fix issues in input
         -h, --help                Show this help message

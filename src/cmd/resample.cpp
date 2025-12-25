@@ -42,7 +42,7 @@ std::shared_ptr<cyHairFile> cmd::exec::resample(std::shared_ptr<cyHairFile> hair
     unsigned int offset = 0;
     for (unsigned int i = 0; i < hair_count; ++i) {
         if (i > 0 && i % 100 == 0)
-            spdlog::debug("Processing hair {}/{}", i, hair_count);
+            log_debug("Processing hair {}/{}", i, hair_count);
 
         const unsigned int num_segments = has_segments ? hairfile_in->GetSegmentsArray()[i] : header_in.d_segments;
 

@@ -6,10 +6,10 @@ std::shared_ptr<cyHairFile> util::get_subset(std::shared_ptr<cyHairFile> hairfil
     const unsigned int num_selected = std::accumulate(selected.begin(), selected.end(), 0);
 
     if (num_selected == 0) {
-        spdlog::warn("No strand is selected");
+        log_warn("No strand is selected");
         return {};
     }
-    spdlog::info("Selected {} strands", num_selected);
+    log_info("Selected {} strands", num_selected);
 
     // Count the number of selected strands and their points
     unsigned int out_hair_count = num_selected;
@@ -35,14 +35,14 @@ std::shared_ptr<cyHairFile> util::get_subset(std::shared_ptr<cyHairFile> hairfil
     unsigned int in_point_offset = 0;
     unsigned int out_hair_idx = 0;
     unsigned int out_point_offset = 0;
-    spdlog::debug("Input-output index mapping (strand idx ; root vertex idx):");
+    log_debug("Input-output index mapping (strand idx ; root vertex idx):");
     for (unsigned int in_hair_idx = 0; in_hair_idx < header_in.hair_count; ++in_hair_idx)
     {
         const unsigned int nsegs = hairfile_in->GetSegmentsArray() ? hairfile_in->GetSegmentsArray()[in_hair_idx] : header_in.d_segments;
 
         if (selected[in_hair_idx])
         {
-            spdlog::debug("  {} -> {} ; {} -> {}", in_hair_idx, out_hair_idx, in_point_offset, out_point_offset);
+            log_debug("  {} -> {} ; {} -> {}", in_hair_idx, out_hair_idx, in_point_offset, out_point_offset);
 
             // Copy segment info if available
             if (header_in.arrays & _CY_HAIR_FILE_SEGMENTS_BIT)

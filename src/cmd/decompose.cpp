@@ -86,7 +86,7 @@ std::shared_ptr<cyHairFile> cmd::exec::decompose(std::shared_ptr<cyHairFile> hai
         for (const auto& [output_ext, output_dir] : output_dirs) {
             const std::string output_file = fmt::format("{}/{}.{}", output_dir, i, output_ext);
             if (header.hair_count < 1000 || (i > 0 && i % 1000 == 0) || !::param.indices.empty()) {
-                spdlog::info("Saving to {} ...", output_file);
+                log_info("Saving to {} ...", output_file);
             }
             globals::supported_ext.at(output_ext).second(output_file, hairfile_out);
         }

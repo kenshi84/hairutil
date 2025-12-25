@@ -46,11 +46,23 @@ int main(int argc, const char **argv)
     args::ValueFlag<unsigned int> globals_ply_load_default_nsegs(grp_globals, "N", "Default number of segments per strand for PLY files [0]", {"ply-load-default-nsegs"}, 0);
     args::Flag globals_ply_save_ascii(grp_globals, "ply-save-ascii", "Save PLY files in ASCII format", {"ply-save-ascii"});
     args::ValueFlag<std::string> globals_verbosity(grp_globals, "NAME", "Verbosity level name {trace,debug,info,warn,error,critical,off} [info]", {'v', "verbosity"}, "info");
+    args::Flag globals_print_json(grp_globals, "print-json", "Print log messages in JSON format, disabling standard logging", {'j', "print-json"});
     args::ValueFlag<int> globals_seed(grp_globals, "N", "Seed for random number generator (-1 for time-based seed) [0]", {"seed"}, 0);
     args::Flag globals_no_autofix(grp_globals, "no-autofix", "Do not auto-fix issues in input", {"no-autofix"});
     args::HelpFlag globals_help(grp_globals, "help", "Show this help message", {'h', "help"});
 
     args::GlobalOptions global_options(parser, grp_globals);
+
+    globals::json = {
+        {"version", globals::VERSIONTAG},
+        {"log", {
+            {"debug", nlohmann::json::array()},
+            {"info", nlohmann::json::array()},
+            {"warn", nlohmann::json::array()},
+            {"error", nlohmann::json::array()},
+            {"critical", nlohmann::json::array()}
+        }},
+    };
 
     try
     {
@@ -68,10 +80,16 @@ int main(int argc, const char **argv)
     }
     catch (const std::exception &e)
     {
-        spdlog::error("{}", e.what());
+        log_error("{}", e.what());
         return 1;
     }
 
+    if (globals_print_json) {
+        if (*globals_verbosity != "off") {
+            globals::json["warnings"].push_back(fmt::format("Ignoring --verbosity={}, as --print-json is specified", *globals_verbosity));
+            *globals_verbosity = "off";
+        }
+    }
     spdlog::set_level(
         *globals_verbosity == "trace" ? spdlog::level::trace :
         *globals_verbosity == "debug" ? spdlog::level::debug :
@@ -92,7 +110,7 @@ int main(int argc, const char **argv)
     int seed = *globals_seed;
     if (seed < 0) {
         seed = std::time(nullptr);
-        spdlog::info("Using time-based seed: {}", seed);
+        log_info("Using time-based seed: {}", seed);
     }
     globals::rng.seed(seed);
 
@@ -102,11 +120,11 @@ int main(int argc, const char **argv)
 
     if (!globals::output_file_wo_ext) {
         if (!globals::output_exts.empty()) {
-            spdlog::warn("Ignoring --output-ext");
+            log_warn("Ignoring --output-ext");
             globals::output_exts = {};
         }
     } else if (globals::output_exts.empty()) {
-        spdlog::warn("--output-ext not specified, using input file extension: {}", globals::input_ext);
+        log_warn("--output-ext not specified, using input file extension: {}", globals::input_ext);
         globals::output_exts.insert(globals::input_ext);
     }
 
@@ -114,12 +132,16 @@ int main(int argc, const char **argv)
         std::filesystem::path output_dir = globals::output_dir;
         if (std::filesystem::exists(output_dir)) {
             if (!std::filesystem::is_directory(output_dir)) {
-                spdlog::error("{} is not a directory", output_dir.string());
+                log_error("{} is not a directory", output_dir.string());
+                if (globals_print_json)
+                    cout << globals::json.dump(2) << std::endl;
                 return 1;
             }
         } else {
             if (!std::filesystem::create_directories(output_dir)) {
-                spdlog::error("Failed to create directory: {}", output_dir.string());
+                log_error("Failed to create directory: {}", output_dir.string());
+                if (globals_print_json)
+                    cout << globals::json.dump(2) << std::endl;
                 return 1;
             }
         }
@@ -130,20 +152,24 @@ int main(int argc, const char **argv)
 
     // Check if input file extension is supported
     if (globals::supported_ext.count(globals::input_ext) == 0) {
-        spdlog::error("Unsupported input file extension: {}", globals::input_ext);
+        log_error("Unsupported input file extension: {}", globals::input_ext);
+        if (globals_print_json)
+            cout << globals::json.dump(2) << std::endl;
         return 1;
     }
     const io::load_func_t load_func = globals::supported_ext.at(globals::input_ext).first;
 
     if (globals::cmd_exec == cmd::exec::autofix) {
         if (globals_no_autofix)
-            spdlog::warn("Ignoring --no-autofix");
+            log_warn("Ignoring --no-autofix");
     }
 
     // Check if output file extension is supported
     for (const std::string& output_ext : globals::output_exts) {
         if (globals::supported_ext.count(output_ext) == 0) {
-            spdlog::error("Unsupported output file extension: {}", output_ext);
+            log_error("Unsupported output file extension: {}", output_ext);
+            if (globals_print_json)
+                cout << globals::json.dump(2) << std::endl;
             return 1;
         }
     }
@@ -159,13 +185,15 @@ int main(int argc, const char **argv)
 
             // Truncate if too long
             if (output_files[output_ext].length() > 230) {
-                spdlog::warn("Output file path is too long ({}), truncating", output_files[output_ext].length());
+                log_warn("Output file path is too long ({}), truncating", output_files[output_ext].length());
                 output_files[output_ext] = output_files[output_ext].substr(0, 230) + "." + output_ext;
             }
 
             if (!globals::overwrite && std::filesystem::exists(output_files[output_ext])) {
-                spdlog::error("Output file already exists: {}", output_files[output_ext]);
-                spdlog::error("Use --overwrite to overwrite the file");
+                log_error("Output file already exists: {}", output_files[output_ext]);
+                log_error("Use --overwrite to overwrite the file");
+                if (globals_print_json)
+                    cout << globals::json.dump(2) << std::endl;
                 return 1;
             }
         }
@@ -177,7 +205,8 @@ int main(int argc, const char **argv)
         if (globals::check_error)
             globals::check_error();
 
-        spdlog::info("Loading from {} ...", globals::input_file);
+        log_info("Loading from {} ...", globals::input_file);
+        globals::json["input"]["file"] = globals::input_file;
         auto hairfile_in = load_func(globals::input_file);
 
         // Auto-fix issues in input
@@ -187,25 +216,35 @@ int main(int argc, const char **argv)
                 hairfile_in = hairfile_fixed;
         }
 
-        spdlog::info("Number of strands: {}", hairfile_in->GetHeader().hair_count);
-        spdlog::info("Number of points: {}", hairfile_in->GetHeader().point_count);
+        log_info("Number of strands: {}", hairfile_in->GetHeader().hair_count);
+        log_info("Number of points: {}", hairfile_in->GetHeader().point_count);
+        globals::json["input"]["num_strands"] = hairfile_in->GetHeader().hair_count;
+        globals::json["input"]["num_points"] = hairfile_in->GetHeader().point_count;
 
         auto hairfile_out = globals::cmd_exec(hairfile_in);
 
         if (hairfile_out) {
+            globals::json["output"]["file"] = nlohmann::json::array();
+            globals::json["output"]["num_strands"] = hairfile_out->GetHeader().hair_count;
+            globals::json["output"]["num_points"] = hairfile_out->GetHeader().point_count;
             for (const auto& [output_ext, output_file] : output_files) {
                 const auto save_func = globals::supported_ext.at(output_ext).second;
-                spdlog::info("Saving to {} ...", output_file);
+                log_info("Saving to {} ...", output_file);
+                globals::json["output"]["file"].push_back(output_file);
                 save_func(output_file, hairfile_out);
             }
         }
     }
     catch (const std::exception &e)
     {
-        spdlog::error("{}", e.what());
+        log_error("{}", e.what());
+        if (globals_print_json)
+            cout << globals::json.dump(2) << std::endl;
         return 1;
     }
 
-    spdlog::info("Done");
+    log_info("Done");
+    if (globals_print_json)
+        cout << globals::json.dump(2) << std::endl;
     return 0;
 }

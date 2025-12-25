@@ -48,7 +48,7 @@ void cmd::parse::findpenet(args::Subparser &parser) {
 
 std::shared_ptr<cyHairFile> cmd::exec::findpenet(std::shared_ptr<cyHairFile> hairfile) {
     // Read triangle mesh
-    spdlog::info("Reading triangle mesh from {}", ::param.mesh_path);
+    log_info("Reading triangle mesh from {}", ::param.mesh_path);
     MatrixXd OV;
     MatrixXi OF;
     if (!igl::read_triangle_mesh(::param.mesh_path, OV, OF)) {
@@ -59,7 +59,7 @@ std::shared_ptr<cyHairFile> cmd::exec::findpenet(std::shared_ptr<cyHairFile> hai
     MatrixXd V;
     MatrixXi F;
     if (::param.decimate_ratio < 1.0f) {
-        spdlog::info("Decimating triangle mesh with ratio {} ({} faces)", ::param.decimate_ratio, (int)(::param.decimate_ratio * OF.rows()));
+        log_info("Decimating triangle mesh with ratio {} ({} faces)", ::param.decimate_ratio, (int)(::param.decimate_ratio * OF.rows()));
         VectorXi J, I;
         igl::decimate(OV, OF, ::param.decimate_ratio * OF.rows(), false, V, F, J, I);
     } else {
@@ -75,14 +75,14 @@ std::shared_ptr<cyHairFile> cmd::exec::findpenet(std::shared_ptr<cyHairFile> hai
     }
 
     // Compute winding number
-    spdlog::info("Computing winding number");
+    log_info("Computing winding number");
     VectorXd W;
     igl::FastWindingNumberBVH fwn_bvh;
     igl::fast_winding_number(V,F,2,fwn_bvh);
     igl::fast_winding_number(fwn_bvh,2,P,W);
 
     // Determine which strands are penetrating
-    spdlog::info("Determining which strands are penetrating");
+    log_info("Determining which strands are penetrating");
     std::set<unsigned int> penetrating;
     unsigned int offset = 0;
     for (unsigned int i = 0; i < header.hair_count; ++i) {
@@ -103,15 +103,15 @@ std::shared_ptr<cyHairFile> cmd::exec::findpenet(std::shared_ptr<cyHairFile> hai
     if (!penetrating.empty()) {
         std::stringstream ss;
         std::copy(penetrating.begin(), penetrating.end(), std::ostream_iterator<unsigned int>(ss, ","));
-        spdlog::warn("Found {} strands penetrating the mesh:\n{}", penetrating.size(), ::param.no_print ? std::string() : ss.str());
+        log_warn("Found {} strands penetrating the mesh:\n{}", penetrating.size(), ::param.no_print ? std::string() : ss.str());
         if (!::param.no_export) {
             const std::string output_file = util::path_under_optional_dir(globals::input_file_wo_ext + "_penet.txt", globals::output_dir);
             std::ofstream ofs(output_file);
             ofs << ss.str();
-            spdlog::info("Exported penetrating strands to {}", output_file);
+            log_info("Exported penetrating strands to {}", output_file);
         }
     } else {
-        spdlog::info("No penetrating strands found");
+        log_info("No penetrating strands found");
     }
 
     return {};
