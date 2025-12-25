@@ -176,7 +176,6 @@ $ hairutil smooth --help
   OPTIONS:
 
       --lambda=[R]                      Smoothness weight [1.0]
-      -n[N], --num-iter=[N]             Number of smoothing iterations [1]
 ```
 
 ### `stats` command

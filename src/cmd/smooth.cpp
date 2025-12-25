@@ -8,26 +8,20 @@ using namespace Eigen;
 namespace {
 struct {
     float& lambda = cmd::param::f("smooth", "lambda");
-    unsigned int& num_iter = cmd::param::ui("smooth", "num_iter");
 } param;
 }
 
 void cmd::parse::smooth(args::Subparser &parser) {
     args::ValueFlag<float> lambda(parser, "R", "Smoothness weight [1.0]", {"lambda"}, 1.0f);
-    args::ValueFlag<unsigned int> num_iter(parser, "N", "Number of smoothing iterations [1]", {"num-iter", 'n'}, 1);
     parser.Parse();
     globals::cmd_exec = cmd::exec::smooth;
-    globals::output_file_wo_ext = [](){ return fmt::format("{}_smoothed_λ_{}_n_{}", globals::input_file_wo_ext, ::param.lambda, ::param.num_iter); };
+    globals::output_file_wo_ext = [](){ return fmt::format("{}_smoothed_λ_{}", globals::input_file_wo_ext, ::param.lambda); };
     globals::check_error = []() {
         if (::param.lambda <= 0) {
             throw std::runtime_error("Smoothness weight must be positive");
         }
-        if (::param.num_iter == 0) {
-            throw std::runtime_error("Number of iterations must be positive");
-        }
     };
     ::param.lambda = *lambda;
-    ::param.num_iter = *num_iter;
 }
 
 std::shared_ptr<cyHairFile> cmd::exec::smooth(std::shared_ptr<cyHairFile> hairfile) {
@@ -77,10 +71,8 @@ std::shared_ptr<cyHairFile> cmd::exec::smooth(std::shared_ptr<cyHairFile> hairfi
         const VectorXd Beq;
         igl::min_quad_with_fixed_data<double> mqwf;
         igl::min_quad_with_fixed_precompute(Q, b, Aeq, true, mqwf);
+        igl::min_quad_with_fixed_solve(mqwf, -f, bc, Beq, f);
 
-        for (unsigned int iter = 0; iter < ::param.num_iter; ++iter) {
-            igl::min_quad_with_fixed_solve(mqwf,-f,bc,Beq,f);
-        }
         // Copy resulting point data back to hairfile
         Matrix3Xf f_T = f.transpose().cast<float>();
         std::memcpy(hairfile->GetPointsArray() + 3*offset, f_T.data(), 3*(nsegs+1)*sizeof(float));
