@@ -110,6 +110,7 @@ std::shared_ptr<cyHairFile> cmd::exec::findpenet(std::shared_ptr<cyHairFile> hai
             ofs << ss.str();
             log_info("Exported penetrating strands to {}", output_file);
         }
+        globals::json["findpenet"]["penetrating_strands"] = penetrating;
     } else {
         log_info("No penetrating strands found");
     }
