@@ -62,6 +62,9 @@ std::shared_ptr<cyHairFile> cmd::exec::getcurvature(std::shared_ptr<cyHairFile> 
 
     int offset = 0;
     for (int i = 0; i < num_strands; ++i) {
+        auto scope_guard = sg::make_scope_guard([&]{
+            offset += nsegs[i] + 1;
+        });
         if (i > 0 && i % 100 == 0)
             log_debug("Processing hair {}/{}", i, num_strands);
 
@@ -173,8 +176,6 @@ std::shared_ptr<cyHairFile> cmd::exec::getcurvature(std::shared_ptr<cyHairFile> 
         H5Easy::dump(file, fmt::format("/{}/binormal", i), binormal);
         H5Easy::dump(file, fmt::format("/{}/kappa", i), kappa);
         H5Easy::dump(file, fmt::format("/{}/tau", i), tau);
-
-        offset += nsegs[i] + 1;
 
 #ifndef NDEBUG
         if (spdlog::get_level() <= spdlog::level::debug) {
