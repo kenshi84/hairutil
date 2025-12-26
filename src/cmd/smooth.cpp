@@ -35,11 +35,14 @@ std::shared_ptr<cyHairFile> cmd::exec::smooth(std::shared_ptr<cyHairFile> hairfi
         const int nsegs = hairfile->GetSegmentsArray() ? hairfile->GetSegmentsArray()[i] : hairfile->GetHeader().d_segments;
         const int n = nsegs + 1;
 
+        // Copy point data to Eigen matrix
+        auto scope_guard = sg::make_scope_guard([&]{
+            offset += nsegs + 1;
+        });
+        MatrixX3d f = Map<Matrix3Xf>(hairfile->GetPointsArray() + 3*offset, 3, nsegs+1).cast<double>().transpose();
+
         if (nsegs < 2)
             continue;
-
-        // Copy point data to Eigen matrix
-        MatrixX3d f = Map<Matrix3Xf>(hairfile->GetPointsArray() + 3*offset, 3, nsegs+1).cast<double>().transpose();
 
         /*
         Energy to be minimized for coordinate function f:
@@ -76,8 +79,6 @@ std::shared_ptr<cyHairFile> cmd::exec::smooth(std::shared_ptr<cyHairFile> hairfi
         // Copy resulting point data back to hairfile
         Matrix3Xf f_T = f.transpose().cast<float>();
         std::memcpy(hairfile->GetPointsArray() + 3*offset, f_T.data(), 3*(nsegs+1)*sizeof(float));
-
-        offset += nsegs + 1;
     }
     return hairfile;
 }
