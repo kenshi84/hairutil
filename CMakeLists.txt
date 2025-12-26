@@ -98,6 +98,7 @@ target_include_directories(hairutil_core
   ext/libigl/include
   ext/libnpy/include
   ext/nanoflann/include
+  ext/scope_guard
   ext/spdlog/include
 )
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")

@@ -90,6 +90,10 @@ int main(int argc, const char **argv)
             *globals_verbosity = "off";
         }
     }
+    auto scope_guard = sg::make_scope_guard([&]{
+        if (globals_print_json)
+            cout << globals::json.dump(2) << std::endl;
+    });
     spdlog::set_level(
         *globals_verbosity == "trace" ? spdlog::level::trace :
         *globals_verbosity == "debug" ? spdlog::level::debug :
@@ -133,15 +137,11 @@ int main(int argc, const char **argv)
         if (std::filesystem::exists(output_dir)) {
             if (!std::filesystem::is_directory(output_dir)) {
                 log_error("{} is not a directory", output_dir.string());
-                if (globals_print_json)
-                    cout << globals::json.dump(2) << std::endl;
                 return 1;
             }
         } else {
             if (!std::filesystem::create_directories(output_dir)) {
                 log_error("Failed to create directory: {}", output_dir.string());
-                if (globals_print_json)
-                    cout << globals::json.dump(2) << std::endl;
                 return 1;
             }
         }
@@ -153,8 +153,6 @@ int main(int argc, const char **argv)
     // Check if input file extension is supported
     if (globals::supported_ext.count(globals::input_ext) == 0) {
         log_error("Unsupported input file extension: {}", globals::input_ext);
-        if (globals_print_json)
-            cout << globals::json.dump(2) << std::endl;
         return 1;
     }
     const io::load_func_t load_func = globals::supported_ext.at(globals::input_ext).first;
@@ -168,8 +166,6 @@ int main(int argc, const char **argv)
     for (const std::string& output_ext : globals::output_exts) {
         if (globals::supported_ext.count(output_ext) == 0) {
             log_error("Unsupported output file extension: {}", output_ext);
-            if (globals_print_json)
-                cout << globals::json.dump(2) << std::endl;
             return 1;
         }
     }
@@ -192,8 +188,6 @@ int main(int argc, const char **argv)
             if (!globals::overwrite && std::filesystem::exists(output_files[output_ext])) {
                 log_error("Output file already exists: {}", output_files[output_ext]);
                 log_error("Use --overwrite to overwrite the file");
-                if (globals_print_json)
-                    cout << globals::json.dump(2) << std::endl;
                 return 1;
             }
         }
@@ -238,13 +232,9 @@ int main(int argc, const char **argv)
     catch (const std::exception &e)
     {
         log_error("{}", e.what());
-        if (globals_print_json)
-            cout << globals::json.dump(2) << std::endl;
         return 1;
     }
 
     log_info("Done");
-    if (globals_print_json)
-        cout << globals::json.dump(2) << std::endl;
     return 0;
 }

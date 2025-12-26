@@ -250,6 +250,17 @@ TEST(cmd_info, ply) {
     EXPECT_EQ(test_main(args.size(), args.data()), 0);
 }
 
+TEST(cmd_info, print_json) {
+    std::vector<const char*> args = {
+        "test_cmd",
+        "info",
+        "-i", TEST_DATA_DIR "/Bangs_100_binary.ply",
+        "-j",
+    };
+    globals::clear();
+    EXPECT_EQ(test_main(args.size(), args.data()), 0);
+}
+
 TEST(cmd_resample, bin_to_ply) {
     std::vector<const char*> args = {
         "test_cmd",

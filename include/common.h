@@ -22,6 +22,7 @@
 #include <spdlog/fmt/ostr.h>
 #include <Eigen/Geometry>
 #include <nlohmann/json.hpp>
+#include <scope_guard.hpp>
 
 #define CY_NO_INTRIN_H
 #include <cyHairFile.h>

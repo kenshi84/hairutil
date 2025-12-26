@@ -37,3 +37,6 @@
 [submodule "ext/json"]
 	path = ext/json
 	url = https://github.com/nlohmann/json
+[submodule "ext/scope_guard"]
+	path = ext/scope_guard
+	url = https://github.com/ricab/scope_guard
