@@ -100,6 +100,7 @@ std::shared_ptr<cyHairFile> cmd::exec::findpenet(std::shared_ptr<cyHairFile> hai
         offset += nsegs + 1;
     }
 
+    globals::json["findpenet"]["penetrating_strands"] = penetrating;
     if (!penetrating.empty()) {
         std::stringstream ss;
         std::copy(penetrating.begin(), penetrating.end(), std::ostream_iterator<unsigned int>(ss, ","));
@@ -110,7 +111,6 @@ std::shared_ptr<cyHairFile> cmd::exec::findpenet(std::shared_ptr<cyHairFile> hai
             ofs << ss.str();
             log_info("Exported penetrating strands to {}", output_file);
         }
-        globals::json["findpenet"]["penetrating_strands"] = penetrating;
     } else {
         log_info("No penetrating strands found");
     }
