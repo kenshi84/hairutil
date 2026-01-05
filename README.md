@@ -166,6 +166,7 @@ $ hairutil resample --help
                                 (REQUIRED) Target segment length
       --linear-subdiv           Use linear subdivision
       --catmull-rom             Use centripetal Catmull-Rom interpolation
+      --cr-power=[R]            Power parameter for Catmull-Rom (default: 0.5)
 ```
 
 ### `smooth` command

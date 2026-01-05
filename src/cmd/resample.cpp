@@ -7,16 +7,18 @@ struct {
     float& target_segment_length = cmd::param::f("resample", "target_segment_length");
     bool& linear_subdiv = cmd::param::b("resample", "linear_subdiv");
     bool& catmull_rom = cmd::param::b("resample", "catmull_rom");
+    float& cr_power = cmd::param::f("resample", "cr_power");
 } param;
 }
 
 void cmd::parse::resample(args::Subparser &parser) {
     args::ValueFlag<float> target_segment_length(parser, "R", "(REQUIRED) Target segment length", {"target-segment-length", 'l'}, args::Options::Required);
     args::Flag linear_subdiv(parser, "linear-subdiv", "Use linear subdivision", {"linear-subdiv"});
-    args::Flag catmull_rom(parser, "catmull-rom", "Use centripetal Catmull-Rom interpolation", {"catmull-rom"});
+    args::Flag catmull_rom(parser, "catmull-rom", "Use parameterized Catmull-Rom interpolation", {"catmull-rom"});
+    args::ValueFlag<float> cr_power(parser, "R", "Power parameter for Catmull-Rom (default: 0.5)", {"cr-power"}, 0.5f);
     parser.Parse();
     globals::cmd_exec = cmd::exec::resample;
-    globals::output_file_wo_ext = [](){ return fmt::format("{}_resampled_tsl_{}{}", globals::input_file_wo_ext, ::param.target_segment_length, ::param.linear_subdiv ? "_ls" : ::param.catmull_rom ? "_cr" : ""); };
+    globals::output_file_wo_ext = [](){ return fmt::format("{}_resampled_tsl_{}{}", globals::input_file_wo_ext, ::param.target_segment_length, ::param.linear_subdiv ? "_ls" : ::param.catmull_rom ? fmt::format("_cr{}", ::param.cr_power) : ""); };
     globals::check_error = [](){
         if (::param.target_segment_length <= 0) {
             throw std::runtime_error(fmt::format("Invalid target segment length: {}", ::param.target_segment_length));
@@ -28,6 +30,7 @@ void cmd::parse::resample(args::Subparser &parser) {
     ::param.target_segment_length = *target_segment_length;
     ::param.linear_subdiv = linear_subdiv;
     ::param.catmull_rom = catmull_rom;
+    ::param.cr_power = *cr_power;
 }
 
 std::shared_ptr<cyHairFile> cmd::exec::resample(std::shared_ptr<cyHairFile> hairfile_in) {
@@ -64,10 +67,10 @@ std::shared_ptr<cyHairFile> cmd::exec::resample(std::shared_ptr<cyHairFile> hair
         }
 
         // Preparation for catmull-rom mode
-        std::vector<float> segment_length_sqrt;
-        std::transform(segment_length.begin(), segment_length.end(), std::back_inserter(segment_length_sqrt), [](float l) { return std::sqrt(l); });
+        std::vector<float> segment_length_pow;
+        std::transform(segment_length.begin(), segment_length.end(), std::back_inserter(segment_length_pow), [](float l) { return std::pow(l, ::param.cr_power); });
         std::vector<float> knots;
-        std::partial_sum(segment_length_sqrt.begin(), segment_length_sqrt.end(), std::back_inserter(knots));
+        std::partial_sum(segment_length_pow.begin(), segment_length_pow.end(), std::back_inserter(knots));
         knots.insert(knots.begin(), 0);
 
         if (::param.linear_subdiv || ::param.catmull_rom) {
