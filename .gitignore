@@ -48,5 +48,6 @@ test/data/Bangs_100_tfm_*.ply
 test/data/Bangs_100_tube.ply
 test/data/Bangs_20_decomposed_ply
 test/data/Bangs_20_decomposed_data
+test/data/catmull_rom_test*_resampled*
 test/data/out/
 .vscode/

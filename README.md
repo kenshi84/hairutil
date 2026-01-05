@@ -164,7 +164,8 @@ $ hairutil resample --help
 
       -l[R], --target-segment-length=[R]
                                 (REQUIRED) Target segment length
-      --linear-subdiv           Use linear subdivision mode
+      --linear-subdiv           Use linear subdivision
+      --catmull-rom             Use centripetal Catmull-Rom interpolation
 ```
 
 ### `smooth` command

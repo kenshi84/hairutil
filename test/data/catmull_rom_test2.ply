@@ -1,0 +1,26 @@
+ply
+format ascii 1.0
+element vertex 7
+property float x
+property float y
+property float z
+element strand 1
+property ushort nsegs
+element edge 6
+property int vertex1
+property int vertex2
+end_header
+105 357 0
+33 290 0
+302 28 0
+317 42 0
+535 346 0
+561 321 0
+600 81 0
+6
+0 1
+1 2
+2 3
+3 4
+4 5
+5 6

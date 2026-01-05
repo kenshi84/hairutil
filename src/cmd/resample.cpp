@@ -6,22 +6,28 @@ namespace {
 struct {
     float& target_segment_length = cmd::param::f("resample", "target_segment_length");
     bool& linear_subdiv = cmd::param::b("resample", "linear_subdiv");
+    bool& catmull_rom = cmd::param::b("resample", "catmull_rom");
 } param;
 }
 
 void cmd::parse::resample(args::Subparser &parser) {
     args::ValueFlag<float> target_segment_length(parser, "R", "(REQUIRED) Target segment length", {"target-segment-length", 'l'}, args::Options::Required);
-    args::Flag linear_subdiv(parser, "linear-subdiv", "Use linear subdivision mode", {"linear-subdiv"});
+    args::Flag linear_subdiv(parser, "linear-subdiv", "Use linear subdivision", {"linear-subdiv"});
+    args::Flag catmull_rom(parser, "catmull-rom", "Use centripetal Catmull-Rom interpolation", {"catmull-rom"});
     parser.Parse();
     globals::cmd_exec = cmd::exec::resample;
-    globals::output_file_wo_ext = [](){ return fmt::format("{}_resampled_tsl_{}{}", globals::input_file_wo_ext, ::param.target_segment_length, ::param.linear_subdiv ? "_ls" : ""); };
+    globals::output_file_wo_ext = [](){ return fmt::format("{}_resampled_tsl_{}{}", globals::input_file_wo_ext, ::param.target_segment_length, ::param.linear_subdiv ? "_ls" : ::param.catmull_rom ? "_cr" : ""); };
     globals::check_error = [](){
         if (::param.target_segment_length <= 0) {
             throw std::runtime_error(fmt::format("Invalid target segment length: {}", ::param.target_segment_length));
         }
+        if (::param.linear_subdiv && ::param.catmull_rom) {
+            throw std::runtime_error("Cannot use --linear-subdiv and --catmull-rom simultaneously.");
+        }
     };
     ::param.target_segment_length = *target_segment_length;
     ::param.linear_subdiv = linear_subdiv;
+    ::param.catmull_rom = catmull_rom;
 }
 
 std::shared_ptr<cyHairFile> cmd::exec::resample(std::shared_ptr<cyHairFile> hairfile_in) {
@@ -57,7 +63,14 @@ std::shared_ptr<cyHairFile> cmd::exec::resample(std::shared_ptr<cyHairFile> hair
             segment_length[j] = (p1 - p0).norm();
         }
 
-        if (::param.linear_subdiv) {
+        // Preparation for catmull-rom mode
+        std::vector<float> segment_length_sqrt;
+        std::transform(segment_length.begin(), segment_length.end(), std::back_inserter(segment_length_sqrt), [](float l) { return std::sqrt(l); });
+        std::vector<float> knots;
+        std::partial_sum(segment_length_sqrt.begin(), segment_length_sqrt.end(), std::back_inserter(knots));
+        knots.insert(knots.begin(), 0);
+
+        if (::param.linear_subdiv || ::param.catmull_rom) {
             std::vector<unsigned int> num_subsegments_per_segment(num_segments);
             for (unsigned int j : j_range) {
                 num_subsegments_per_segment[j] = (unsigned int)std::ceil(segment_length[j] / ::param.target_segment_length);
@@ -90,27 +103,104 @@ std::shared_ptr<cyHairFile> cmd::exec::resample(std::shared_ptr<cyHairFile> hair
                     if (has_color) color_per_strand[i].insert(color_per_strand[i].end(), color0->data(), color0->data() + 3);
                 }
 
+                // Preparation for linear-subdiv mode
                 const Vector3f delta_point = (point1 - point0) / num_subsegments_per_segment[j];
-
                 const std::optional<float> delta_thickness = has_thickness ? std::optional<float>((*thickness1 - *thickness0) / num_subsegments_per_segment[j]) : std::nullopt;
                 const std::optional<float> delta_transparency = has_transparency ? std::optional<float>((*transparency1 - *transparency0) / num_subsegments_per_segment[j]) : std::nullopt;
                 const std::optional<Vector3f> delta_color = has_color ? std::optional<Vector3f>((*color1 - *color0) / num_subsegments_per_segment[j]) : std::nullopt;
-
                 Vector3f curr_point = point0;
                 std::optional<float> curr_thickness = thickness0;
                 std::optional<float> curr_transparency = transparency0;
                 std::optional<Vector3f> curr_color = color0;
 
-                for (unsigned int k = 0; k < num_subsegments_per_segment[j]; ++k) {
-                    curr_point += delta_point;
-                    if (has_thickness) *curr_thickness += *delta_thickness;
-                    if (has_transparency) *curr_transparency += *delta_transparency;
-                    if (has_color) *curr_color += *delta_color;
+                auto cr_interpolate_1f = [&offset, &num_segments, &knots, &j](const float t, float * const array) -> float {
+                    const float t0 = (j == 0) ? -knots[1] : knots[j - 1];
+                    const float t1 = knots[j];
+                    const float t2 = knots[j + 1];
+                    const float t3 = (j == num_segments - 1) ? (2 * knots[j + 1] - knots[j]) : knots[j + 2];
+                    const float p1 = array[offset + j];
+                    const float p2 = array[offset + j + 1];
+                    const float p0 = (j == 0) ? 2 * p1 - p2 : array[offset + j - 1];
+                    const float p3 = (j == num_segments - 1) ? 2 * p2 - p1 : array[offset + j + 2];
+                    const float A1 = (t1 - t) / (t1 - t0) * p0 + (t - t0) / (t1 - t0) * p1;
+                    const float A2 = (t2 - t) / (t2 - t1) * p1 + (t - t1) / (t2 - t1) * p2;
+                    const float A3 = (t3 - t) / (t3 - t2) * p2 + (t - t2) / (t3 - t2) * p3;
+                    const float B1 = (t2 - t) / (t2 - t0) * A1 + (t - t0) / (t2 - t0) * A2;
+                    const float B2 = (t3 - t) / (t3 - t1) * A2 + (t - t1) / (t3 - t1) * A3;
+                    const float C = (t2 - t) / (t2 - t1) * B1 + (t - t1) / (t2 - t1) * B2;
+                    return C;                    
+                };
+                auto cr_interpolate_3f = [&offset, &num_segments, &knots, &j](const float t, float * const array) -> Vector3f {
+                    const float t0 = (j == 0) ? -knots[1] : knots[j - 1];
+                    const float t1 = knots[j];
+                    const float t2 = knots[j + 1];
+                    const float t3 = (j == num_segments - 1) ? (2 * knots[j + 1] - knots[j]) : knots[j + 2];
+                    const Vector3f p1 = Map<Vector3f>(array + 3 * (offset + j));
+                    const Vector3f p2 = Map<Vector3f>(array + 3 * (offset + j + 1));
+                    const Vector3f p0 = (j == 0) ? Vector3f(2 * p1 - p2) : Map<Vector3f>(array + 3 * (offset + j - 1));
+                    const Vector3f p3 = (j == num_segments - 1) ? Vector3f(2 * p2 - p1) : Map<Vector3f>(array + 3 * (offset + j + 2));
+                    const Vector3f A1 = (t1 - t) / (t1 - t0) * p0 + (t - t0) / (t1 - t0) * p1;
+                    const Vector3f A2 = (t2 - t) / (t2 - t1) * p1 + (t - t1) / (t2 - t1) * p2;
+                    const Vector3f A3 = (t3 - t) / (t3 - t2) * p2 + (t - t2) / (t3 - t2) * p3;
+                    const Vector3f B1 = (t2 - t) / (t2 - t0) * A1 + (t - t0) / (t2 - t0) * A2;
+                    const Vector3f B2 = (t3 - t) / (t3 - t1) * A2 + (t - t1) / (t3 - t1) * A3;
+                    const Vector3f C = (t2 - t) / (t2 - t1) * B1 + (t - t1) / (t2 - t1) * B2;
+                    return C;
+                };
+                auto cr_dsdt = [&offset, &num_segments, &knots, &j](float t, float * const points_array) -> float {
+                    const float t0 = (j == 0) ? -knots[1] : knots[j - 1];
+                    const float t1 = knots[j];
+                    const float t2 = knots[j + 1];
+                    const float t3 = (j == num_segments - 1) ? (2 * knots[j + 1] - knots[j]) : knots[j + 2];
+                    const Vector3f p1 = Map<Vector3f>(points_array + 3 * (offset + j));
+                    const Vector3f p2 = Map<Vector3f>(points_array + 3 * (offset + j + 1));
+                    const Vector3f p0 = (j == 0) ? Vector3f(2 * p1 - p2) : Map<Vector3f>(points_array + 3 * (offset + j - 1));
+                    const Vector3f p3 = (j == num_segments - 1) ? Vector3f(2 * p2 - p1) : Map<Vector3f>(points_array + 3 * (offset + j + 2));
+                    const Vector3f A1 = (t1 - t) / (t1 - t0) * p0 + (t - t0) / (t1 - t0) * p1;
+                    const Vector3f A2 = (t2 - t) / (t2 - t1) * p1 + (t - t1) / (t2 - t1) * p2;
+                    const Vector3f A3 = (t3 - t) / (t3 - t2) * p2 + (t - t2) / (t3 - t2) * p3;
+                    const Vector3f B1 = (t2 - t) / (t2 - t0) * A1 + (t - t0) / (t2 - t0) * A2;
+                    const Vector3f B2 = (t3 - t) / (t3 - t1) * A2 + (t - t1) / (t3 - t1) * A3;
+                    const Vector3f dA1_dt = -1.f / (t1 - t0) * p0 + 1.f / (t1 - t0) * p1;
+                    const Vector3f dA2_dt = -1.f / (t2 - t1) * p1 + 1.f / (t2 - t1) * p2;
+                    const Vector3f dA3_dt = -1.f / (t3 - t2) * p2 + 1.f / (t3 - t2) * p3;
+                    const Vector3f dB1_dt = -1.f / (t2 - t0) * A1 + 1.f / (t2 - t0) * A2 + (t2 - t) / (t2 - t0) * dA1_dt + (t - t0) / (t2 - t0) * dA2_dt;
+                    const Vector3f dB2_dt = -1.f / (t3 - t1) * A2 + 1.f / (t3 - t1) * A3 + (t3 - t) / (t3 - t1) * dA2_dt + (t - t1) / (t3 - t1) * dA3_dt;
+                    const Vector3f dC_dt = -1.f / (t2 - t1) * B1 + 1.f / (t2 - t1) * B2 + (t2 - t) / (t2 - t1) * dB1_dt + (t - t1) / (t2 - t1) * dB2_dt;
+                    return dC_dt.norm();
+                };
 
-                    points_per_strand[i].insert(points_per_strand[i].end(), curr_point.data(), curr_point.data() + 3);
-                    if (has_thickness) thickness_per_strand[i].push_back(*curr_thickness);
-                    if (has_transparency) transparency_per_strand[i].push_back(*curr_transparency);
-                    if (has_color) color_per_strand[i].insert(color_per_strand[i].end(), curr_color->data(), curr_color->data() + 3);
+                if (::param.linear_subdiv) {
+                    for (unsigned int k = 0; k < num_subsegments_per_segment[j]; ++k) {
+                        curr_point += delta_point;
+                        points_per_strand[i].insert(points_per_strand[i].end(), curr_point.data(), curr_point.data() + 3);
+                        if (has_thickness) thickness_per_strand[i].push_back(*curr_thickness += *delta_thickness);
+                        if (has_transparency) transparency_per_strand[i].push_back(*curr_transparency += *delta_transparency);
+                        if (has_color) {
+                            *curr_color += *delta_color;
+                            color_per_strand[i].insert(color_per_strand[i].end(), curr_color->data(), curr_color->data() + 3);
+                        }
+                    }
+                } else {
+                    float t = knots[j];
+                    while (true) {
+                        const float dsdt = cr_dsdt(t, hairfile_in->GetPointsArray());
+                        const float dt = ::param.target_segment_length / dsdt;
+                        t += dt;
+                        if (t >= knots[j + 1]) break;
+                        curr_point = cr_interpolate_3f(t, hairfile_in->GetPointsArray());
+                        points_per_strand[i].insert(points_per_strand[i].end(), curr_point.data(), curr_point.data() + 3);
+                        if (has_thickness) thickness_per_strand[i].push_back(cr_interpolate_1f(t, hairfile_in->GetThicknessArray()));
+                        if (has_transparency) transparency_per_strand[i].push_back(cr_interpolate_1f(t, hairfile_in->GetTransparencyArray()));
+                        if (has_color) {
+                            *curr_color = cr_interpolate_3f(t, hairfile_in->GetColorsArray());
+                            color_per_strand[i].insert(color_per_strand[i].end(), curr_color->data(), curr_color->data() + 3);
+                        }
+                    }
+                    points_per_strand[i].insert(points_per_strand[i].end(), point1.data(), point1.data() + 3);
+                    if (has_thickness) thickness_per_strand[i].push_back(*thickness1);
+                    if (has_transparency) transparency_per_strand[i].push_back(*transparency1);
+                    if (has_color) color_per_strand[i].insert(color_per_strand[i].end(), color1->data(), color1->data() + 3);
                 }
             }
         } else {

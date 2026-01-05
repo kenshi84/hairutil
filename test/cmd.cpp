@@ -288,6 +288,48 @@ TEST(cmd_resample, linear_subdiv) {
     EXPECT_EQ(test_main(args.size(), args.data()), 0);
 }
 
+TEST(cmd_resample, catmull_rom_1) {
+    std::vector<const char*> args = {
+        "test_cmd",
+        "resample",
+        "-i", TEST_DATA_DIR "/catmull_rom_test1.ply",
+        "--ply-save-ascii",
+        "--target-segment-length", "5.0",
+        "--overwrite",
+        "--catmull-rom",
+    };
+    globals::clear();
+    EXPECT_EQ(test_main(args.size(), args.data()), 0);
+}
+
+TEST(cmd_resample, catmull_rom_2) {
+    std::vector<const char*> args = {
+        "test_cmd",
+        "resample",
+        "-i", TEST_DATA_DIR "/catmull_rom_test2.ply",
+        "--ply-save-ascii",
+        "--target-segment-length", "2.0",
+        "--overwrite",
+        "--catmull-rom",
+    };
+    globals::clear();
+    EXPECT_EQ(test_main(args.size(), args.data()), 0);
+}
+
+TEST(cmd_resample, conflict_linear_catmull) {
+    std::vector<const char*> args = {
+        "test_cmd",
+        "resample",
+        "-i", TEST_DATA_DIR "/Bangs_100.bin",
+        "--target-segment-length", "5.0",
+        "--overwrite",
+        "--catmull-rom",
+        "--linear-subdiv",
+    };
+    globals::clear();
+    EXPECT_EQ(test_main(args.size(), args.data()), 1);
+}
+
 TEST(cmd_smooth, Bangs_100_ply) {
     std::vector<const char*> args = {
         "test_cmd",
