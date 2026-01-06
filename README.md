@@ -163,7 +163,7 @@ $ hairutil resample --help
   OPTIONS:
 
       -l[R], --target-segment-length=[R]
-                                (REQUIRED) Target segment length
+                                (REQUIRED) Target segment length (0 uses average segment length)
       --linear-subdiv           Use linear subdivision
       --catmull-rom             Use centripetal Catmull-Rom interpolation
       --cr-power=[R]            Power parameter for Catmull-Rom (default: 0.5)

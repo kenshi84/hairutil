@@ -151,7 +151,7 @@ std::pair<Vector3f, Vector3f> c2i_interpolate(const Circle& curve1, const Circle
 }
 
 void cmd::parse::resample(args::Subparser &parser) {
-    args::ValueFlag<float> target_segment_length(parser, "R", "(REQUIRED) Target segment length", {"target-segment-length", 'l'}, args::Options::Required);
+    args::ValueFlag<float> target_segment_length(parser, "R", "(REQUIRED) Target segment length (0 uses average segment length)", {"target-segment-length", 'l'}, args::Options::Required);
     args::Flag linear_subdiv(parser, "linear-subdiv", "Use linear subdivision", {"linear-subdiv"});
     args::Flag catmull_rom(parser, "catmull-rom", "Use parameterized Catmull-Rom interpolation", {"catmull-rom"});
     args::ValueFlag<float> cr_power(parser, "R", "Power parameter for Catmull-Rom (default: 0.5)", {"cr-power"}, 0.5f);
@@ -160,8 +160,11 @@ void cmd::parse::resample(args::Subparser &parser) {
     globals::cmd_exec = cmd::exec::resample;
     globals::output_file_wo_ext = [](){ return fmt::format("{}_resampled_tsl_{}{}", globals::input_file_wo_ext, ::param.target_segment_length, ::param.linear_subdiv ? "_ls" : ::param.catmull_rom ? fmt::format("_cr{}", ::param.cr_power) : ""); };
     globals::check_error = [](){
-        if (::param.target_segment_length <= 0) {
+        if (::param.target_segment_length < 0) {
             throw std::runtime_error(fmt::format("Invalid target segment length: {}", ::param.target_segment_length));
+        }
+        if (::param.target_segment_length == 0 && (::param.linear_subdiv || ::param.catmull_rom || ::param.c2_interp)) {
+            throw std::runtime_error("When --target-segment-length is 0, none of --linear-subdiv, --catmull-rom, or --c2-interp can be specified.");
         }
         if (::param.linear_subdiv + ::param.catmull_rom + ::param.c2_interp > 1) {
             throw std::runtime_error("Flags --linear-subdiv and --catmull-rom simultaneously and --c2-interp are mutually exclusive.");
@@ -368,7 +371,7 @@ std::shared_ptr<cyHairFile> cmd::exec::resample(std::shared_ptr<cyHairFile> hair
         } else {
             const unsigned int num_points = num_segments + 1;
             const double total_length = std::accumulate(segment_length.begin(), segment_length.end(), 0.0);
-            const unsigned int target_num_points = static_cast<unsigned int>(std::ceil(total_length / ::param.target_segment_length)) + 1;
+            const unsigned int target_num_points = ::param.target_segment_length ? static_cast<unsigned int>(std::ceil(total_length / ::param.target_segment_length)) + 1 : num_points;
 
             auto append_point = [&](const Vector3f& point,
                                     const std::optional<float>& thickness,

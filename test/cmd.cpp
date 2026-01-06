@@ -274,6 +274,33 @@ TEST(cmd_resample, bin_to_ply) {
     EXPECT_EQ(test_main(args.size(), args.data()), 0);
 }
 
+TEST(cmd_resample, tsl_0) {
+    std::vector<const char*> args = {
+        "test_cmd",
+        "resample",
+        "-i", TEST_DATA_DIR "/Bangs_100.bin",
+        "-o", "ply",
+        "--target-segment-length", "0",
+        "--overwrite",
+    };
+    globals::clear();
+    EXPECT_EQ(test_main(args.size(), args.data()), 0);
+}
+
+TEST(cmd_resample, tsl_0_invalid) {
+    std::vector<const char*> args = {
+        "test_cmd",
+        "resample",
+        "-i", TEST_DATA_DIR "/Bangs_100.bin",
+        "-o", "ply",
+        "--target-segment-length", "0",
+        "--overwrite",
+        "--linear-subdiv",
+    };
+    globals::clear();
+    EXPECT_EQ(test_main(args.size(), args.data()), 1);
+}
+
 TEST(cmd_resample, linear_subdiv) {
     std::vector<const char*> args = {
         "test_cmd",

@@ -41,7 +41,7 @@ test/data/Bangs_100_cvtr.hdf5
 test/data/Bangs_100_filtered_length_geq_174.96289*
 test/data/Bangs_100_indices_0_4_32_36_65.ply
 test/data/Bangs_100_indices_10.ply
-test/data/Bangs_100_resampled_tsl_2*.ply
+test/data/Bangs_100_resampled_*.ply
 test/data/Bangs_100_smoothed_λ_1.*
 test/data/Bangs_100_stats.xlsx
 test/data/Bangs_100_tfm_*.ply
