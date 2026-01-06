@@ -9,6 +9,15 @@ struct {
     bool& catmull_rom = cmd::param::b("resample", "catmull_rom");
     float& cr_power = cmd::param::f("resample", "cr_power");
 } param;
+template <typename T>
+inline T lerp(const T& a, const T& b, float t) {
+    return (1.0f - t) * a + t * b;
+}
+void push_back_3f(std::vector<float>& vec, const Vector3f& v) {
+    vec.push_back(v[0]);
+    vec.push_back(v[1]);
+    vec.push_back(v[2]);
+}
 }
 
 void cmd::parse::resample(args::Subparser &parser) {
@@ -100,110 +109,79 @@ std::shared_ptr<cyHairFile> cmd::exec::resample(std::shared_ptr<cyHairFile> hair
 
                 // Add first point
                 if (j == 0) {
-                    points_per_strand[i].insert(points_per_strand[i].end(), point0.data(), point0.data() + 3);
+                    push_back_3f(points_per_strand[i], point0);
                     if (has_thickness) thickness_per_strand[i].push_back(*thickness0);
                     if (has_transparency) transparency_per_strand[i].push_back(*transparency0);
-                    if (has_color) color_per_strand[i].insert(color_per_strand[i].end(), color0->data(), color0->data() + 3);
+                    if (has_color) push_back_3f(color_per_strand[i], *color0);
                 }
 
-                // Preparation for linear-subdiv mode
-                const Vector3f delta_point = (point1 - point0) / num_subsegments_per_segment[j];
-                const std::optional<float> delta_thickness = has_thickness ? std::optional<float>((*thickness1 - *thickness0) / num_subsegments_per_segment[j]) : std::nullopt;
-                const std::optional<float> delta_transparency = has_transparency ? std::optional<float>((*transparency1 - *transparency0) / num_subsegments_per_segment[j]) : std::nullopt;
-                const std::optional<Vector3f> delta_color = has_color ? std::optional<Vector3f>((*color1 - *color0) / num_subsegments_per_segment[j]) : std::nullopt;
-                Vector3f curr_point = point0;
-                std::optional<float> curr_thickness = thickness0;
-                std::optional<float> curr_transparency = transparency0;
-                std::optional<Vector3f> curr_color = color0;
-
-                auto cr_interpolate_1f = [&offset, &num_segments, &knots, &j](const float t, float * const array) -> float {
-                    const float t0 = (j == 0) ? -knots[1] : knots[j - 1];
-                    const float t1 = knots[j];
-                    const float t2 = knots[j + 1];
-                    const float t3 = (j == num_segments - 1) ? (2 * knots[j + 1] - knots[j]) : knots[j + 2];
-                    const float p1 = array[offset + j];
-                    const float p2 = array[offset + j + 1];
-                    const float p0 = (j == 0) ? 2 * p1 - p2 : array[offset + j - 1];
-                    const float p3 = (j == num_segments - 1) ? 2 * p2 - p1 : array[offset + j + 2];
-                    const float A1 = (t1 - t) / (t1 - t0) * p0 + (t - t0) / (t1 - t0) * p1;
-                    const float A2 = (t2 - t) / (t2 - t1) * p1 + (t - t1) / (t2 - t1) * p2;
-                    const float A3 = (t3 - t) / (t3 - t2) * p2 + (t - t2) / (t3 - t2) * p3;
-                    const float B1 = (t2 - t) / (t2 - t0) * A1 + (t - t0) / (t2 - t0) * A2;
-                    const float B2 = (t3 - t) / (t3 - t1) * A2 + (t - t1) / (t3 - t1) * A3;
-                    const float C = (t2 - t) / (t2 - t1) * B1 + (t - t1) / (t2 - t1) * B2;
-                    return C;                    
-                };
-                auto cr_interpolate_3f = [&offset, &num_segments, &knots, &j](const float t, float * const array) -> Vector3f {
-                    const float t0 = (j == 0) ? -knots[1] : knots[j - 1];
-                    const float t1 = knots[j];
-                    const float t2 = knots[j + 1];
-                    const float t3 = (j == num_segments - 1) ? (2 * knots[j + 1] - knots[j]) : knots[j + 2];
-                    const Vector3f p1 = Map<Vector3f>(array + 3 * (offset + j));
-                    const Vector3f p2 = Map<Vector3f>(array + 3 * (offset + j + 1));
-                    const Vector3f p0 = (j == 0) ? Vector3f(2 * p1 - p2) : Map<Vector3f>(array + 3 * (offset + j - 1));
-                    const Vector3f p3 = (j == num_segments - 1) ? Vector3f(2 * p2 - p1) : Map<Vector3f>(array + 3 * (offset + j + 2));
-                    const Vector3f A1 = (t1 - t) / (t1 - t0) * p0 + (t - t0) / (t1 - t0) * p1;
-                    const Vector3f A2 = (t2 - t) / (t2 - t1) * p1 + (t - t1) / (t2 - t1) * p2;
-                    const Vector3f A3 = (t3 - t) / (t3 - t2) * p2 + (t - t2) / (t3 - t2) * p3;
-                    const Vector3f B1 = (t2 - t) / (t2 - t0) * A1 + (t - t0) / (t2 - t0) * A2;
-                    const Vector3f B2 = (t3 - t) / (t3 - t1) * A2 + (t - t1) / (t3 - t1) * A3;
-                    const Vector3f C = (t2 - t) / (t2 - t1) * B1 + (t - t1) / (t2 - t1) * B2;
-                    return C;
-                };
-                auto cr_dsdt = [&offset, &num_segments, &knots, &j](float t, float * const points_array) -> float {
-                    const float t0 = (j == 0) ? -knots[1] : knots[j - 1];
-                    const float t1 = knots[j];
-                    const float t2 = knots[j + 1];
-                    const float t3 = (j == num_segments - 1) ? (2 * knots[j + 1] - knots[j]) : knots[j + 2];
-                    const Vector3f p1 = Map<Vector3f>(points_array + 3 * (offset + j));
-                    const Vector3f p2 = Map<Vector3f>(points_array + 3 * (offset + j + 1));
-                    const Vector3f p0 = (j == 0) ? Vector3f(2 * p1 - p2) : Map<Vector3f>(points_array + 3 * (offset + j - 1));
-                    const Vector3f p3 = (j == num_segments - 1) ? Vector3f(2 * p2 - p1) : Map<Vector3f>(points_array + 3 * (offset + j + 2));
-                    const Vector3f A1 = (t1 - t) / (t1 - t0) * p0 + (t - t0) / (t1 - t0) * p1;
-                    const Vector3f A2 = (t2 - t) / (t2 - t1) * p1 + (t - t1) / (t2 - t1) * p2;
-                    const Vector3f A3 = (t3 - t) / (t3 - t2) * p2 + (t - t2) / (t3 - t2) * p3;
-                    const Vector3f B1 = (t2 - t) / (t2 - t0) * A1 + (t - t0) / (t2 - t0) * A2;
-                    const Vector3f B2 = (t3 - t) / (t3 - t1) * A2 + (t - t1) / (t3 - t1) * A3;
-                    const Vector3f dA1_dt = -1.f / (t1 - t0) * p0 + 1.f / (t1 - t0) * p1;
-                    const Vector3f dA2_dt = -1.f / (t2 - t1) * p1 + 1.f / (t2 - t1) * p2;
-                    const Vector3f dA3_dt = -1.f / (t3 - t2) * p2 + 1.f / (t3 - t2) * p3;
-                    const Vector3f dB1_dt = -1.f / (t2 - t0) * A1 + 1.f / (t2 - t0) * A2 + (t2 - t) / (t2 - t0) * dA1_dt + (t - t0) / (t2 - t0) * dA2_dt;
-                    const Vector3f dB2_dt = -1.f / (t3 - t1) * A2 + 1.f / (t3 - t1) * A3 + (t3 - t) / (t3 - t1) * dA2_dt + (t - t1) / (t3 - t1) * dA3_dt;
-                    const Vector3f dC_dt = -1.f / (t2 - t1) * B1 + 1.f / (t2 - t1) * B2 + (t2 - t) / (t2 - t1) * dB1_dt + (t - t1) / (t2 - t1) * dB2_dt;
-                    return dC_dt.norm();
-                };
-
-                if (::param.linear_subdiv) {
+                if (::param.linear_subdiv || num_segments == 1) {
                     for (unsigned int k = 0; k < num_subsegments_per_segment[j]; ++k) {
-                        curr_point += delta_point;
-                        points_per_strand[i].insert(points_per_strand[i].end(), curr_point.data(), curr_point.data() + 3);
-                        if (has_thickness) thickness_per_strand[i].push_back(*curr_thickness += *delta_thickness);
-                        if (has_transparency) transparency_per_strand[i].push_back(*curr_transparency += *delta_transparency);
-                        if (has_color) {
-                            *curr_color += *delta_color;
-                            color_per_strand[i].insert(color_per_strand[i].end(), curr_color->data(), curr_color->data() + 3);
-                        }
+                        const float t = (k + 1) / (float)num_subsegments_per_segment[j];
+                        push_back_3f(points_per_strand[i], lerp(point0, point1, t));
+                        if (has_thickness) thickness_per_strand[i].push_back(lerp(*thickness0, *thickness1, t));
+                        if (has_transparency) transparency_per_strand[i].push_back(lerp(*transparency0, *transparency1, t));
+                        if (has_color) push_back_3f(color_per_strand[i], lerp(*color0, *color1, t));
                     }
-                } else {
+                } else if (::param.catmull_rom) {
+                    auto cr_interpolate_1f = [&offset, &num_segments, &knots, &j](const float t, float * const array) -> float {
+                        const float t0 = (j == 0) ? -knots[1] : knots[j - 1];
+                        const float t1 = knots[j];
+                        const float t2 = knots[j + 1];
+                        const float t3 = (j == num_segments - 1) ? (2 * knots[j + 1] - knots[j]) : knots[j + 2];
+                        const float p1 = array[offset + j];
+                        const float p2 = array[offset + j + 1];
+                        const float p0 = (j == 0) ? 2 * p1 - p2 : array[offset + j - 1];
+                        const float p3 = (j == num_segments - 1) ? 2 * p2 - p1 : array[offset + j + 2];
+                        const float A1 = (t1 - t) / (t1 - t0) * p0 + (t - t0) / (t1 - t0) * p1;
+                        const float A2 = (t2 - t) / (t2 - t1) * p1 + (t - t1) / (t2 - t1) * p2;
+                        const float A3 = (t3 - t) / (t3 - t2) * p2 + (t - t2) / (t3 - t2) * p3;
+                        const float B1 = (t2 - t) / (t2 - t0) * A1 + (t - t0) / (t2 - t0) * A2;
+                        const float B2 = (t3 - t) / (t3 - t1) * A2 + (t - t1) / (t3 - t1) * A3;
+                        const float C = (t2 - t) / (t2 - t1) * B1 + (t - t1) / (t2 - t1) * B2;
+                        return C;                    
+                    };
+                    auto cr_interpolate_3f = [&offset, &num_segments, &knots, &j](const float t, float * const array) -> std::pair<Vector3f, Vector3f> {
+                        const float t0 = (j == 0) ? -knots[1] : knots[j - 1];
+                        const float t1 = knots[j];
+                        const float t2 = knots[j + 1];
+                        const float t3 = (j == num_segments - 1) ? (2 * knots[j + 1] - knots[j]) : knots[j + 2];
+                        const Vector3f p1 = Map<Vector3f>(array + 3 * (offset + j));
+                        const Vector3f p2 = Map<Vector3f>(array + 3 * (offset + j + 1));
+                        const Vector3f p0 = (j == 0) ? Vector3f(2 * p1 - p2) : Map<Vector3f>(array + 3 * (offset + j - 1));
+                        const Vector3f p3 = (j == num_segments - 1) ? Vector3f(2 * p2 - p1) : Map<Vector3f>(array + 3 * (offset + j + 2));
+                        const Vector3f A1 = (t1 - t) / (t1 - t0) * p0 + (t - t0) / (t1 - t0) * p1;
+                        const Vector3f A2 = (t2 - t) / (t2 - t1) * p1 + (t - t1) / (t2 - t1) * p2;
+                        const Vector3f A3 = (t3 - t) / (t3 - t2) * p2 + (t - t2) / (t3 - t2) * p3;
+                        const Vector3f B1 = (t2 - t) / (t2 - t0) * A1 + (t - t0) / (t2 - t0) * A2;
+                        const Vector3f B2 = (t3 - t) / (t3 - t1) * A2 + (t - t1) / (t3 - t1) * A3;
+                        const Vector3f C = (t2 - t) / (t2 - t1) * B1 + (t - t1) / (t2 - t1) * B2;
+                        const Vector3f dA1_dt = -1.f / (t1 - t0) * p0 + 1.f / (t1 - t0) * p1;
+                        const Vector3f dA2_dt = -1.f / (t2 - t1) * p1 + 1.f / (t2 - t1) * p2;
+                        const Vector3f dA3_dt = -1.f / (t3 - t2) * p2 + 1.f / (t3 - t2) * p3;
+                        const Vector3f dB1_dt = -1.f / (t2 - t0) * A1 + 1.f / (t2 - t0) * A2 + (t2 - t) / (t2 - t0) * dA1_dt + (t - t0) / (t2 - t0) * dA2_dt;
+                        const Vector3f dB2_dt = -1.f / (t3 - t1) * A2 + 1.f / (t3 - t1) * A3 + (t3 - t) / (t3 - t1) * dA2_dt + (t - t1) / (t3 - t1) * dA3_dt;
+                        const Vector3f dC_dt = -1.f / (t2 - t1) * B1 + 1.f / (t2 - t1) * B2 + (t2 - t) / (t2 - t1) * dB1_dt + (t - t1) / (t2 - t1) * dB2_dt;
+                        return {C, dC_dt};
+                    };
                     float t = knots[j];
+                    float dsdt = cr_interpolate_3f(t, hairfile_in->GetPointsArray()).second.norm();
                     while (true) {
-                        const float dsdt = cr_dsdt(t, hairfile_in->GetPointsArray());
                         const float dt = ::param.target_segment_length / dsdt;
                         t += dt;
                         if (t >= knots[j + 1]) break;
-                        curr_point = cr_interpolate_3f(t, hairfile_in->GetPointsArray());
-                        points_per_strand[i].insert(points_per_strand[i].end(), curr_point.data(), curr_point.data() + 3);
+                        Vector3f p, dp;
+                        std::tie(p, dp) = cr_interpolate_3f(t, hairfile_in->GetPointsArray());
+                        dsdt = dp.norm();
+                        push_back_3f(points_per_strand[i], p);
                         if (has_thickness) thickness_per_strand[i].push_back(cr_interpolate_1f(t, hairfile_in->GetThicknessArray()));
                         if (has_transparency) transparency_per_strand[i].push_back(cr_interpolate_1f(t, hairfile_in->GetTransparencyArray()));
-                        if (has_color) {
-                            *curr_color = cr_interpolate_3f(t, hairfile_in->GetColorsArray());
-                            color_per_strand[i].insert(color_per_strand[i].end(), curr_color->data(), curr_color->data() + 3);
-                        }
+                        if (has_color) push_back_3f(color_per_strand[i], cr_interpolate_3f(t, hairfile_in->GetColorsArray()).first);
                     }
-                    points_per_strand[i].insert(points_per_strand[i].end(), point1.data(), point1.data() + 3);
+                    push_back_3f(points_per_strand[i], point1);
                     if (has_thickness) thickness_per_strand[i].push_back(*thickness1);
                     if (has_transparency) transparency_per_strand[i].push_back(*transparency1);
-                    if (has_color) color_per_strand[i].insert(color_per_strand[i].end(), color1->data(), color1->data() + 3);
+                    if (has_color) push_back_3f(color_per_strand[i], *color1);
                 }
             }
         } else {
@@ -215,10 +193,10 @@ std::shared_ptr<cyHairFile> cmd::exec::resample(std::shared_ptr<cyHairFile> hair
                                     const std::optional<float>& thickness,
                                     const std::optional<float>& transparency,
                                     const std::optional<Vector3f>& color) {
-                points_per_strand[i].insert(points_per_strand[i].end(), point.data(), point.data() + 3);
+                push_back_3f(points_per_strand[i], point);
                 if (has_thickness) thickness_per_strand[i].push_back(*thickness);
                 if (has_transparency) transparency_per_strand[i].push_back(*transparency);
-                if (has_color) color_per_strand[i].insert(color_per_strand[i].end(), color->data(), color->data() + 3);
+                if (has_color) push_back_3f(color_per_strand[i], *color);
             };
 
             auto append_point_at = [&](unsigned int point_index) {
