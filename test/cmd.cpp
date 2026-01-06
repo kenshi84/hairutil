@@ -346,6 +346,48 @@ TEST(cmd_resample, catmull_rom_2) {
     EXPECT_EQ(test_main(args.size(), args.data()), 0);
 }
 
+TEST(cmd_resample, c2_interp_1) {
+    std::vector<const char*> args = {
+        "test_cmd",
+        "resample",
+        "-i", TEST_DATA_DIR "/c2_interp_test1.ply",
+        "--ply-save-ascii",
+        "--target-segment-length", "2.0",
+        "--overwrite",
+        "--c2-interp",
+    };
+    globals::clear();
+    EXPECT_EQ(test_main(args.size(), args.data()), 0);
+}
+
+TEST(cmd_resample, c2_interp_2) {
+    std::vector<const char*> args = {
+        "test_cmd",
+        "resample",
+        "-i", TEST_DATA_DIR "/c2_interp_test2.ply",
+        "--ply-save-ascii",
+        "--target-segment-length", "2.0",
+        "--overwrite",
+        "--c2-interp",
+    };
+    globals::clear();
+    EXPECT_EQ(test_main(args.size(), args.data()), 0);
+}
+
+TEST(cmd_resample, c2_interp_3) {
+    std::vector<const char*> args = {
+        "test_cmd",
+        "resample",
+        "-i", TEST_DATA_DIR "/c2_interp_test3.ply",
+        "--ply-save-ascii",
+        "--target-segment-length", "2.0",
+        "--overwrite",
+        "--c2-interp",
+    };
+    globals::clear();
+    EXPECT_EQ(test_main(args.size(), args.data()), 0);
+}
+
 TEST(cmd_resample, conflict_linear_catmull) {
     std::vector<const char*> args = {
         "test_cmd",

@@ -3,6 +3,7 @@
 
 namespace globals {
     const float pi = std::acos(-1.0f);
+    const float pi_2 = pi / 2.0f;
 
     // Given as command line arguments
     std::string input_file;

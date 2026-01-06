@@ -167,6 +167,7 @@ $ hairutil resample --help
       --linear-subdiv           Use linear subdivision
       --catmull-rom             Use centripetal Catmull-Rom interpolation
       --cr-power=[R]            Power parameter for Catmull-Rom (default: 0.5)
+      --c2-interp               Use hybrid C2-interpolating spline
 ```
 
 ### `smooth` command

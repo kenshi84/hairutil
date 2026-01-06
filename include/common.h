@@ -32,6 +32,7 @@
 
 namespace globals {
     extern const float pi;
+    extern const float pi_2;
 
     // Given as command line arguments
     extern std::string input_file;
