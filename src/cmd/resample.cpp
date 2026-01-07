@@ -108,9 +108,10 @@ Circle c2i_getEllipse(const Vector3f& p_prev, const Vector3f& p_curr, const Vect
         pt2 = p_prev;
     }
     Vector3f dir = vec / len;
-    Vector3f n = vec1.cross(vec2).normalized();
+    Vector3f vec1_cross_vec2 = vec1.cross(vec2);
+    Vector3f n = vec1_cross_vec2 / std::max(vec1_cross_vec2.norm(), 0.0001f);
     Vector3f perp = n.cross(dir);
-    float cross = vec1.cross(vec2).dot(n);
+    float cross = vec1_cross_vec2.dot(n);
     if ((len1 < len2 && cross > 0) || (len1 >= len2 && cross < 0)) perp = -perp;
     float v = b * b / len;
     float h = b * a / len;
@@ -125,28 +126,17 @@ Circle c2i_getEllipse(const Vector3f& p_prev, const Vector3f& p_curr, const Vect
         .limits = (len1 < len2) ? std::array<float, 3>{ -beta, 0.f, globals::pi_2 } : std::array<float, 3>{ -globals::pi_2, 0.f, beta }
     };
 }
-std::pair<Vector3f, Vector3f> c2i_curvePos(const Circle& curve, float t, bool first_half) {
-    float s = (first_half ? curve.limits[1] - curve.limits[0] : curve.limits[2] - curve.limits[1]);
+Vector3f c2i_curvePos(const Circle& curve, float t, bool first_half) {
     float tt = first_half ? lerp(curve.limits[0], curve.limits[1], t) : lerp(curve.limits[1], curve.limits[2], t);
-    float cos_tt = std::cos(tt);
-    float sin_tt = std::sin(tt);
-    Vector3f p = curve.center + curve.axis1 * cos_tt + curve.axis2 * sin_tt;
-    Vector3f dpdt = (-sin_tt * curve.axis1 + cos_tt * curve.axis2) * s;
-    return {p, dpdt};
+    Vector3f p = curve.center + curve.axis1 * std::cos(tt) + curve.axis2 * std::sin(tt);
+    return p;
 }
-std::pair<Vector3f, Vector3f> c2i_interpolate(const Circle& curve1, const Circle& curve2, float t) {
-    Vector3f p1, dpdt1;
-    Vector3f p2, dpdt2;
-    std::tie(p1, dpdt1) = c2i_curvePos(curve1, t, false);
-    std::tie(p2, dpdt2) = c2i_curvePos(curve2, t, true);
+Vector3f c2i_interpolate(const Circle& curve1, const Circle& curve2, float t) {
+    Vector3f p1 = c2i_curvePos(curve1, t, false);
+    Vector3f p2 = c2i_curvePos(curve2, t, true);
     float theta = t * globals::pi_2;
-    float cos_theta = std::cos(theta);
-    float sin_theta = std::sin(theta);
-    float cos_theta_sq = sq(cos_theta);
-    float sin_theta_sq = sq(sin_theta);
-    Vector3f p = cos_theta_sq * p1 + sin_theta_sq * p2;
-    Vector3f dpdt = 2.f * cos_theta * sin_theta * (p2 - p1) * globals::pi_2 + cos_theta_sq * dpdt1 + sin_theta_sq * dpdt2;
-    return {p, dpdt};
+    Vector3f p = sq(std::cos(theta)) * p1 + sq(std::sin(theta)) * p2;
+    return p;
 }
 }
 
@@ -252,6 +242,7 @@ std::shared_ptr<cyHairFile> cmd::exec::resample(std::shared_ptr<cyHairFile> hair
                     if (has_transparency) transparency_per_strand[i].push_back(*transparency0);
                     if (has_color) push_back_3f(color_per_strand[i], *color0);
                 }
+                Vector3f p_last = Map<Vector3f>(&points_per_strand[i].back() - 2);
 
                 if (::param.linear_subdiv || num_segments == 1) {
                     for (unsigned int k = 0; k < num_subsegments_per_segment[j]; ++k) {
@@ -279,7 +270,7 @@ std::shared_ptr<cyHairFile> cmd::exec::resample(std::shared_ptr<cyHairFile> hair
                         const float C = (t2 - t) / (t2 - t1) * B1 + (t - t1) / (t2 - t1) * B2;
                         return C;                    
                     };
-                    auto cr_interpolate_3f = [&offset, &num_segments, &knots, &j](const float t, float * const array) -> std::pair<Vector3f, Vector3f> {
+                    auto cr_interpolate_3f = [&offset, &num_segments, &knots, &j](const float t, float * const array) -> Vector3f {
                         const float t0 = (j == 0) ? -knots[1] : knots[j - 1];
                         const float t1 = knots[j];
                         const float t2 = knots[j + 1];
@@ -294,27 +285,25 @@ std::shared_ptr<cyHairFile> cmd::exec::resample(std::shared_ptr<cyHairFile> hair
                         const Vector3f B1 = (t2 - t) / (t2 - t0) * A1 + (t - t0) / (t2 - t0) * A2;
                         const Vector3f B2 = (t3 - t) / (t3 - t1) * A2 + (t - t1) / (t3 - t1) * A3;
                         const Vector3f C = (t2 - t) / (t2 - t1) * B1 + (t - t1) / (t2 - t1) * B2;
-                        const Vector3f dA1_dt = -1.f / (t1 - t0) * p0 + 1.f / (t1 - t0) * p1;
-                        const Vector3f dA2_dt = -1.f / (t2 - t1) * p1 + 1.f / (t2 - t1) * p2;
-                        const Vector3f dA3_dt = -1.f / (t3 - t2) * p2 + 1.f / (t3 - t2) * p3;
-                        const Vector3f dB1_dt = -1.f / (t2 - t0) * A1 + 1.f / (t2 - t0) * A2 + (t2 - t) / (t2 - t0) * dA1_dt + (t - t0) / (t2 - t0) * dA2_dt;
-                        const Vector3f dB2_dt = -1.f / (t3 - t1) * A2 + 1.f / (t3 - t1) * A3 + (t3 - t) / (t3 - t1) * dA2_dt + (t - t1) / (t3 - t1) * dA3_dt;
-                        const Vector3f dC_dt = -1.f / (t2 - t1) * B1 + 1.f / (t2 - t1) * B2 + (t2 - t) / (t2 - t1) * dB1_dt + (t - t1) / (t2 - t1) * dB2_dt;
-                        return {C, dC_dt};
+                        return C;
                     };
                     float t = knots[j];
-                    float dsdt = cr_interpolate_3f(t, hairfile_in->GetPointsArray()).second.norm();
                     while (true) {
-                        const float dt = ::param.target_segment_length / dsdt;
+                        float dt = 1e-4f;
+                        Vector3f p;
+                        while (true) {
+                            p = cr_interpolate_3f(t + dt, hairfile_in->GetPointsArray());
+                            if ((p - p_last).norm() >= ::param.target_segment_length) break;
+                            dt *= 1.1f;
+                            if (dt > knots[j + 1] - knots[j]) break;
+                        }
                         t += dt;
                         if (t >= knots[j + 1]) break;
-                        Vector3f p, dpdt;
-                        std::tie(p, dpdt) = cr_interpolate_3f(t, hairfile_in->GetPointsArray());
-                        dsdt = dpdt.norm();
                         push_back_3f(points_per_strand[i], p);
+                        p_last = p;
                         if (has_thickness) thickness_per_strand[i].push_back(cr_interpolate_1f(t, hairfile_in->GetThicknessArray()));
                         if (has_transparency) transparency_per_strand[i].push_back(cr_interpolate_1f(t, hairfile_in->GetTransparencyArray()));
-                        if (has_color) push_back_3f(color_per_strand[i], cr_interpolate_3f(t, hairfile_in->GetColorsArray()).first);
+                        if (has_color) push_back_3f(color_per_strand[i], cr_interpolate_3f(t, hairfile_in->GetColorsArray()));
                     }
                     push_back_3f(points_per_strand[i], point1);
                     if (has_thickness) thickness_per_strand[i].push_back(*thickness1);
@@ -348,15 +337,19 @@ std::shared_ptr<cyHairFile> cmd::exec::resample(std::shared_ptr<cyHairFile> hair
                         };
                     }
                     float t = 0.f;
-                    float dsdt = c2i_interpolate(*curve1, curve2, t).second.norm();
                     while (true) {
-                        const float dt = ::param.target_segment_length / dsdt;
+                        float dt = 1e-4f;
+                        Vector3f p;
+                        while (true) {
+                            p = c2i_interpolate(*curve1, curve2, t + dt);
+                            if ((p - p_last).norm() >= ::param.target_segment_length) break;
+                            dt *= 1.1f;
+                            if (dt > 1.f) break;
+                        }
                         t += dt;
                         if (t >= 1) break;
-                        Vector3f p, dpdt;
-                        std::tie(p, dpdt) = c2i_interpolate(*curve1, curve2, t);
-                        dsdt = dpdt.norm();
                         push_back_3f(points_per_strand[i], p);
+                        p_last = p;
                         if (has_thickness) thickness_per_strand[i].push_back(lerp(*thickness0, *thickness1, t));
                         if (has_transparency) transparency_per_strand[i].push_back(lerp(*transparency0, *transparency1, t));
                         if (has_color) push_back_3f(color_per_strand[i], lerp(*color0, *color1, t));
@@ -468,6 +461,9 @@ std::shared_ptr<cyHairFile> cmd::exec::resample(std::shared_ptr<cyHairFile> hair
     offset = 0;
     for (unsigned int i = 0; i < hair_count; ++i) {
         const size_t num_points_per_strand = points_per_strand[i].size() / 3;
+        if (num_points_per_strand - 1 > std::numeric_limits<unsigned short>::max()) {
+            throw std::runtime_error(fmt::format("Number of segments per strand {} exceeds the maximum limit: {}", num_points_per_strand - 1, std::numeric_limits<unsigned short>::max()));
+        }
 
         hairfile_out->GetSegmentsArray()[i] = num_points_per_strand - 1;
 
