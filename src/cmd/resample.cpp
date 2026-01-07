@@ -233,7 +233,7 @@ std::shared_ptr<cyHairFile> cmd::exec::resample(std::shared_ptr<cyHairFile> hair
                     if (has_transparency) transparency_per_strand[i].push_back(*transparency0);
                     if (has_color) util::push_back_vec3(color_per_strand[i], *color0);
                 }
-                Vector3f p_last = Map<Vector3f>(&points_per_strand[i].back() - 2);
+                Vector3f p_last = point0;
 
                 if (::param.linear_subdiv || num_segments == 1) {
                     for (unsigned int k = 0; k < num_subsegments_per_segment[j]; ++k) {
@@ -245,38 +245,54 @@ std::shared_ptr<cyHairFile> cmd::exec::resample(std::shared_ptr<cyHairFile> hair
                     }
                 } else if (::param.catmull_rom) {
                     auto cr_interpolate_1f = [&offset, &num_segments, &knots, &j](const float t, float * const array) -> float {
-                        const float t0 = (j == 0) ? -knots[1] : knots[j - 1];
-                        const float t1 = knots[j];
-                        const float t2 = knots[j + 1];
-                        const float t3 = (j == num_segments - 1) ? (2 * knots[j + 1] - knots[j]) : knots[j + 2];
-                        const float p1 = array[offset + j];
-                        const float p2 = array[offset + j + 1];
-                        const float p0 = (j == 0) ? 2 * p1 - p2 : array[offset + j - 1];
-                        const float p3 = (j == num_segments - 1) ? 2 * p2 - p1 : array[offset + j + 2];
+                        float t0{}, t1{}, t2{}, t3{};
+                        float p0{}, p1{}, p2{}, p3{};
+                        if (j > 0 && j < num_segments - 1) {
+                            t0 = knots[j - 1];      p0 = array[offset + j - 1];
+                            t1 = knots[j];          p1 = array[offset + j];
+                            t2 = knots[j + 1];      p2 = array[offset + j + 1];
+                            t3 = knots[j + 2];      p3 = array[offset + j + 2];
+                        } else if (j == 0) {
+                            t0 = knots[j];          p0 = array[offset + j];
+                            t1 = knots[j + 1];      p1 = array[offset + j + 1];
+                            t2 = knots[j + 2];      p2 = array[offset + j + 2];
+                        } else {
+                            t1 = knots[j - 1];      p1 = array[offset + j - 1];
+                            t2 = knots[j];          p2 = array[offset + j];
+                            t3 = knots[j + 1];      p3 = array[offset + j + 1];
+                        }
                         const float A1 = (t1 - t) / (t1 - t0) * p0 + (t - t0) / (t1 - t0) * p1;
                         const float A2 = (t2 - t) / (t2 - t1) * p1 + (t - t1) / (t2 - t1) * p2;
                         const float A3 = (t3 - t) / (t3 - t2) * p2 + (t - t2) / (t3 - t2) * p3;
                         const float B1 = (t2 - t) / (t2 - t0) * A1 + (t - t0) / (t2 - t0) * A2;
                         const float B2 = (t3 - t) / (t3 - t1) * A2 + (t - t1) / (t3 - t1) * A3;
                         const float C = (t2 - t) / (t2 - t1) * B1 + (t - t1) / (t2 - t1) * B2;
-                        return C;                    
+                        return (j > 0 && j < num_segments - 1) ? C : (j == 0 ? B1 : B2);
                     };
                     auto cr_interpolate_3f = [&offset, &num_segments, &knots, &j](const float t, float * const array) -> Vector3f {
-                        const float t0 = (j == 0) ? -knots[1] : knots[j - 1];
-                        const float t1 = knots[j];
-                        const float t2 = knots[j + 1];
-                        const float t3 = (j == num_segments - 1) ? (2 * knots[j + 1] - knots[j]) : knots[j + 2];
-                        const Vector3f p1 = Map<Vector3f>(array + 3 * (offset + j));
-                        const Vector3f p2 = Map<Vector3f>(array + 3 * (offset + j + 1));
-                        const Vector3f p0 = (j == 0) ? Vector3f(2 * p1 - p2) : Map<Vector3f>(array + 3 * (offset + j - 1));
-                        const Vector3f p3 = (j == num_segments - 1) ? Vector3f(2 * p2 - p1) : Map<Vector3f>(array + 3 * (offset + j + 2));
+                        float t0{}, t1{}, t2{}, t3{};
+                        Vector3f p0{}, p1{}, p2{}, p3{};
+                        if (j > 0 && j < num_segments - 1) {
+                            t0 = knots[j - 1];      p0 = Map<Vector3f>(array + 3 * (offset + j - 1));
+                            t1 = knots[j];          p1 = Map<Vector3f>(array + 3 * (offset + j));
+                            t2 = knots[j + 1];      p2 = Map<Vector3f>(array + 3 * (offset + j + 1));
+                            t3 = knots[j + 2];      p3 = Map<Vector3f>(array + 3 * (offset + j + 2));
+                        } else if (j == 0) {
+                            t0 = knots[j];          p0 = Map<Vector3f>(array + 3 * (offset + j));
+                            t1 = knots[j + 1];      p1 = Map<Vector3f>(array + 3 * (offset + j + 1));
+                            t2 = knots[j + 2];      p2 = Map<Vector3f>(array + 3 * (offset + j + 2));
+                        } else {
+                            t1 = knots[j - 1];      p1 = Map<Vector3f>(array + 3 * (offset + j - 1));
+                            t2 = knots[j];          p2 = Map<Vector3f>(array + 3 * (offset + j));
+                            t3 = knots[j + 1];      p3 = Map<Vector3f>(array + 3 * (offset + j + 1));
+                        }
                         const Vector3f A1 = (t1 - t) / (t1 - t0) * p0 + (t - t0) / (t1 - t0) * p1;
                         const Vector3f A2 = (t2 - t) / (t2 - t1) * p1 + (t - t1) / (t2 - t1) * p2;
                         const Vector3f A3 = (t3 - t) / (t3 - t2) * p2 + (t - t2) / (t3 - t2) * p3;
                         const Vector3f B1 = (t2 - t) / (t2 - t0) * A1 + (t - t0) / (t2 - t0) * A2;
                         const Vector3f B2 = (t3 - t) / (t3 - t1) * A2 + (t - t1) / (t3 - t1) * A3;
                         const Vector3f C = (t2 - t) / (t2 - t1) * B1 + (t - t1) / (t2 - t1) * B2;
-                        return C;
+                        return (j > 0 && j < num_segments - 1) ? C : (j == 0 ? B1 : B2);
                     };
                     float t = knots[j];
                     while (true) {
