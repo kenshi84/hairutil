@@ -11,6 +11,7 @@ struct {
     float& cr_power = cmd::param::f("resample", "cr_power");
     bool& c2_interp = cmd::param::b("resample", "c2_interp");
 } param;
+// Code ported from https://www.cemyuksel.com/research/interpolating_curves/curves.html
 struct Circle {
     Vector3f center;
     Vector3f axis1;
@@ -132,7 +133,7 @@ Vector3f c2i_interpolate(const Circle& curve1, const Circle& curve2, float t) {
 }
 
 void cmd::parse::resample(args::Subparser &parser) {
-    args::ValueFlag<float> target_segment_length(parser, "R", "(REQUIRED) Target segment length (0 uses average segment length)", {"target-segment-length", 'l'}, args::Options::Required);
+    args::ValueFlag<float> target_segment_length(parser, "R", "(REQUIRED) Target segment length (0 uses per-strand average segment length)", {"target-segment-length", 'l'}, args::Options::Required);
     args::Flag linear_subdiv(parser, "linear-subdiv", "Use linear subdivision", {"linear-subdiv"});
     args::Flag catmull_rom(parser, "catmull-rom", "Use parameterized Catmull-Rom interpolation", {"catmull-rom"});
     args::ValueFlag<float> cr_power(parser, "R", "Power parameter for Catmull-Rom (default: 0.5)", {"cr-power"}, 0.5f);
