@@ -1,4 +1,5 @@
 #include "cmd.h"
+#include "util.h"
 
 using namespace Eigen;
 
@@ -10,16 +11,6 @@ struct {
     float& cr_power = cmd::param::f("resample", "cr_power");
     bool& c2_interp = cmd::param::b("resample", "c2_interp");
 } param;
-template <typename T>
-inline T lerp(const T& a, const T& b, float t) {
-    return (1.0f - t) * a + t * b;
-}
-inline float sq(float x) { return x * x; }
-void push_back_3f(std::vector<float>& vec, const Vector3f& v) {
-    vec.push_back(v[0]);
-    vec.push_back(v[1]);
-    vec.push_back(v[2]);
-}
 struct Circle {
     Vector3f center;
     Vector3f axis1;
@@ -92,7 +83,7 @@ Circle c2i_getEllipse(const Vector3f& p_prev, const Vector3f& p_curr, const Vect
         float beta = maxA - theta;
         c = l2 * std::sin(beta);
         d = l2 * std::cos(beta);
-        float v = sq(1 - d / b) + sq(c / a); // ellipse equation
+        float v = util::sq(1 - d / b) + util::sq(c / a); // ellipse equation
         ang += (v > 1) ? incA : -incA;
         incA *= 0.5f;
     }
@@ -127,7 +118,7 @@ Circle c2i_getEllipse(const Vector3f& p_prev, const Vector3f& p_curr, const Vect
     };
 }
 Vector3f c2i_curvePos(const Circle& curve, float t, bool first_half) {
-    float tt = first_half ? lerp(curve.limits[0], curve.limits[1], t) : lerp(curve.limits[1], curve.limits[2], t);
+    float tt = first_half ? util::lerp(curve.limits[0], curve.limits[1], t) : util::lerp(curve.limits[1], curve.limits[2], t);
     Vector3f p = curve.center + curve.axis1 * std::cos(tt) + curve.axis2 * std::sin(tt);
     return p;
 }
@@ -135,7 +126,7 @@ Vector3f c2i_interpolate(const Circle& curve1, const Circle& curve2, float t) {
     Vector3f p1 = c2i_curvePos(curve1, t, false);
     Vector3f p2 = c2i_curvePos(curve2, t, true);
     float theta = t * globals::pi_2;
-    Vector3f p = sq(std::cos(theta)) * p1 + sq(std::sin(theta)) * p2;
+    Vector3f p = util::sq(std::cos(theta)) * p1 + util::sq(std::sin(theta)) * p2;
     return p;
 }
 }
@@ -237,20 +228,20 @@ std::shared_ptr<cyHairFile> cmd::exec::resample(std::shared_ptr<cyHairFile> hair
 
                 // Add first point
                 if (j == 0) {
-                    push_back_3f(points_per_strand[i], point0);
+                    util::push_back_vec3(points_per_strand[i], point0);
                     if (has_thickness) thickness_per_strand[i].push_back(*thickness0);
                     if (has_transparency) transparency_per_strand[i].push_back(*transparency0);
-                    if (has_color) push_back_3f(color_per_strand[i], *color0);
+                    if (has_color) util::push_back_vec3(color_per_strand[i], *color0);
                 }
                 Vector3f p_last = Map<Vector3f>(&points_per_strand[i].back() - 2);
 
                 if (::param.linear_subdiv || num_segments == 1) {
                     for (unsigned int k = 0; k < num_subsegments_per_segment[j]; ++k) {
                         const float t = (k + 1) / (float)num_subsegments_per_segment[j];
-                        push_back_3f(points_per_strand[i], lerp(point0, point1, t));
-                        if (has_thickness) thickness_per_strand[i].push_back(lerp(*thickness0, *thickness1, t));
-                        if (has_transparency) transparency_per_strand[i].push_back(lerp(*transparency0, *transparency1, t));
-                        if (has_color) push_back_3f(color_per_strand[i], lerp(*color0, *color1, t));
+                        util::push_back_vec3(points_per_strand[i], util::lerp(point0, point1, t));
+                        if (has_thickness) thickness_per_strand[i].push_back(util::lerp(*thickness0, *thickness1, t));
+                        if (has_transparency) transparency_per_strand[i].push_back(util::lerp(*transparency0, *transparency1, t));
+                        if (has_color) util::push_back_vec3(color_per_strand[i], util::lerp(*color0, *color1, t));
                     }
                 } else if (::param.catmull_rom) {
                     auto cr_interpolate_1f = [&offset, &num_segments, &knots, &j](const float t, float * const array) -> float {
@@ -299,16 +290,16 @@ std::shared_ptr<cyHairFile> cmd::exec::resample(std::shared_ptr<cyHairFile> hair
                         }
                         t += dt;
                         if (t >= knots[j + 1]) break;
-                        push_back_3f(points_per_strand[i], p);
+                        util::push_back_vec3(points_per_strand[i], p);
                         p_last = p;
                         if (has_thickness) thickness_per_strand[i].push_back(cr_interpolate_1f(t, hairfile_in->GetThicknessArray()));
                         if (has_transparency) transparency_per_strand[i].push_back(cr_interpolate_1f(t, hairfile_in->GetTransparencyArray()));
-                        if (has_color) push_back_3f(color_per_strand[i], cr_interpolate_3f(t, hairfile_in->GetColorsArray()));
+                        if (has_color) util::push_back_vec3(color_per_strand[i], cr_interpolate_3f(t, hairfile_in->GetColorsArray()));
                     }
-                    push_back_3f(points_per_strand[i], point1);
+                    util::push_back_vec3(points_per_strand[i], point1);
                     if (has_thickness) thickness_per_strand[i].push_back(*thickness1);
                     if (has_transparency) transparency_per_strand[i].push_back(*transparency1);
-                    if (has_color) push_back_3f(color_per_strand[i], *color1);
+                    if (has_color) util::push_back_vec3(color_per_strand[i], *color1);
                 } else if (::param.c2_interp) {
                     Circle curve2;
                     if (j == num_segments - 1) {
@@ -348,16 +339,16 @@ std::shared_ptr<cyHairFile> cmd::exec::resample(std::shared_ptr<cyHairFile> hair
                         }
                         t += dt;
                         if (t >= 1) break;
-                        push_back_3f(points_per_strand[i], p);
+                        util::push_back_vec3(points_per_strand[i], p);
                         p_last = p;
-                        if (has_thickness) thickness_per_strand[i].push_back(lerp(*thickness0, *thickness1, t));
-                        if (has_transparency) transparency_per_strand[i].push_back(lerp(*transparency0, *transparency1, t));
-                        if (has_color) push_back_3f(color_per_strand[i], lerp(*color0, *color1, t));
+                        if (has_thickness) thickness_per_strand[i].push_back(util::lerp(*thickness0, *thickness1, t));
+                        if (has_transparency) transparency_per_strand[i].push_back(util::lerp(*transparency0, *transparency1, t));
+                        if (has_color) util::push_back_vec3(color_per_strand[i], util::lerp(*color0, *color1, t));
                     }
-                    push_back_3f(points_per_strand[i], point1);
+                    util::push_back_vec3(points_per_strand[i], point1);
                     if (has_thickness) thickness_per_strand[i].push_back(*thickness1);
                     if (has_transparency) transparency_per_strand[i].push_back(*transparency1);
-                    if (has_color) push_back_3f(color_per_strand[i], *color1);
+                    if (has_color) util::push_back_vec3(color_per_strand[i], *color1);
                     curve1 = curve2;
                 }
             }
@@ -370,10 +361,10 @@ std::shared_ptr<cyHairFile> cmd::exec::resample(std::shared_ptr<cyHairFile> hair
                                     const std::optional<float>& thickness,
                                     const std::optional<float>& transparency,
                                     const std::optional<Vector3f>& color) {
-                push_back_3f(points_per_strand[i], point);
+                util::push_back_vec3(points_per_strand[i], point);
                 if (has_thickness) thickness_per_strand[i].push_back(*thickness);
                 if (has_transparency) transparency_per_strand[i].push_back(*transparency);
-                if (has_color) push_back_3f(color_per_strand[i], *color);
+                if (has_color) util::push_back_vec3(color_per_strand[i], *color);
             };
 
             auto append_point_at = [&](unsigned int point_index) {

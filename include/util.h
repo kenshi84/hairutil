@@ -123,4 +123,20 @@ inline std::string path_under_optional_dir(std::string path, const std::string& 
     return path;
 }
 
+template <typename T>
+inline T lerp(const T& a, const T& b, float t) {
+    return (1.0f - t) * a + t * b;
+}
+
+inline float sq(float x) {
+    return x * x;
+}
+
+template <typename T, typename TVec3>
+inline void push_back_vec3(std::vector<T>& vec, const TVec3& v) {
+    vec.push_back(v[0]);
+    vec.push_back(v[1]);
+    vec.push_back(v[2]);
+}
+
 }
