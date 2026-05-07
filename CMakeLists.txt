@@ -62,6 +62,8 @@ add_library(hairutil_core STATIC
   src/cmd/filter.cpp
   src/cmd/findpenet.cpp
   src/cmd/getcurvature.cpp
+  src/cmd/getroots.cpp
+  src/cmd/gettips.cpp
   src/cmd/info.cpp
   src/cmd/resample.cpp
   src/cmd/smooth.cpp

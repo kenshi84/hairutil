@@ -1,6 +1,6 @@
 # Bash completion for hairutil (subcommands only).
 
-_hairutil_subcommands="autofix convert decompose filter findpenet getcurvature info resample smooth stats subsample transform tubify"
+_hairutil_subcommands="autofix convert decompose filter findpenet getcurvature getroots gettips info resample smooth stats subsample transform tubify"
 
 _hairutil()
 {
