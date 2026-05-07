@@ -9,6 +9,13 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   add_compile_options(-Wno-deprecated-declarations -Wno-free-nonheap-object -Wno-stringop-overflow)
 endif()
 
+# Workaround: macOS SDK headers (mach/port.h on macOS 26+) use the C11 keyword
+# _Static_assert at file scope, which g++ does not accept in C++ mode. Alias it
+# to C++'s static_assert for C++ compilation only.
+if (APPLE AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-D_Static_assert=static_assert>)
+endif()
+
 
 #########################################
 # External libraries that require build #
