@@ -45,6 +45,7 @@ int main(int argc, const char **argv)
     args::ValueFlag<std::string> globals_output_ext(grp_globals, "EXT", "Output file extension (or extensions by comma-delimited list); when omitted, use input file extension", {'o', "output-ext"}, "");
     args::Flag globals_overwrite(grp_globals, "overwrite", "Overwrite when output file exists", {"overwrite"});
     args::ValueFlag<std::string> globals_output_dir(grp_globals, "DIR", "Output directory; if not specified, same as the input file", {'d', "output-dir"}, "");
+    args::ValueFlag<std::string> globals_extra_suffix(grp_globals, "STR", "Extra suffix appended to the output filename in addition to the existing suffix", {"extra-suffix"}, "");
     args::ValueFlag<unsigned int> globals_ply_load_default_nsegs(grp_globals, "N", "Default number of segments per strand for PLY files [0]", {"ply-load-default-nsegs"}, 0);
     args::Flag globals_ply_save_ascii(grp_globals, "ply-save-ascii", "Save PLY files in ASCII format", {"ply-save-ascii"});
     args::ValueFlag<std::string> globals_verbosity(grp_globals, "NAME", "Verbosity level name {trace,debug,info,warn,error,critical,off} [info]", {'v', "verbosity"}, "info");
@@ -111,6 +112,7 @@ int main(int argc, const char **argv)
     globals::overwrite = globals_overwrite;
     globals::ply_load_default_nsegs = *globals_ply_load_default_nsegs;
     globals::ply_save_ascii = globals_ply_save_ascii;
+    globals::extra_suffix = *globals_extra_suffix;
 
     // Seed the random number generator
     int seed = *globals_seed;

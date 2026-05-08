@@ -2,5 +2,6 @@
 #include "util.h"
 
 std::string OutputFile::operator()() const {
-    return util::path_under_optional_dir(func(), dir);
+    const std::string suffix = globals::extra_suffix.empty() ? "" : "_" + globals::extra_suffix;
+    return util::path_under_optional_dir(func() + suffix, dir);
 }

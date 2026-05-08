@@ -11,6 +11,7 @@ namespace globals {
     bool overwrite;
     unsigned int ply_load_default_nsegs;
     bool ply_save_ascii;
+    std::string extra_suffix;
 
     // Other global variables
     std::string input_file_wo_ext;
@@ -39,6 +40,7 @@ namespace globals {
         overwrite = {};
         ply_load_default_nsegs = {};
         ply_save_ascii = {};
+        extra_suffix = {};
         input_file_wo_ext = {};
         input_ext = {};
         output_file_wo_ext = OutputFile{};

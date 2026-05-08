@@ -40,6 +40,7 @@ namespace globals {
     extern bool overwrite;
     extern unsigned int ply_load_default_nsegs;
     extern bool ply_save_ascii;
+    extern std::string extra_suffix;
 
     extern std::string input_file_wo_ext;
     extern std::string input_ext;
