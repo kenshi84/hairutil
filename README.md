@@ -23,6 +23,8 @@ $ hairutil --help
         filter                    Extract strands that pass given filter
         findpenet                 Find penetration against head mesh
         getcurvature              Get discrete curvature & torsion
+        getroots                  Extract strand roots as point cloud in PLY
+        gettips                   Extract strand tips as point cloud in PLY
         info                      Print information
         resample                  Resample strands s.t. every segment is shorter than twice the target segment length
         smooth                    Smooth strands
@@ -40,6 +42,7 @@ $ hairutil --help
         --overwrite               Overwrite when output file exists
         -d[DIR], --output-dir=[DIR]
                                   Output directory; if not specified, same as the input file
+        --extra-suffix=[STR]      Extra suffix appended to the output filename in addition to the existing suffix
         --ply-load-default-nsegs=[N]
                                   Default number of segments per strand for PLY files [0]
         --ply-save-ascii          Save PLY files in ASCII format
@@ -134,6 +137,17 @@ $ hairutil findpenet --help
                                         penetrating if #in-points is more than
                                         this value times #total-points
       --no-export                       Do not export result to txt
+      --no-print                        Do not print result to stdout
+```
+
+### `getroots` / `gettips` commands
+Extract the first / last point of every strand and save them as a point cloud in PLY format. The output is written next to the input file with `_roots.ply` / `_tips.ply` appended (regardless of `--output-ext`).
+```
+hairutil getroots --input-file ~/CT2Hair/output/Bangs.bin
+# Output saved to ~/CT2Hair/output/Bangs_roots.ply
+
+hairutil gettips --input-file ~/CT2Hair/output/Bangs.bin
+# Output saved to ~/CT2Hair/output/Bangs_tips.ply
 ```
 
 ### `info` command
