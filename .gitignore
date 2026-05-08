@@ -52,3 +52,4 @@ test/data/catmull_rom_test*_resampled*
 test/data/c2_interp_test*_resampled*
 test/data/out/
 .vscode/
+.claude/
