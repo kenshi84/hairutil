@@ -45,6 +45,8 @@ $ hairutil --help
         --extra-suffix=[STR]      Extra suffix appended to the output filename in addition to the existing suffix
         --ply-load-default-nsegs=[N]
                                   Default number of segments per strand for PLY files [0]
+        --abc-load-tess-factor=[N]
+                                  Tessellation factor for cubic Alembic curve import [2]
         --ply-save-ascii          Save PLY files in ASCII format
         -v[NAME], --verbosity=[NAME]
                                   Verbosity level name {trace,debug,info,warn,error,critical,off} [info]

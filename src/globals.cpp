@@ -10,6 +10,7 @@ namespace globals {
     std::set<std::string> output_exts;
     bool overwrite;
     unsigned int ply_load_default_nsegs;
+    unsigned int abc_load_tess_factor = 2;
     bool ply_save_ascii;
     std::string extra_suffix;
 
@@ -39,6 +40,7 @@ namespace globals {
         output_exts = {};
         overwrite = {};
         ply_load_default_nsegs = {};
+        abc_load_tess_factor = 2;
         ply_save_ascii = {};
         extra_suffix = {};
         input_file_wo_ext = {};

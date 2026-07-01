@@ -47,6 +47,7 @@ int main(int argc, const char **argv)
     args::ValueFlag<std::string> globals_output_dir(grp_globals, "DIR", "Output directory; if not specified, same as the input file", {'d', "output-dir"}, "");
     args::ValueFlag<std::string> globals_extra_suffix(grp_globals, "STR", "Extra suffix appended to the output filename in addition to the existing suffix", {"extra-suffix"}, "");
     args::ValueFlag<unsigned int> globals_ply_load_default_nsegs(grp_globals, "N", "Default number of segments per strand for PLY files [0]", {"ply-load-default-nsegs"}, 0);
+    args::ValueFlag<unsigned int> globals_abc_load_tess_factor(grp_globals, "N", "Tessellation factor for cubic Alembic curve import [2]", {"abc-load-tess-factor"}, 2);
     args::Flag globals_ply_save_ascii(grp_globals, "ply-save-ascii", "Save PLY files in ASCII format", {"ply-save-ascii"});
     args::ValueFlag<std::string> globals_verbosity(grp_globals, "NAME", "Verbosity level name {trace,debug,info,warn,error,critical,off} [info]", {'v', "verbosity"}, "info");
     args::Flag globals_print_json(grp_globals, "print-json", "Print log messages in JSON format, disabling standard logging", {'j', "print-json"});
@@ -111,8 +112,14 @@ int main(int argc, const char **argv)
     globals::output_dir = *globals_output_dir;
     globals::overwrite = globals_overwrite;
     globals::ply_load_default_nsegs = *globals_ply_load_default_nsegs;
+    globals::abc_load_tess_factor = *globals_abc_load_tess_factor;
     globals::ply_save_ascii = globals_ply_save_ascii;
     globals::extra_suffix = *globals_extra_suffix;
+
+    if (globals::abc_load_tess_factor == 0) {
+        log_error("--abc-load-tess-factor must be at least 1");
+        return 1;
+    }
 
     // Seed the random number generator
     int seed = *globals_seed;

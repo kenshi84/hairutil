@@ -93,6 +93,17 @@ TEST(cmd_convert, bin_to_abc) {
     EXPECT_EQ(test_main(args.size(), args.data()), 0);
 }
 
+TEST(cmd_info, abc_load_tess_factor_zero_fails) {
+    std::vector<const char*> args = {
+        "test_cmd",
+        "info",
+        "-i", TEST_DATA_DIR "/Bangs_100.abc",
+        "--abc-load-tess-factor=0"
+    };
+    globals::clear();
+    EXPECT_EQ(test_main(args.size(), args.data()), 1);
+}
+
 TEST(cmd_convert, bin_to_data_ply) {
     std::vector<const char*> args = {
         "test_cmd",

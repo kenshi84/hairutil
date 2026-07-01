@@ -3,6 +3,7 @@
 #include <Alembic/AbcCoreOgawa/All.h>
 #include <Alembic/AbcGeom/All.h>
 
+#include "cmd.h"
 #include "io.h"
 
 namespace {
@@ -78,11 +79,58 @@ void write_curve(Parent& parent, const std::vector<Alembic::Abc::V3f>& positions
     curves.getSchema().set(sample);
 }
 
+void write_curve(const std::string& filename,
+                 const std::vector<Alembic::Abc::V3f>& positions,
+                 const Alembic::AbcGeom::CurveType type,
+                 const Alembic::AbcGeom::BasisType basis,
+                 const Alembic::AbcGeom::CurvePeriodicity wrap = Alembic::AbcGeom::kNonPeriodic,
+                 const std::vector<float> knots = {}) {
+    Alembic::Abc::OArchive archive(Alembic::AbcCoreOgawa::WriteArchive(), filename);
+    Alembic::AbcGeom::OCurves curves(archive.getTop(), "curves");
+    Alembic::AbcGeom::OCurvesSchema::Sample sample;
+    const std::vector<std::int32_t> nVertices = { static_cast<std::int32_t>(positions.size()) };
+    sample.setPositions(positions);
+    sample.setCurvesNumVertices(nVertices);
+    sample.setType(type);
+    sample.setWrap(wrap);
+    sample.setBasis(basis);
+    if (!knots.empty()) {
+        sample.setKnots(knots);
+    }
+    curves.getSchema().set(sample);
+}
+
 void expect_point(const cyHairFile& hairfile, size_t index, float x, float y, float z) {
     const float* points = hairfile.GetPointsArray();
     EXPECT_FLOAT_EQ(points[3*index + 0], x);
     EXPECT_FLOAT_EQ(points[3*index + 1], y);
     EXPECT_FLOAT_EQ(points[3*index + 2], z);
+}
+
+void expect_point_near(const cyHairFile& hairfile, size_t index, const Alembic::Abc::V3d& p) {
+    const float* points = hairfile.GetPointsArray();
+    EXPECT_NEAR(points[3*index + 0], p.x, 1e-5);
+    EXPECT_NEAR(points[3*index + 1], p.y, 1e-5);
+    EXPECT_NEAR(points[3*index + 2], p.z, 1e-5);
+}
+
+Alembic::Abc::V3d expected_cubic_bspline_point(const std::vector<Alembic::Abc::V3f>& cvs, const size_t index, const size_t output_count) {
+    const size_t span_count = cvs.size() - 3;
+    const double u = static_cast<double>(index) * static_cast<double>(span_count) / static_cast<double>(output_count - 1);
+    const size_t span = std::min(static_cast<size_t>(std::floor(u)), span_count - 1);
+    const double t = (index == output_count - 1) ? 1.0 : u - static_cast<double>(span);
+    const double omt = 1.0 - t;
+    const double t2 = t * t;
+    const double t3 = t2 * t;
+    const double b0 = omt * omt * omt / 6.0;
+    const double b1 = (4.0 - 6.0 * t2 + 3.0 * t3) / 6.0;
+    const double b2 = (1.0 + 3.0 * t + 3.0 * t2 - 3.0 * t3) / 6.0;
+    const double b3 = t3 / 6.0;
+    return Alembic::Abc::V3d(
+        b0 * cvs[span + 0].x + b1 * cvs[span + 1].x + b2 * cvs[span + 2].x + b3 * cvs[span + 3].x,
+        b0 * cvs[span + 0].y + b1 * cvs[span + 1].y + b2 * cvs[span + 2].y + b3 * cvs[span + 3].y,
+        b0 * cvs[span + 0].z + b1 * cvs[span + 1].z + b2 * cvs[span + 2].z + b3 * cvs[span + 3].z
+    );
 }
 
 }
@@ -186,6 +234,90 @@ TEST(io_abc, read_animated_transform_uses_first_sample_and_warns) {
     const std::string warning = globals::json["log"]["warn"][0].get<std::string>();
     EXPECT_NE(warning.find("Alembic transform \"animated\" has 2 samples"), std::string::npos);
     EXPECT_NE(warning.find("using the first frame and ignoring frames 2 through 2"), std::string::npos);
+}
+
+TEST(io_abc, read_cubic_bspline_default_tess_factor) {
+    const std::string filename = "test_io_cubic_bspline_default.abc";
+    const std::vector<Alembic::Abc::V3f> cvs = {
+        Alembic::Abc::V3f(0.0f, 0.0f, 0.0f),
+        Alembic::Abc::V3f(1.0f, 0.0f, 0.0f),
+        Alembic::Abc::V3f(1.0f, 0.0f, 0.0f),
+        Alembic::Abc::V3f(2.0f, 1.0f, 0.0f),
+        Alembic::Abc::V3f(4.0f, 1.0f, 0.0f),
+    };
+    write_curve(filename, cvs, Alembic::AbcGeom::kCubic, Alembic::AbcGeom::kBsplineBasis, Alembic::AbcGeom::kNonPeriodic, {0, 0, 0, 0, 1, 2, 2, 2, 2});
+
+    globals::clear();
+    auto hairfile = io::load_abc(filename);
+    const size_t expected_points = cvs.size() * 2;
+    ASSERT_EQ(hairfile->GetHeader().hair_count, 1);
+    ASSERT_EQ(hairfile->GetHeader().point_count, expected_points);
+    ASSERT_EQ(hairfile->GetSegmentsArray()[0], expected_points - 1);
+    expect_point_near(*hairfile, 0, Alembic::Abc::V3d(cvs.front().x, cvs.front().y, cvs.front().z));
+    expect_point_near(*hairfile, expected_points - 1, Alembic::Abc::V3d(cvs.back().x, cvs.back().y, cvs.back().z));
+
+    auto fixed = cmd::exec::autofix(hairfile);
+    EXPECT_FALSE(fixed);
+}
+
+TEST(io_abc, read_cubic_bspline_custom_tess_factor) {
+    const std::string filename = "test_io_cubic_bspline_custom.abc";
+    const std::vector<Alembic::Abc::V3f> cvs = {
+        Alembic::Abc::V3f(0.0f, 0.0f, 0.0f),
+        Alembic::Abc::V3f(1.0f, 0.0f, 0.0f),
+        Alembic::Abc::V3f(2.0f, 1.0f, 0.0f),
+        Alembic::Abc::V3f(3.0f, 1.0f, 0.0f),
+        Alembic::Abc::V3f(4.0f, 0.0f, 0.0f),
+    };
+    write_curve(filename, cvs, Alembic::AbcGeom::kCubic, Alembic::AbcGeom::kBsplineBasis);
+
+    globals::clear();
+    globals::abc_load_tess_factor = 3;
+    auto hairfile = io::load_abc(filename);
+    const size_t expected_points = cvs.size() * 3;
+    ASSERT_EQ(hairfile->GetHeader().point_count, expected_points);
+    ASSERT_EQ(hairfile->GetSegmentsArray()[0], expected_points - 1);
+}
+
+TEST(io_abc, read_cubic_bspline_tess_factor_one) {
+    const std::string filename = "test_io_cubic_bspline_factor_one.abc";
+    const std::vector<Alembic::Abc::V3f> cvs = {
+        Alembic::Abc::V3f(0.0f, 0.0f, 0.0f),
+        Alembic::Abc::V3f(1.0f, 0.0f, 0.0f),
+        Alembic::Abc::V3f(2.0f, 1.0f, 0.0f),
+        Alembic::Abc::V3f(3.0f, 1.0f, 0.0f),
+        Alembic::Abc::V3f(4.0f, 0.0f, 0.0f),
+    };
+    write_curve(filename, cvs, Alembic::AbcGeom::kCubic, Alembic::AbcGeom::kBsplineBasis);
+
+    globals::clear();
+    globals::abc_load_tess_factor = 1;
+    auto hairfile = io::load_abc(filename);
+    const size_t expected_points = cvs.size();
+    ASSERT_EQ(hairfile->GetHeader().point_count, expected_points);
+    ASSERT_EQ(hairfile->GetSegmentsArray()[0], expected_points - 1);
+    expect_point_near(*hairfile, 2, expected_cubic_bspline_point(cvs, 2, expected_points));
+}
+
+TEST(io_abc, read_unsupported_cubic_curve_schema_throws) {
+    const std::string filename = "test_io_cubic_bezier_unsupported.abc";
+    write_curve(filename, {
+        Alembic::Abc::V3f(0.0f, 0.0f, 0.0f),
+        Alembic::Abc::V3f(1.0f, 0.0f, 0.0f),
+        Alembic::Abc::V3f(2.0f, 1.0f, 0.0f),
+        Alembic::Abc::V3f(3.0f, 1.0f, 0.0f),
+    }, Alembic::AbcGeom::kCubic, Alembic::AbcGeom::kBezierBasis);
+
+    globals::clear();
+    try {
+        auto hairfile = io::load_abc(filename);
+        (void)hairfile;
+        FAIL() << "Expected unsupported cubic curve schema to throw";
+    } catch (const std::runtime_error& e) {
+        const std::string message = e.what();
+        EXPECT_NE(message.find("Unsupported Alembic curve schema"), std::string::npos);
+        EXPECT_NE(message.find("basis=bezier"), std::string::npos);
+    }
 }
 
 TEST(io_abc, write) { auto hairfile = generate_test_data(); io::save_abc("test_io_out.abc", hairfile); }
