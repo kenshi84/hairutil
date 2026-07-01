@@ -7,11 +7,11 @@
 using namespace Alembic;
 
 namespace {
-void load_abc_sub(int depth, const Abc::IObject& obj, std::vector<float>& points, std::vector<unsigned short>& segments) {
+void load_abc_sub(int depth, const Abc::IObject& obj, const Abc::M44d& parent_transform, std::vector<float>& points, std::vector<unsigned short>& segments) {
     const std::string spaces(depth * 2, ' ');
+    Abc::M44d current_transform = parent_transform;
 
     std::string type = "unknown";
-    const std::string schema = "schema";
     if (AbcGeom::IPolyMeshSchema::matches(obj.getMetaData())) type = "mesh";
     if (AbcGeom::ICameraSchema::matches(obj.getMetaData())) type = "camera";
     if (AbcGeom::IXformSchema::matches(obj.getMetaData())) type = "transform";
@@ -25,13 +25,18 @@ void load_abc_sub(int depth, const Abc::IObject& obj, std::vector<float>& points
     log_info("{}{} ({})", spaces, obj.getName(), type);
 
     if (type == "transform") {
-        AbcGeom::IXformSchema xform(obj, Abc::kWrapExisting);
-        AbcGeom::IXformSchema::sample_type sample;
-        xform.get(sample);
+        AbcGeom::IXform xform(obj, Abc::kWrapExisting);
+        AbcGeom::IXformSchema& schema = xform.getSchema();
+        const size_t num_samples = schema.getNumSamples();
 
-        if (sample.getNumOps() > 0) {
-            throw std::runtime_error("Transform is unsupported!");
+        if (num_samples > 1) {
+            log_warn("Alembic transform \"{}\" has {} samples; using the first frame and ignoring frames 2 through {}.",
+                     obj.getName(), num_samples, num_samples);
         }
+
+        AbcGeom::IXformSchema::sample_type sample = schema.getValue(Abc::ISampleSelector(static_cast<Abc::index_t>(0)));
+        const Abc::M44d local_transform = sample.getMatrix();
+        current_transform = sample.getInheritsXforms() ? local_transform * parent_transform : local_transform;
     }
 
     if (type == "curves") {
@@ -60,13 +65,19 @@ void load_abc_sub(int depth, const Abc::IObject& obj, std::vector<float>& points
         // Copy points data
         std::vector<float> new_points(num_points * 3);
         for (size_t i = 0; i < num_points; ++i) {
-            std::memcpy(new_points.data() + 3*i, &sample.getPositions()->get()[i].x, 3*sizeof(float));
+            const auto& p = sample.getPositions()->get()[i];
+            const Abc::V3d point(p.x, p.y, p.z);
+            Abc::V3d transformed_point;
+            current_transform.multVecMatrix(point, transformed_point);
+            new_points[3*i + 0] = static_cast<float>(transformed_point.x);
+            new_points[3*i + 1] = static_cast<float>(transformed_point.y);
+            new_points[3*i + 2] = static_cast<float>(transformed_point.z);
         }
         points.insert(points.end(), new_points.begin(), new_points.end());
     }
 
     for (size_t i = 0; i < obj.getNumChildren(); i++) {
-        load_abc_sub(depth + 1, obj.getChild(i), points, segments);
+        load_abc_sub(depth + 1, obj.getChild(i), current_transform, points, segments);
     }
 }
 }
@@ -83,7 +94,9 @@ std::shared_ptr<cyHairFile> io::load_abc(const std::string &filename) {
     std::vector<unsigned short> segments;
 
     // Read data recursively
-    load_abc_sub(0, archive.getTop(), points, segments);
+    Abc::M44d identity;
+    identity.makeIdentity();
+    load_abc_sub(0, archive.getTop(), identity, points, segments);
 
     std::shared_ptr<cyHairFile> hairfile = std::make_shared<cyHairFile>();
 
