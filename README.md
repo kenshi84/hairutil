@@ -48,6 +48,7 @@ $ hairutil --help
         --abc-load-tess-factor=[N]
                                   Tessellation factor for cubic Alembic curve import [2]
         --ply-save-ascii          Save PLY files in ASCII format
+        --npy-save-float16        Save NPY files using float16
         -v[NAME], --verbosity=[NAME]
                                   Verbosity level name {trace,debug,info,warn,error,critical,off} [info]
         -j, --print-json          Print log messages in JSON format, disabling standard logging

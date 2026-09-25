@@ -12,6 +12,7 @@ namespace globals {
     unsigned int ply_load_default_nsegs;
     unsigned int abc_load_tess_factor = 2;
     bool ply_save_ascii;
+    bool npy_save_float16;
     std::string extra_suffix;
 
     // Other global variables
@@ -42,6 +43,7 @@ namespace globals {
         ply_load_default_nsegs = {};
         abc_load_tess_factor = 2;
         ply_save_ascii = {};
+        npy_save_float16 = {};
         extra_suffix = {};
         input_file_wo_ext = {};
         input_ext = {};

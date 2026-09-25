@@ -37,6 +37,9 @@ set(BUILD_STATIC_LIBS ON CACHE BOOL "Build HDF5 as a static library")
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build HDF5 as a shared library")
 add_subdirectory(ext/hdf5)
 
+# libnpy
+add_subdirectory(ext/libnpy)
+
 # xlnt
 set(STATIC TRUE CACHE BOOL "Build xlnt as a static library")
 add_subdirectory(ext/xlnt)
@@ -93,6 +96,7 @@ add_library(hairutil_core STATIC
 target_link_libraries(hairutil_core
   Alembic::Alembic
   hdf5-static
+  npy::npy
   xlnt
 )
 target_include_directories(hairutil_core
@@ -105,7 +109,6 @@ target_include_directories(hairutil_core
   ext/HighFive/include
   ext/json/include
   ext/libigl/include
-  ext/libnpy/include
   ext/nanoflann/include
   ext/scope_guard
   ext/spdlog/include

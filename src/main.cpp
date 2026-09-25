@@ -49,6 +49,7 @@ int main(int argc, const char **argv)
     args::ValueFlag<unsigned int> globals_ply_load_default_nsegs(grp_globals, "N", "Default number of segments per strand for PLY files [0]", {"ply-load-default-nsegs"}, 0);
     args::ValueFlag<unsigned int> globals_abc_load_tess_factor(grp_globals, "N", "Tessellation factor for cubic Alembic curve import [2]", {"abc-load-tess-factor"}, 2);
     args::Flag globals_ply_save_ascii(grp_globals, "ply-save-ascii", "Save PLY files in ASCII format", {"ply-save-ascii"});
+    args::Flag globals_npy_save_float16(grp_globals, "npy-save-float16", "Save NPY files using float16", {"npy-save-float16"});
     args::ValueFlag<std::string> globals_verbosity(grp_globals, "NAME", "Verbosity level name {trace,debug,info,warn,error,critical,off} [info]", {'v', "verbosity"}, "info");
     args::Flag globals_print_json(grp_globals, "print-json", "Print log messages in JSON format, disabling standard logging", {'j', "print-json"});
     args::ValueFlag<int> globals_seed(grp_globals, "N", "Seed for random number generator (-1 for time-based seed) [0]", {"seed"}, 0);
@@ -114,6 +115,7 @@ int main(int argc, const char **argv)
     globals::ply_load_default_nsegs = *globals_ply_load_default_nsegs;
     globals::abc_load_tess_factor = *globals_abc_load_tess_factor;
     globals::ply_save_ascii = globals_ply_save_ascii;
+    globals::npy_save_float16 = globals_npy_save_float16;
     globals::extra_suffix = *globals_extra_suffix;
 
     if (globals::abc_load_tess_factor == 0) {
