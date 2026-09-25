@@ -13,6 +13,8 @@ namespace globals {
     unsigned int abc_load_tess_factor = 2;
     bool ply_save_ascii;
     bool npy_save_float16;
+    std::string npz_key;
+    bool npz_save_compressed;
     std::string extra_suffix;
 
     // Other global variables
@@ -33,7 +35,8 @@ namespace globals {
         {"ply", {::io::load_ply, ::io::save_ply}},
         {"ma", {::io::load_ma, ::io::save_ma}},
         {"abc", {::io::load_abc, ::io::save_abc}},
-        {"npy", {::io::load_npy, ::io::save_npy}}
+        {"npy", {::io::load_npy, ::io::save_npy}},
+        {"npz", {::io::load_npz, ::io::save_npz}}
     };
 
     void clear() {
@@ -44,6 +47,8 @@ namespace globals {
         abc_load_tess_factor = 2;
         ply_save_ascii = {};
         npy_save_float16 = {};
+        npz_key = {};
+        npz_save_compressed = {};
         extra_suffix = {};
         input_file_wo_ext = {};
         input_ext = {};

@@ -9,6 +9,7 @@ Supported file formats:
 - .ma
 - .abc
 - .npy (write supports uniform number of per-strand segments only)
+- .npz
 
 ```
 $ hairutil --help
@@ -49,6 +50,8 @@ $ hairutil --help
                                   Tessellation factor for cubic Alembic curve import [2]
         --ply-save-ascii          Save PLY files in ASCII format
         --npy-save-float16        Save NPY files using float16
+        --npz-key=[KEY]           Key for the array within the NPZ file []
+        --npz-save-compressed     Save NPZ with compression
         -v[NAME], --verbosity=[NAME]
                                   Verbosity level name {trace,debug,info,warn,error,critical,off} [info]
         -j, --print-json          Print log messages in JSON format, disabling standard logging

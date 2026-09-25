@@ -42,6 +42,8 @@ namespace globals {
     extern unsigned int abc_load_tess_factor;
     extern bool ply_save_ascii;
     extern bool npy_save_float16;
+    extern std::string npz_key;
+    extern bool npz_save_compressed;
     extern std::string extra_suffix;
 
     extern std::string input_file_wo_ext;

@@ -19,7 +19,8 @@ int main(int argc, const char **argv)
         "  .ply\n"
         "  .ma\n"
         "  .abc\n"
-        "  .npy", globals::VERSIONTAG));
+        "  .npy\n"
+        "  .npz", globals::VERSIONTAG));
     parser.helpParams.width = 120;
     parser.helpParams.helpindent = 32;
 
@@ -50,6 +51,8 @@ int main(int argc, const char **argv)
     args::ValueFlag<unsigned int> globals_abc_load_tess_factor(grp_globals, "N", "Tessellation factor for cubic Alembic curve import [2]", {"abc-load-tess-factor"}, 2);
     args::Flag globals_ply_save_ascii(grp_globals, "ply-save-ascii", "Save PLY files in ASCII format", {"ply-save-ascii"});
     args::Flag globals_npy_save_float16(grp_globals, "npy-save-float16", "Save NPY files using float16", {"npy-save-float16"});
+    args::ValueFlag<std::string> globals_npz_key(grp_globals, "KEY", "Key for the array within the NPZ file", {"npz-key"}, "");
+    args::Flag globals_npz_save_compressed(grp_globals, "npz-save-compressed", "Save NPZ with compression", {"npz-save-compressed"});
     args::ValueFlag<std::string> globals_verbosity(grp_globals, "NAME", "Verbosity level name {trace,debug,info,warn,error,critical,off} [info]", {'v', "verbosity"}, "info");
     args::Flag globals_print_json(grp_globals, "print-json", "Print log messages in JSON format, disabling standard logging", {'j', "print-json"});
     args::ValueFlag<int> globals_seed(grp_globals, "N", "Seed for random number generator (-1 for time-based seed) [0]", {"seed"}, 0);
@@ -116,6 +119,8 @@ int main(int argc, const char **argv)
     globals::abc_load_tess_factor = *globals_abc_load_tess_factor;
     globals::ply_save_ascii = globals_ply_save_ascii;
     globals::npy_save_float16 = globals_npy_save_float16;
+    globals::npz_key = *globals_npz_key;
+    globals::npz_save_compressed = globals_npz_save_compressed;
     globals::extra_suffix = *globals_extra_suffix;
 
     if (globals::abc_load_tess_factor == 0) {

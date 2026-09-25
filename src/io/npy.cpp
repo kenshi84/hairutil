@@ -46,7 +46,10 @@ std::shared_ptr<cyHairFile> io::load_npy(const std::string &filename) {
     hairfile->SetPointCount(shape[0] * shape[1]);
     if (dtype == npy::data_type_t::FLOAT32) {
         auto d = npy::load<float, npy::tensor>(filename);
-        std::memcpy(hairfile->GetPointsArray(), d.data(), d.size() * sizeof(float));
+        if (!header->fortran_order)
+            std::memcpy(hairfile->GetPointsArray(), d.data(), d.size() * sizeof(float));
+        else
+            cast_copy(d, hairfile->GetPointsArray(), shape);
     } else if (dtype == npy::data_type_t::FLOAT64) {
         auto d = npy::load<double, npy::tensor>(filename);
         cast_copy(d, hairfile->GetPointsArray(), shape);

@@ -143,6 +143,7 @@ TEST(io_ma, read) { auto hairfile = io::load_ma(TEST_DATA_DIR "/Bangs_100.ma"); 
 TEST(io_ply, read_ascii) { auto hairfile = io::load_ply(TEST_DATA_DIR "/Bangs_100_ascii.ply"); }
 TEST(io_ply, read_binary) { auto hairfile = io::load_ply(TEST_DATA_DIR "/Bangs_100_binary.ply"); }
 TEST(io_npy, read) { auto hairfile = io::load_npy(TEST_DATA_DIR "/base_0_idx_17453.npy"); }
+TEST(io_npz, read) { auto hairfile = io::load_npz(TEST_DATA_DIR "/HairCS_00000.npz"); }
 
 TEST(io_abc, read_static_nested_transforms) {
     const std::string filename = "test_io_xform_nested.abc";
@@ -329,6 +330,7 @@ TEST(io_ply, write_ascii) { auto hairfile = generate_test_data(); globals::ply_s
 TEST(io_ply, write_binary) { auto hairfile = generate_test_data(); globals::ply_save_ascii = false; io::save_ply("test_io_out_binary.ply", hairfile); }
 TEST(io_npy, write) { auto hairfile = generate_test_data(true); io::save_npy("test_io_out_binary.npy", hairfile); }
 TEST(io_npy, write_fail) { auto hairfile = generate_test_data(false); EXPECT_THROW({ io::save_npy("test_io_out_binary.npy", hairfile); }, std::runtime_error); }
+TEST(io_npz, write) { auto hairfile = generate_test_data(true); io::save_npz("test_io_out.npz", hairfile); }
 
 int main(int argc, char **argv) {
     testing::InitGoogleTest(&argc, argv);
