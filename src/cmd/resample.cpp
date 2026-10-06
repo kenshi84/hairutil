@@ -5,7 +5,8 @@ using namespace Eigen;
 
 namespace {
 struct {
-    float& target_segment_length = cmd::param::f("resample", "target_segment_length");
+    std::optional<float>& target_segment_length = cmd::param::opt_f("resample", "target_segment_length");
+    std::optional<int>& target_segment_count = cmd::param::opt_i("resample", "target_segment_count");
     bool& linear_subdiv = cmd::param::b("resample", "linear_subdiv");
     bool& catmull_rom = cmd::param::b("resample", "catmull_rom");
     float& cr_power = cmd::param::f("resample", "cr_power");
@@ -133,26 +134,47 @@ Vector3f c2i_interpolate(const Circle& curve1, const Circle& curve2, float t) {
 }
 
 void cmd::parse::resample(args::Subparser &parser) {
-    args::ValueFlag<float> target_segment_length(parser, "R", "(REQUIRED) Target segment length (0 uses per-strand average segment length)", {"target-segment-length", 'l'}, args::Options::Required);
+    args::ValueFlag<float> target_segment_length(parser, "R", "Target segment length (use per-strand average segment length when omitted)", {"target-segment-length", 'l'});
+    args::ValueFlag<int> target_segment_count(parser, "N", "Target segment count (mutually exclusive with --target-segment-length)", {"target-segment-count", 'n'});
     args::Flag linear_subdiv(parser, "linear-subdiv", "Use linear subdivision", {"linear-subdiv"});
     args::Flag catmull_rom(parser, "catmull-rom", "Use parameterized Catmull-Rom interpolation", {"catmull-rom"});
     args::ValueFlag<float> cr_power(parser, "R", "Power parameter for Catmull-Rom (default: 0.5)", {"cr-power"}, 0.5f);
     args::Flag c2_interp(parser, "c2-interp", "Use hybrid C2-interpolating spline", {"c2-interp"});
     parser.Parse();
     globals::cmd_exec = cmd::exec::resample;
-    globals::output_file_wo_ext = [](){ return fmt::format("{}_resampled_tsl_{}{}", globals::input_file_wo_ext, ::param.target_segment_length, ::param.linear_subdiv ? "_ls" : ::param.catmull_rom ? fmt::format("_cr{}", ::param.cr_power) : ""); };
+    globals::output_file_wo_ext = [](){
+        if (::param.target_segment_count)
+            return fmt::format("{}_resampled_tsc_{}", globals::input_file_wo_ext, *::param.target_segment_count);
+        else if (::param.target_segment_length)
+            return fmt::format("{}_resampled_tsl_{}{}", globals::input_file_wo_ext, *::param.target_segment_length, ::param.linear_subdiv ? "_ls" : ::param.catmull_rom ? fmt::format("_cr{}", ::param.cr_power) : "");
+        else
+            return fmt::format("{}_resampled", globals::input_file_wo_ext);
+    };
     globals::check_error = [](){
-        if (::param.target_segment_length < 0) {
-            throw std::runtime_error(fmt::format("Invalid target segment length: {}", ::param.target_segment_length));
+        if (::param.target_segment_length && ::param.target_segment_count) {
+            throw std::runtime_error("Cannot specify both --target-segment-length and --target-segment-count.");
         }
-        if (::param.target_segment_length == 0 && (::param.linear_subdiv || ::param.catmull_rom || ::param.c2_interp)) {
-            throw std::runtime_error("When --target-segment-length is 0, none of --linear-subdiv, --catmull-rom, or --c2-interp can be specified.");
-        }
-        if (::param.linear_subdiv + ::param.catmull_rom + ::param.c2_interp > 1) {
-            throw std::runtime_error("Flags --linear-subdiv and --catmull-rom simultaneously and --c2-interp are mutually exclusive.");
+        if (::param.target_segment_count) {
+            if (*::param.target_segment_count < 2 || *::param.target_segment_count > 65535) {
+                throw std::runtime_error(fmt::format("Invalid target segment count: {}; must be between 2 and 65535.", *::param.target_segment_count));
+            }
+            if (::param.linear_subdiv || ::param.catmull_rom || ::param.c2_interp) {
+                throw std::runtime_error("When --target-segment-count is specified, --linear-subdiv, --catmull-rom, and --c2-interp cannot be used.");
+            }
+        } else {
+            if (::param.target_segment_length && *::param.target_segment_length <= 0) {
+                throw std::runtime_error(fmt::format("Invalid target segment length: {}", *::param.target_segment_length));
+            }
+            if (!::param.target_segment_length && (::param.linear_subdiv || ::param.catmull_rom || ::param.c2_interp)) {
+                throw std::runtime_error("When --target-segment-length is omitted, none of --linear-subdiv, --catmull-rom, or --c2-interp can be specified.");
+            }
+            if (::param.linear_subdiv + ::param.catmull_rom + ::param.c2_interp > 1) {
+                throw std::runtime_error("Flags --linear-subdiv and --catmull-rom simultaneously and --c2-interp are mutually exclusive.");
+            }
         }
     };
-    ::param.target_segment_length = *target_segment_length;
+    ::param.target_segment_length = target_segment_length ? std::optional<float>(*target_segment_length) : std::nullopt;
+    ::param.target_segment_count = target_segment_count ? std::optional<int>(*target_segment_count) : std::nullopt; 
     ::param.linear_subdiv = linear_subdiv;
     ::param.catmull_rom = catmull_rom;
     ::param.cr_power = *cr_power;
@@ -205,7 +227,7 @@ std::shared_ptr<cyHairFile> cmd::exec::resample(std::shared_ptr<cyHairFile> hair
         if (::param.linear_subdiv || ::param.catmull_rom || ::param.c2_interp) {
             std::vector<unsigned int> num_subsegments_per_segment(num_segments);
             for (unsigned int j : j_range) {
-                num_subsegments_per_segment[j] = (unsigned int)std::ceil(segment_length[j] / ::param.target_segment_length);
+                num_subsegments_per_segment[j] = (unsigned int)std::ceil(segment_length[j] / *::param.target_segment_length);
             }
 
             const unsigned int num_subsegments_total = std::accumulate(num_subsegments_per_segment.begin(), num_subsegments_per_segment.end(), 0);
@@ -301,7 +323,7 @@ std::shared_ptr<cyHairFile> cmd::exec::resample(std::shared_ptr<cyHairFile> hair
                         Vector3f p;
                         while (true) {
                             p = cr_interpolate_3f(t + dt, hairfile_in->GetPointsArray());
-                            if ((p - p_last).norm() >= ::param.target_segment_length) break;
+                            if ((p - p_last).norm() >= *::param.target_segment_length) break;
                             dt *= 1.1f;
                             if (dt > knots[j + 1] - knots[j]) break;
                         }
@@ -350,7 +372,7 @@ std::shared_ptr<cyHairFile> cmd::exec::resample(std::shared_ptr<cyHairFile> hair
                         Vector3f p;
                         while (true) {
                             p = c2i_interpolate(*curve1, curve2, t + dt);
-                            if ((p - p_last).norm() >= ::param.target_segment_length) break;
+                            if ((p - p_last).norm() >= *::param.target_segment_length) break;
                             dt *= 1.1f;
                             if (dt > 1.f) break;
                         }
@@ -372,7 +394,10 @@ std::shared_ptr<cyHairFile> cmd::exec::resample(std::shared_ptr<cyHairFile> hair
         } else {
             const unsigned int num_points = num_segments + 1;
             const double total_length = std::accumulate(segment_length.begin(), segment_length.end(), 0.0);
-            const unsigned int target_num_points = ::param.target_segment_length ? static_cast<unsigned int>(std::ceil(total_length / ::param.target_segment_length)) + 1 : num_points;
+            const unsigned int target_num_points =
+                ::param.target_segment_count ? static_cast<unsigned int>(*::param.target_segment_count + 1) :
+                ::param.target_segment_length ? static_cast<unsigned int>(std::ceil(total_length / *::param.target_segment_length)) + 1 :
+                num_points;
 
             auto append_point = [&](const Vector3f& point,
                                     const std::optional<float>& thickness,
