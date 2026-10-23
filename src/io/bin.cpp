@@ -16,7 +16,12 @@ std::shared_ptr<cyHairFile> io::load_bin(const std::string &filename) {
 
     // Read the number of strands
     int hair_count;
-    ifs.read((char*)&hair_count, sizeof(int));
+    if (!ifs.read((char*)&hair_count, sizeof(int))) {
+        throw std::runtime_error(fmt::format("Failed to read strand count from BIN file {}", filename));
+    }
+    if (hair_count < 0) {
+        throw std::runtime_error(fmt::format("Invalid strand count {} in BIN file {}", hair_count, filename));
+    }
 
     std::shared_ptr<cyHairFile> hairfile = std::make_shared<cyHairFile>();
 
@@ -24,7 +29,7 @@ std::shared_ptr<cyHairFile> io::load_bin(const std::string &filename) {
     hairfile->SetHairCount(hair_count);
 
     std::vector<float> points_array;
-    points_array.reserve(hair_count * 3 * 1000);
+    points_array.reserve(static_cast<size_t>(hair_count) * 3 * 1000);
 
     for (int hair_idx = 0; hair_idx < hair_count; ++hair_idx) {
         if (hair_idx > 0 && hair_idx % 100 == 0)
@@ -32,21 +37,23 @@ std::shared_ptr<cyHairFile> io::load_bin(const std::string &filename) {
 
         // Read the number of points in the strand
         int num_points;
-        ifs.read((char*)&num_points, sizeof(int));
-        assert(num_points < 0x10000);
+        if (!ifs.read((char*)&num_points, sizeof(int))) {
+            throw std::runtime_error(fmt::format("Failed to read point count for strand {} from BIN file {}", hair_idx, filename));
+        }
+        if (num_points <= 0 || num_points > 0x10000) {
+            throw std::runtime_error(fmt::format("Invalid point count {} for strand {} in BIN file {}", num_points, hair_idx, filename));
+        }
 
         hairfile->GetSegmentsArray()[hair_idx] = num_points - 1;
 
         // Read individual points
         for (int j = 0; j < num_points; ++j) {
-            float x, y, z;
-            ifs.read((char*)&x, sizeof(float));     points_array.push_back(x);
-            ifs.read((char*)&y, sizeof(float));     points_array.push_back(y);
-            ifs.read((char*)&z, sizeof(float));     points_array.push_back(z);
-
-            float dummy;
-            for (int k = 0; k < 4; ++k)
-                ifs.read((char*)&dummy, sizeof(float));
+            // Each record contains XYZ followed by four unused floats.
+            float point[7];
+            if (!ifs.read((char*)point, sizeof(point))) {
+                throw std::runtime_error(fmt::format("Failed to read point {} of strand {} from BIN file {}", j, hair_idx, filename));
+            }
+            points_array.insert(points_array.end(), point, point + 3);
         }
     }
 

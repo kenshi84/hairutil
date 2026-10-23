@@ -145,6 +145,43 @@ TEST(io_ply, read_binary) { auto hairfile = io::load_ply(TEST_DATA_DIR "/Bangs_1
 TEST(io_npy, read) { auto hairfile = io::load_npy(TEST_DATA_DIR "/base_0_idx_17453.npy"); }
 TEST(io_npz, read) { auto hairfile = io::load_npz(TEST_DATA_DIR "/HairCS_00000.npz"); }
 
+TEST(io_bin, round_trip_and_reject_truncated_prefixes) {
+    const std::string filename = "test_io_truncated.bin";
+    auto cleanup = sg::make_scope_guard([&] { std::filesystem::remove(filename); });
+    auto original = generate_test_data();
+    io::save_bin(filename, original);
+    auto loaded = io::load_bin(filename);
+    ASSERT_EQ(loaded->GetHeader().hair_count, original->GetHeader().hair_count);
+    ASSERT_EQ(loaded->GetHeader().point_count, original->GetHeader().point_count);
+    for (unsigned int i = 0; i < original->GetHeader().hair_count; ++i) {
+        EXPECT_EQ(loaded->GetSegmentsArray()[i], original->GetSegmentsArray()[i]);
+    }
+    for (unsigned int i = 0; i < original->GetHeader().point_count * 3; ++i) {
+        EXPECT_EQ(loaded->GetPointsArray()[i], original->GetPointsArray()[i]);
+    }
+
+    // Cover partial/missing counts, XYZ coordinates, and the four unused floats per point.
+    for (auto size = std::filesystem::file_size(filename); size > 0; --size) {
+        SCOPED_TRACE(size - 1);
+        std::filesystem::resize_file(filename, size - 1);
+        EXPECT_THROW(io::load_bin(filename), std::runtime_error);
+    }
+}
+
+TEST(io_bin, reject_invalid_counts) {
+    const std::string filename = "test_io_invalid_counts.bin";
+    auto cleanup = sg::make_scope_guard([&] { std::filesystem::remove(filename); });
+    for (const auto& counts : std::vector<std::array<int, 2>>{{-1, 2}, {1, -1}, {1, 0}, {1, 0x10001}}) {
+        SCOPED_TRACE(counts[0]);
+        SCOPED_TRACE(counts[1]);
+        {
+            std::ofstream output(filename, std::ios::binary);
+            output.write((const char*)counts.data(), sizeof(int) * counts.size());
+        }
+        EXPECT_THROW(io::load_bin(filename), std::runtime_error);
+    }
+}
+
 TEST(io_abc, read_static_nested_transforms) {
     const std::string filename = "test_io_xform_nested.abc";
     {

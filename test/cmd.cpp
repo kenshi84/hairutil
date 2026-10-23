@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
+#include <npy/npy.h>
 
+#include "cmd.h"
 #include "io.h"
 
 extern int test_main(int argc, const char **argv);
@@ -79,6 +81,93 @@ TEST(cmd_autofix, empty_strand) {
     };
     globals::clear();
     EXPECT_EQ(test_main(args.size(), args.data()), 0);
+}
+
+TEST(cmd_autofix, degenerate_strand_preserves_point_attributes) {
+    // Remove a middle, first, last, or every strand (-1).
+    for (int removed_strand : {1, 0, 4, -1}) {
+        SCOPED_TRACE(removed_strand);
+        auto hairfile = generate_test_data();
+        std::vector<unsigned int> kept_points;
+        std::vector<unsigned short> kept_segments;
+        unsigned int offset = 0;
+        for (int i = 0; i < hairfile->GetHeader().hair_count; ++i) {
+            const auto segments = hairfile->GetSegmentsArray()[i];
+            if (i == removed_strand || removed_strand == -1) {
+                for (unsigned int j = 1; j <= segments; ++j) {
+                    std::copy_n(hairfile->GetPointsArray() + 3*offset, 3,
+                                hairfile->GetPointsArray() + 3*(offset + j));
+                }
+            } else if (segments > 0) {
+                kept_segments.push_back(segments);
+                for (unsigned int j = 0; j <= segments; ++j) kept_points.push_back(offset + j);
+            }
+            offset += segments + 1;
+        }
+        for (unsigned int j = 0; j < hairfile->GetHeader().point_count; ++j) {
+            hairfile->GetTransparencyArray()[j] = 0.01f * j;
+        }
+
+        globals::clear();
+        auto fixed = cmd::exec::autofix(hairfile);
+        ASSERT_NE(fixed, nullptr);
+        ASSERT_EQ(fixed->GetHeader().hair_count, kept_segments.size());
+        ASSERT_EQ(fixed->GetHeader().point_count, kept_points.size());
+        for (size_t i = 0; i < kept_segments.size(); ++i) {
+            EXPECT_EQ(fixed->GetSegmentsArray()[i], kept_segments[i]);
+        }
+
+        for (size_t j = 0; j < kept_points.size(); ++j) {
+            SCOPED_TRACE(j);
+            const auto src = kept_points[j];
+            EXPECT_FLOAT_EQ(fixed->GetThicknessArray()[j], hairfile->GetThicknessArray()[src]);
+            EXPECT_FLOAT_EQ(fixed->GetTransparencyArray()[j], hairfile->GetTransparencyArray()[src]);
+            for (unsigned int k = 0; k < 3; ++k) {
+                EXPECT_FLOAT_EQ(fixed->GetPointsArray()[3*j + k], hairfile->GetPointsArray()[3*src + k]);
+                EXPECT_FLOAT_EQ(fixed->GetColorsArray()[3*j + k], hairfile->GetColorsArray()[3*src + k]);
+            }
+        }
+    }
+}
+
+TEST(cmd_info, truncated_bin_fails) {
+    const std::string filename = "test_cmd_truncated.bin";
+    auto cleanup = sg::make_scope_guard([&] { std::filesystem::remove(filename); });
+    io::save_bin(filename, generate_test_data());
+    std::filesystem::resize_file(filename, std::filesystem::file_size(filename) - sizeof(float));
+    std::vector<const char*> args = {"test_cmd", "info", "-i", filename.c_str()};
+    globals::clear();
+    EXPECT_EQ(test_main(args.size(), args.data()), 1);
+}
+
+TEST(cmd_info, multiple_npz_keys_reports_usable_option) {
+    const std::string filename = "test_cmd_multiple_keys.npz";
+    auto cleanup = sg::make_scope_guard([&] { std::filesystem::remove(filename); });
+    npy::tensor<float> first({1, 2, 3});
+    npy::tensor<float> second({2, 2, 3});
+    for (size_t i = 0; i < first.size(); ++i) first.data()[i] = static_cast<float>(i);
+    for (size_t i = 0; i < second.size(); ++i) second.data()[i] = static_cast<float>(i);
+    {
+        npy::npzfilewriter output(filename);
+        output.write("first", first);
+        output.write("second", second);
+        output.close();
+    }
+
+    std::vector<const char*> args = {"test_cmd", "info", "-i", filename.c_str()};
+    globals::clear();
+    EXPECT_EQ(test_main(args.size(), args.data()), 1);
+    ASSERT_EQ(globals::json["log"]["error"].size(), 1);
+    const auto message = globals::json["log"]["error"][0].get<std::string>();
+    EXPECT_NE(message.find("--npz-key"), std::string::npos);
+    EXPECT_NE(message.find("first"), std::string::npos);
+    EXPECT_NE(message.find("second"), std::string::npos);
+
+    args.insert(args.end(), {"--npz-key", "second"});
+    globals::clear();
+    EXPECT_EQ(test_main(args.size(), args.data()), 0);
+    EXPECT_EQ(globals::json["input"]["num_strands"], 2);
+    EXPECT_EQ(globals::json["input"]["num_points"], 4);
 }
 
 TEST(cmd_convert, bin_to_abc) {

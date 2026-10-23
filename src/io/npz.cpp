@@ -45,7 +45,7 @@ std::shared_ptr<cyHairFile> io::load_npz(const std::string &filename) {
         for (auto it = std::next(candidate_keys.begin()); it != candidate_keys.end(); ++it) {
             candidate_keys_str += ", " + *it;
         }
-        throw std::runtime_error(fmt::format("Multiple candidate keys exist: {} ; use --npz_key to specify one", candidate_keys_str));
+        throw std::runtime_error(fmt::format("Multiple candidate keys exist: {} ; use --npz-key to specify one", candidate_keys_str));
     }
     key = key + ".npy";
     const auto& header = input.peek(key);
